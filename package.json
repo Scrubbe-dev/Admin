@@ -2,15 +2,15 @@
   "name": "cyber-protector",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node dist/app.js",
     "build": "tsc",
     "migrate": "npx prisma migrate dev --name init",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
     "seed": "ts-node prisma/seed.ts",
-    "dev": "concurrently \"tsc --watch\" \"nodemon ./dist/server.js\"",
+    "dev": "concurrently \"tsc --watch\" \"nodemon ./dist/app.js\"",
     "lint": "eslint . --ext .ts",
     "dockerbuild": "docker build -f ./src/infrastructure/docker/DockerFile -t file-converter-app ",
     "dockerrun": "docker run -p 3000:3000 file-converter-app"
@@ -38,8 +38,10 @@
     "morgan": "^1.10.0",
     "multer": "1.4.5-lts.2",
     "redis": "^4.7.0",
+    "ua-parser-js": "^2.0.3",
     "uuid": "^11.1.0",
     "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

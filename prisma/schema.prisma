@@ -12,3 +12,15 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
+model RateLimit {
+  id           String   @id @default(uuid())
+  ip           String   @unique
+  points       Int      @default(0)
+  createdAt    DateTime @default(now())
+  blockedUntil DateTime?
+  
+  @@index([createdAt])
+  @@index([blockedUntil])
+}
