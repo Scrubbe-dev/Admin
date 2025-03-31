@@ -1,0 +1,82 @@
+// src/config/swagger.ts
+import { SwaggerDefinition } from 'swagger-jsdoc';
+import { version, name, description } from '../../../package.json';
+
+const swaggerDefinition: SwaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: name,
+    version,
+    description,
+    contact: {
+      name: 'API Support',
+      url: 'https://yourdomain.com/support',
+      email: 'support@yourdomain.com'
+    },
+    license: {
+      name: 'Commercial',
+      url: 'https://yourdomain.com/license'
+    }
+  },
+  servers: [
+    {
+      url: 'http://localhost:3000/api/v1',
+      description: 'Development server'
+    },
+    {
+      url: 'https://api.yourdomain.com/v1',
+      description: 'Production server'
+    }
+  ],
+  components: {
+    securitySchemes: {
+      BearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT'
+      },
+      ApiKeyAuth: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-API-KEY'
+      }
+    },
+    schemas: {
+      ErrorResponse: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: false },
+          error: {
+            type: 'object',
+            properties: {
+              code: { type: 'string', example: 'VALIDATION_ERROR' },
+              message: { type: 'string', example: 'Invalid request parameters' },
+              details: { type: 'array', items: { type: 'string' } }
+            }
+          }
+        }
+      },
+      IPGeoResponse: {
+        type: 'object',
+        properties: {
+          ip: { type: 'string', example: '192.168.1.1' },
+          type: { type: 'string', enum: ['ipv4', 'ipv6'] },
+          city: { type: 'string', example: 'San Francisco' },
+          // ... other properties from your IPGeoResponse interface
+        }
+      }
+    }
+  }
+};
+
+const options = {
+  swaggerDefinition,
+  apis: [
+    './src/routes/*.ts',
+    './src/controllers/*.ts',
+    './src/models/*.ts',
+    './src/dtos/*.ts'
+  ]
+};
+
+export default options;

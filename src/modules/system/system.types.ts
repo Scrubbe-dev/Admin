@@ -1,3 +1,5 @@
+import { IPGeoResponse } from "../../types/geolocation";
+
 // src/modules/system/system.types.ts
 export type GeoData = {
     country?: string;
@@ -23,4 +25,5 @@ export type GeoData = {
     location: GeoData;
     network: NetworkData;
     device: DeviceData;
+    usersDetails?: IPGeoResponse
   };

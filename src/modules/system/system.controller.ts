@@ -1,4 +1,3 @@
-// src/modules/system/system.controller.ts
 import { Request, Response } from 'express';
 import { SystemService } from './system.service';
 

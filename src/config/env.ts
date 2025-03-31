@@ -22,6 +22,8 @@ const envSchema = z.object({
     .default('http://localhost:3000'),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000), // 15 minutes
   RATE_LIMIT_MAX: z.coerce.number().default(100),
+  SEARCH_IP_LOCATION_API_KEY:  z.string().min(32),
+  BASE_SEARCH_URL: z.string().url().default('https://api.apilayer.com/ip_to_location'),
 });
 
 // Type for TypeScript usage
