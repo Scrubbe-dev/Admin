@@ -178,8 +178,8 @@ export class SystemService {
       const ipv4 = convertIP(ip)
       console.log(ipv4 , ip)
       const [location, network, device , usersDetails] = await Promise.all([
-        this.getGeoData(String(ipv4)),
-        this.getNetworkData(String(ipv4)),
+        this.getGeoData(ip),
+        this.getNetworkData(ip),
         this.getDeviceData(req),
         this.getUserInforByIPv4(String(ipv4))
       ]);

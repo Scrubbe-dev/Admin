@@ -23,13 +23,12 @@ app.set('trust proxy', (ip: string) => {
 app.use(helmet());
 app.use(cors({
   origin: env.ALLOWED_ORIGINS,
-  methods: ['GET'],
+  methods: ['GET','POST','PUT',"DELETE",'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 
 app.use('/api/v1', systemRouter);
-
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
