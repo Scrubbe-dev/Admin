@@ -18,7 +18,7 @@ const options: swaggerJSDoc.Options = {
     },
     servers: [
         {
-            url: "http://localhost:3000", 
+            url: "https://admin-rul9.onrender.com", 
             description: "Local Development Server",
         },
     ],
@@ -31,7 +31,7 @@ const swaggerSpec = swaggerJSDoc(options);
 
 export function setupSwagger(app: Express) {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec,option));
-  console.log("✅ Swagger Docs available at: http://localhost:3000/api-docs");
+  console.log("✅ Swagger Docs available at: https://admin-rul9.onrender.com/api-docs");
 }
 
 

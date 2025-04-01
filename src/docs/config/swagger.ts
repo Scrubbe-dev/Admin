@@ -10,21 +10,21 @@ const swaggerDefinition: SwaggerDefinition = {
     description,
     contact: {
       name: 'API Support',
-      url: 'https://yourdomain.com/support',
+      url: 'https://admin-rul9.onrender.com/support',
       email: 'support@yourdomain.com'
     },
     license: {
       name: 'Commercial',
-      url: 'https://yourdomain.com/license'
+      url: 'https://admin-rul9.onrender.com'
     }
   },
   servers: [
     {
-      url: 'http://localhost:3000/api/v1',
+      url: 'https://admin-rul9.onrender.com/api/v1',
       description: 'Development server'
     },
     {
-      url: 'https://api.yourdomain.com/v1',
+      url: 'https://admin-rul9.onrender.com/v1',
       description: 'Production server'
     }
   ],
