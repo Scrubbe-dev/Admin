@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  rateLimiterMiddleware,
+  // rateLimiterMiddleware,
   securityHeadersMiddleware
 } from './system.middleware';
 import { getSystemInfoHandler } from './system.controller';
