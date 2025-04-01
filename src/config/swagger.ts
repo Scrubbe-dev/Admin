@@ -3,18 +3,6 @@ import swaggerUi from "swagger-ui-express";
 import { Express } from "express";
 
 
-// const customCss = `
-//   .swagger-ui .topbar {
-//     display: none;
-//   }
-//   .swagger-ui .information-container {
-//     display: none;
-//   }
-//   .swagger-ui .scheme-container {
-//     display: none;
-//   }
-// `;
-
 const option = {
     customCss:'.swagger-ui .topbar { display: none }',
 }
