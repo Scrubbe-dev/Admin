@@ -18,12 +18,13 @@ const options: swaggerJSDoc.Options = {
     },
     servers: [
         {
-           url: "https://admin-rul9.onrender.com",
+        //    url: "https://admin-rul9.onrender.com",
+        url: "http://localhost:3000",
             description: "Production development Server",
         },
     ],
 },
-apis: ["./src/modules/system/system.routes.ts","./src/modules/bec/bec.routes.ts"],
+apis: ["./src/modules/system/system.routes.ts","./src/modules/bec/bec.routes.ts","./src/modules/digitalpaymentfraud/fraud.route.ts"],
 };
 
 

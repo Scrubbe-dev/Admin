@@ -7,6 +7,7 @@ import systemRouter from './modules/system/system.routes';
 import { config } from 'dotenv';
 import { setupSwagger } from "./config/swagger";
 import analysisRouter from './modules/bec/bec.routes';
+import fraudDictation from './modules/digitalpaymentfraud/fraud.route'
 config()
 
 const app = express();
@@ -31,6 +32,8 @@ app.use(cors({
 // Routes
 app.use('/api/v1', analysisRouter);
 app.use('/api/v1', systemRouter);
+app.use('/api/v1',fraudDictation)
+
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
