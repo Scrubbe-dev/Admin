@@ -18,8 +18,7 @@ const options: swaggerJSDoc.Options = {
     },
     servers: [
         {
-        //    url: "https://admin-rul9.onrender.com",
-        url: "http://localhost:3000",
+           url: "https://admin-rul9.onrender.com",
             description: "Production development Server",
         },
     ],
