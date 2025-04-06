@@ -6,6 +6,7 @@ import { env } from './config/env';
 import systemRouter from './modules/system/system.routes';
 import { config } from 'dotenv';
 import { setupSwagger } from "./config/swagger";
+import analysisRouter from './modules/bec/bec.routes';
 config()
 
 const app = express();
@@ -27,7 +28,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-
+// Routes
+app.use('/api/v1', analysisRouter);
 app.use('/api/v1', systemRouter);
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response) => {

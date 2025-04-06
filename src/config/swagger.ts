@@ -6,7 +6,7 @@ import { Express } from "express";
 const option = {
     customCss:'.swagger-ui .topbar { display: none }',
 }
-
+ 
 const options: swaggerJSDoc.Options = {
    
   definition: {
@@ -18,12 +18,12 @@ const options: swaggerJSDoc.Options = {
     },
     servers: [
         {
-            url: "https://admin-rul9.onrender.com", 
-            description: "Local Development Server",
+           url: "https://admin-rul9.onrender.com",
+            description: "Production development Server",
         },
     ],
 },
-apis: ["./src/modules/system/system.routes.ts"],
+apis: ["./src/modules/system/system.routes.ts","./src/modules/bec/bec.routes.ts"],
 };
 
 
@@ -33,8 +33,6 @@ export function setupSwagger(app: Express) {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec,option));
   console.log("✅ Swagger Docs available at: https://admin-rul9.onrender.com/api-docs");
 }
-
-
 
 
 // for Auth 
