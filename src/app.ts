@@ -8,6 +8,7 @@ import { config } from 'dotenv';
 import { setupSwagger } from "./config/swagger";
 import analysisRouter from './modules/bec/bec.routes';
 import fraudDictation from './modules/digitalpaymentfraud/fraud.route'
+import apikeyRoute from './modules/apikey/apikey.route'
 config()
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(cors({
 app.use('/api/v1', analysisRouter);
 app.use('/api/v1', systemRouter);
 app.use('/api/v1',fraudDictation)
+app.use('/api/v1',apikeyRoute)
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response) => {
