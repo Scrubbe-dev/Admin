@@ -102,8 +102,8 @@ router.use(apiKeyAuthMiddleware as any);
  */
 router.post(
   '/createapikey', 
-//   requireScope('api-key:create') as any,
-//   controller.createApiKey as any
+  requireScope('api-key:create') as any,
+  controller.createApiKey as any
 );
 
 /**
@@ -168,7 +168,7 @@ router.post(
  */
 router.post(
   '/verify', 
-//   controller.verifyApiKey as any
+  controller.verifyApiKey as any
 );
 
 /**
@@ -247,8 +247,8 @@ router.post(
  */
 router.get(
   '/apikeys', 
-//   requireScope('api-key:read') as any,
-//   controller.listApiKeys as any
+  requireScope('api-key:read') as any,
+  controller.listApiKeys as any
 );
 
 /**
@@ -293,8 +293,8 @@ router.get(
  */
 router.delete(
   '/:keyId', 
-//   requireScope('api-key:delete') as any,
-//   controller.revokeApiKey as any
+  requireScope('api-key:delete') as any,
+  controller.revokeApiKey as any
 );
 
 /**
@@ -382,8 +382,8 @@ router.delete(
  */
 router.patch(
   '/:keyId', 
-//   requireScope('api-key:update') as any,
-//   controller.updateApiKey as any
+  requireScope('api-key:update') as any,
+  controller.updateApiKey as any
 );
 
 export default router;
