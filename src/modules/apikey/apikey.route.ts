@@ -11,7 +11,7 @@ const controller = new ApiKeyController();
 type IRequireScope = typeof requireScope
 
 // Middleware to protect all API key routes
-router.use(apiKeyAuthMiddleware as any);
+
 
 /**
  * @swagger
@@ -105,6 +105,8 @@ router.post(
   requireScope('api-key:create') as any,
   controller.createApiKey as any
 );
+
+router.use(apiKeyAuthMiddleware as any);
 
 /**
  * @swagger
