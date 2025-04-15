@@ -16,13 +16,13 @@ router.use(apiKeyAuthMiddleware as any);
 /**
  * @swagger
  * tags:
- *   name: API Keys
- *   description: API Key management endpoints
+ *   name: Scrubbe API Keys
+ *   description: Scrubbe API Key management endpoints
  */
 
 /**
  * @swagger
- * /apikeys:
+ * /api/v1/createapikey:
  *   post:
  *     summary: Create a new API key
  *     description: |
@@ -101,14 +101,14 @@ router.use(apiKeyAuthMiddleware as any);
  *         description: Internal server error
  */
 router.post(
-  '/', 
-  requireScope('api-key:create') as any,
-  controller.createApiKey as any
+  '/createapikey', 
+//   requireScope('api-key:create') as any,
+//   controller.createApiKey as any
 );
 
 /**
  * @swagger
- * /apikeys/verify:
+ * /api/v1/verify:
  *   post:
  *     summary: Verify an API key
  *     description: |
@@ -168,12 +168,12 @@ router.post(
  */
 router.post(
   '/verify', 
-  controller.verifyApiKey as any
+//   controller.verifyApiKey as any
 );
 
 /**
  * @swagger
- * /apikeys:
+ * /api/v1/apikeys:
  *   get:
  *     summary: List API keys
  *     description: |
@@ -246,14 +246,14 @@ router.post(
  *         description: Internal server error
  */
 router.get(
-  '/', 
-  requireScope('api-key:read') as any,
-  controller.listApiKeys as any
+  '/apikeys', 
+//   requireScope('api-key:read') as any,
+//   controller.listApiKeys as any
 );
 
 /**
  * @swagger
- * /apikeys/{keyId}:
+ * /api/v1/{keyId}:
  *   delete:
  *     summary: Revoke an API key
  *     description: |
@@ -293,13 +293,13 @@ router.get(
  */
 router.delete(
   '/:keyId', 
-  requireScope('api-key:delete') as any,
-  controller.revokeApiKey as any
+//   requireScope('api-key:delete') as any,
+//   controller.revokeApiKey as any
 );
 
 /**
  * @swagger
- * /apikeys/{keyId}:
+ * /api/v1/{keyId}:
  *   patch:
  *     summary: Update an API key
  *     description: |
@@ -382,8 +382,8 @@ router.delete(
  */
 router.patch(
   '/:keyId', 
-  requireScope('api-key:update') as any,
-  controller.updateApiKey as any
+//   requireScope('api-key:update') as any,
+//   controller.updateApiKey as any
 );
 
 export default router;
