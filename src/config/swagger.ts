@@ -23,7 +23,7 @@ const options: swaggerJSDoc.Options = {
         },
     ],
 },
-apis: ["./src/modules/system/system.routes.ts","./src/modules/bec/bec.routes.ts","./src/modules/digitalpaymentfraud/fraud.route.ts","./src/modules/apikey/apikey.route.ts"],
+apis: ["./src/modules/system/system.routes.ts","./src/modules/bec/bec.routes.ts","./src/modules/digitalpaymentfraud/fraud.route.ts","./src/modules/apikey/apikey.route.ts","./src/modules/auth/routes/auth.routes.ts"],
 };
 
 

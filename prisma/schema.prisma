@@ -15,15 +15,20 @@ datasource db {
 
 
 model User {
-  id          String    @id @default(uuid())
-  email       String    @unique
-  password    String?
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  isVerified   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  lastLogin    DateTime?
+  apiKeyDuration DateTime @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  refreshToken RefreshToken[]
   apiKey      String    @unique
   role        Role      @default(USER)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  lastLoginAt DateTime?
-  isActive    Boolean   @default(true)
 
   @@index([apiKey])
   DetectionRule DetectionRule[]
@@ -31,6 +36,20 @@ model User {
   IncidentComment IncidentComment[]
   Customer Customer[]
   Incident Incident[]
+}
+
+
+model RefreshToken {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  token        String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  revokedAt    DateTime?
+  replacedByToken String?
+  ipAddress    String?
+  userAgent    String?
 }
 
 enum Role {

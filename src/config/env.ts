@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { config } from 'dotenv';
 config()
 
-// Schema definition for environment variables
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; 
 const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
@@ -24,18 +24,21 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   SEARCH_IP_LOCATION_API_KEY:  z.string().min(32),
   BASE_SEARCH_URL: z.string().url().default('https://api.apilayer.com/ip_to_location'),
+  BASE_EMAIL_VERIFICATION: z.string().url().default('https://yourapp.com/verify-email'),
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.string().min(4),
+  SMTP_USER: z.string().min(1),
+  SMTP_PASS: z.string().min(3),
+  FROM_EMAIL: z.string()
+  .min(1, "FROM_EMAIL is required")
+  .regex(emailRegex, "Invalid email format"),
+
 });
 
-// Type for TypeScript usage
 export type EnvConfig = z.infer<typeof envSchema>;
-
-// Validate and export environment variables
 export const env = ((): EnvConfig => {
   try {
-    // Validate against schema
     const parsed = envSchema.parse(process.env);
-
-    // Additional security checks
     if (parsed.NODE_ENV === 'production') {
       if (
         parsed.JWT_SECRET === 'default_secret' ||
@@ -47,7 +50,6 @@ export const env = ((): EnvConfig => {
       }
     }
 
-    // Validate MaxMind credentials format
     if (!/^\d+$/.test(parsed.MAXMIND_ACCOUNT_ID)) {
       throw new Error('MAXMIND_ACCOUNT_ID must be numeric');
     }

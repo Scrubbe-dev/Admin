@@ -20,7 +20,7 @@ export class ApiKeyService {
   async createApiKey(payload: CreateApiKeyPayload): Promise<ApiKey> {
     const rawKey = this.generateApiKey();
     const hashedKey = this.hashApiKey(rawKey);
-    
+
     const expiresAt = payload.expiresInDays 
       ? new Date(Date.now() + payload.expiresInDays * 24 * 60 * 60 * 1000)
       : undefined;
