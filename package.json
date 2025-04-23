@@ -8,13 +8,17 @@
       "bcrypt"
     ]
   },
+  "prisma": {
+    "seed": "ts-node ./prisma/seed.ts"
+  },
   "scripts": {
     "start": "node dist/app.js",
     "build": "tsc",
-    "migrate": "npx prisma migrate dev --name init",
+    "migrate:init": "npx prisma migrate dev --name init",
+    "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
     "studio": "npx prisma studio",
-    "seed": "ts-node prisma/seed.ts",
+    "seed": "npx prisma db seed",
     "dev": "concurrently \"tsc --watch\" \"nodemon dist/app.js\"",
     "lint": "eslint . --ext .ts",
     "dockerbuild": "docker build -f ./src/infrastructure/docker/DockerFile -t file-converter-app ",
@@ -25,6 +29,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@faker-js/faker": "^9.7.0",
     "@maxmind/geoip2-node": "^6.0.0",
     "@nestjs/common": "^11.0.12",
     "@prisma/client": "6.5.0",
@@ -43,6 +48,7 @@
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^7.5.0",
+    "generate-api-key": "^1.0.2",
     "get-user-ip": "^1.0.3",
     "helmet": "^8.1.0",
     "ip-address": "^10.0.1",

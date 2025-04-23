@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output = "../../node_modules/.prisma/client"
+  // output = "../../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -47,7 +47,7 @@ model WaitingUser {
   fullName  String
   email     String   @unique @db.VarChar(255)
   company   String
-  role      Role
+  role      Roles    @default(CISO)
   message   String?
   
   @@index([email])
@@ -317,3 +317,11 @@ enum Priority {
   HIGH
   CRITICAL
 }
+enum Roles {
+  CISO
+  SECURITY_ENGINEER
+  SOC_ANALYST
+  IT_MANAGER
+  OTHERS
+}
+
