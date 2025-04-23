@@ -75,11 +75,7 @@ const authController = new AuthController(authService);
 // Middleware
 app.use(morgan('combined'));
 app.use(helmet());
-app.use(cors({
-  origin: env.ALLOWED_ORIGINS,
-  methods: ['GET','POST','PUT',"DELETE",'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors({origin:"*"}));
 app.use(express.json());
 setupSwagger(app);
 
