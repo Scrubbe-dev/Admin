@@ -1,6 +1,14 @@
 import { Request } from 'express';
 
-import { JwtPayload } from '../auth/types/auth.types';
+import { JwtPayload } from '../modules/auth/types/auth.types';
+import { Role } from '@prisma/client';
+
+interface User {
+  id: string;
+  sub: string;
+  email: string;
+  roles: string[]; 
+}
 
 declare global {
   namespace Express {
@@ -23,7 +31,24 @@ declare global {
       user?: {
         id: string;
         scopes: string[];
+        id: string;
+        email: string;
+        roles: Role
       };
     }
   }
 }
+
+
+declare global {
+    namespace Express {
+      interface Request {
+        user?: {
+          sub: string;
+          id: string;
+          email: string;
+          roles: Role; // Add roles array
+        };
+      }
+    }
+  }

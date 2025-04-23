@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { TokenService } from '../services/token.service';
 import { UnauthorizedError, ForbiddenError } from '../error';
-import { Role } from '../types/auth.types';
+import { Role, User } from '../types/auth.types';
 
 export class AuthMiddleware {
   constructor(private tokenService: TokenService) {}
@@ -15,7 +15,7 @@ export class AuthMiddleware {
     const token = authHeader.split(' ')[1];
     try {
       const payload = this.tokenService.verifyAccessToken(token);
-      req.user = payload;
+      req.user = payload as any;
       next();
     } catch (err) {
       throw new UnauthorizedError('Invalid or expired token');
@@ -28,7 +28,7 @@ export class AuthMiddleware {
         throw new UnauthorizedError('Authentication required');
       }
 
-      const hasRequiredRole = roles.some(role => req.user?.roles.includes(role));
+      const hasRequiredRole = roles.some(role => (req.user as { id: string; sub: string; email: string; roles: string[] }).roles.includes(role));
       if (!hasRequiredRole) {
         throw new ForbiddenError('Insufficient permissions');
       }

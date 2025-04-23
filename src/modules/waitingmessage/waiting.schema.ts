@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { Role } from '@prisma/client';
+import { Roles } from '@prisma/client';
 
-const roleEnum = z.nativeEnum(Role);
+const roleEnum = z.nativeEnum(Roles);
 
 export const createWaitingUserSchema = z.object({
   body: z.object({

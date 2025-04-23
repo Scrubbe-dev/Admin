@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../../prisma-clients/client';
 import { ApiError } from '../admin-auth/admin.utils';
 import { CreateWaitingUserInput, GetWaitingUsersInput } from './waiting.schema';
@@ -15,14 +16,15 @@ export const createWaitingUser = async (input: CreateWaitingUserInput['body']) =
 
 export const getWaitingUsers = async (query: GetWaitingUsersInput['query']) => {
   const { page, limit, role, search } = query;
-  const where = {
+  
+  const where: Prisma.WaitingUserWhereInput = {
     ...(role && { role }),
     ...(search && {
       OR: [
         { fullName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { company: { contains: search, mode: 'insensitive' } }
-      ]
+      ] as Prisma.WaitingUserWhereInput['OR']
     })
   };
 

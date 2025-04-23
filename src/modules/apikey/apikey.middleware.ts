@@ -30,7 +30,8 @@ export async function apiKeyAuthMiddleware(req: Request, res: Response, next: Ne
   // Attach user and scopes to the request for downstream use
   req.user = {
     id: verification.userId!,
-    scopes: verification.scopes || [],
+    sub: "",
+    email:"",
   };
 
   next();
