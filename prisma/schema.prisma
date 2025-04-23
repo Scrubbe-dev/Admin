@@ -47,7 +47,7 @@ model WaitingUser {
   fullName  String
   email     String   @unique @db.VarChar(255)
   company   String
-  role      Roles    @default(CISO)
+  role      String
   message   String?
   
   @@index([email])

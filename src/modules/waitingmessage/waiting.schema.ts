@@ -8,7 +8,7 @@ export const createWaitingUserSchema = z.object({
     fullName: z.string().min(2, 'Full name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
     company: z.string().min(2, 'Company name must be at least 2 characters'),
-    role: roleEnum,
+    role: z.string(),
     message: z.string().max(500, 'Message cannot exceed 500 characters').optional()
   })
 });
