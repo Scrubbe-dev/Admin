@@ -39,6 +39,8 @@ async function main() {
     },
   });
 
+  
+
   // Create enterprise customers
   const customers = await prisma.$transaction(
     Array.from({ length: 5 }).map((_, i) =>
