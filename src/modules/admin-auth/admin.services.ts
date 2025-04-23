@@ -53,3 +53,15 @@ export const updateAdminPassword = async (
       select: { id: true, email: true, createdAt: true }
     });
   };
+
+  export const deleteAdmin = async (adminId: string) => {
+    const admin = await prisma.admin.findUnique({ where: { id: adminId } });
+    
+    if (!admin) {
+      throw new ApiError(404, 'Admin not found');
+    }
+  
+    return prisma.admin.delete({
+      where: { id: adminId }
+    });
+  };

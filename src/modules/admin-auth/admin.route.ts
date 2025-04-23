@@ -6,21 +6,26 @@ import { loginAdminSchema, registerAdminSchema , updatePasswordSchema} from './a
 const router = express.Router();
 
 router.post(
-  '/register',
+  '/admin/register',
   validate(registerAdminSchema),
   adminController.registerAdmin
 );
 
 router.post(
-  '/login',
+  '/admin/login',
   validate(loginAdminSchema),
   adminController.loginAdmin
 );
 
 router.put(
-    '/password',
+    '/admin/password',
     validate(updatePasswordSchema),
     adminController.updatePassword
   );
+
+router.delete(
+  '/admin/:adminId',
+  adminController.deleteAdmin
+)
 
 export default router;

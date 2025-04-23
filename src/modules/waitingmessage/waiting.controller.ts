@@ -30,3 +30,19 @@ export const getWaitingUsers: RequestHandler = asyncHandler(async (req, res) => 
       meta: result.meta
     });
   });
+
+
+  export const deleteWaitingUser: RequestHandler = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    
+    if (!id) {
+      throw new ApiError(400, 'Waiting user ID is required');
+    }
+  
+    await waitingService.deleteWaitingUser(id);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Waiting user deleted successfully'
+    });
+  });

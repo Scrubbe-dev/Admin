@@ -55,3 +55,27 @@ export const updatePassword: RequestHandler = asyncHandler(async (req, res) => {
       message: 'Password updated successfully'
     });
   });
+
+
+
+
+export const deleteAdmin: RequestHandler = asyncHandler(async (req, res) => {
+  const { adminId } = req.params;
+  const requestingAdminId = req.user?.sub;
+  
+  if (!requestingAdminId) {
+    throw new ApiError(401, 'Authentication required');
+  }
+  
+  // Prevent admin from deleting themselves
+  if (adminId === requestingAdminId) {
+    throw new ApiError(400, 'Admin cannot delete their own account');
+  }
+  
+  await adminService.deleteAdmin(adminId);
+  
+  res.status(200).json({
+    success: true,
+    message: 'Admin deleted successfully'
+  });
+});

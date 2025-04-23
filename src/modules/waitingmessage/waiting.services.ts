@@ -59,3 +59,16 @@ export const getUserByEmail = async (email: string) => {
     });
   };
   
+  export const deleteWaitingUser = async (id: string) => {
+    const waitingUser = await prisma.waitingUser.findUnique({
+      where: { id }
+    });
+  
+    if (!waitingUser) {
+      throw new ApiError(404, 'Waiting user not found');
+    }
+  
+    return prisma.waitingUser.delete({
+      where: { id }
+    });
+  };
