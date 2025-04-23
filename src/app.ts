@@ -78,7 +78,6 @@ app.use(helmet());
 app.use(cors({
   origin: "*",
   methods: ['GET','POST','PUT',"DELETE",'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 setupSwagger(app);
@@ -91,13 +90,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+app.use('/api/v1',waitingRouter);
+app.use('/api/v1',adminRouter);
 app.use('/api/v1',createAuthRouter(authController, authMiddleware));
 app.use('/api/v1',analysisRouter);
 app.use('/api/v1',systemRouter);
 app.use('/api/v1',fraudDictation);
 app.use('/api/v1',apikeyRoute);
-app.use('/api/v1',waitingRouter);
-app.use('/api/v1',adminRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response) => {
