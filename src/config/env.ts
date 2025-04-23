@@ -19,7 +19,7 @@ const envSchema = z.object({
   ALLOWED_ORIGINS: z
     .string()
     .transform((s) => s.split(','))
-    .default('http://localhost:3000'),
+    .default('*'),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000), // 15 minutes
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   SEARCH_IP_LOCATION_API_KEY:  z.string().min(32),
