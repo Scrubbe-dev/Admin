@@ -26,8 +26,8 @@ import morgan from 'morgan';
 
 
 // waiting and admin 
-import waitingRouter from '../src/modules/waitingmessage/waiting.route';
-import adminRouter from '../src/modules/admin-auth/admin.route';
+import waitingRouter from './modules/waitingmessage/waiting.route';
+import adminRouter from './modules/admin-auth/admin.route';
 
 dotenvConfig()
 
