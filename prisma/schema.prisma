@@ -12,6 +12,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 
@@ -37,6 +38,31 @@ model User {
   IncidentComment IncidentComment[]
   Customer Customer[]
   Incident Incident[]
+}
+
+model WaitingUser {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  fullName  String
+  email     String   @unique @db.VarChar(255)
+  company   String
+  role      Role
+  message   String?
+  
+  @@index([email])
+  @@index([createdAt])
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  email     String   @unique @db.VarChar(255)
+  password  String
+  isActive  Boolean  @default(true)
+  
+  @@index([email])
 }
 
 

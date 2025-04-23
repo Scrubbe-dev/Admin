@@ -32,6 +32,7 @@ const envSchema = z.object({
   FROM_EMAIL: z.string()
   .min(1, "FROM_EMAIL is required")
   .regex(emailRegex, "Invalid email format"),
+  SHADOW_DATABASE_URL: z.string().url(),
 
 });
 

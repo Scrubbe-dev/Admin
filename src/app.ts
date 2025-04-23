@@ -23,6 +23,12 @@ import { AuthMiddleware } from './modules/auth/middleware/auth.middleware';
 import { AuthController } from './modules/auth/controllers/auth.controller';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
+
+
+// waiting and admin 
+import waitingRouter from '../src/modules/waitingmessage/waiting.route';
+import adminRouter from '../src/modules/admin-auth/admin.route';
+
 dotenvConfig()
 
 const app = express();
@@ -86,11 +92,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
-app.use('/api/v1', createAuthRouter(authController, authMiddleware));
-app.use('/api/v1', analysisRouter);
-app.use('/api/v1', systemRouter);
-app.use('/api/v1',fraudDictation)
-app.use('/api/v1',apikeyRoute)
+app.use('/api/v1',createAuthRouter(authController, authMiddleware));
+app.use('/api/v1',analysisRouter);
+app.use('/api/v1',systemRouter);
+app.use('/api/v1',fraudDictation);
+app.use('/api/v1',apikeyRoute);
+app.use('/api/v1',waitingRouter);
+app.use('/api/v1',adminRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response) => {
