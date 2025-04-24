@@ -13,26 +13,33 @@ export const createWaitingUser: RequestHandler = asyncHandler(async (req, res) =
   }
 
   const user = await waitingService.createWaitingUser(body);
-  res.status(201).json({
-    success: true,
-    data: user
-  });
+  try{
+    res.status(201).json({
+      success: true,
+      data: user
+    });
+  }catch(error:any){
+    console.log(error);
+  }
 });
-
-
 
 export const getWaitingUsers: RequestHandler = asyncHandler(async (req, res) => {
     const { query } = req as unknown as GetWaitingUsersInput;
-    const result = await waitingService.getWaitingUsers(query);
-    res.status(200).json({
-      success: true,
-      data: result.data,
-      meta: result.meta
-    });
+     try{
+       const result = await waitingService.getWaitingUsers(query);
+       res.status(200).json({
+         success: true,
+         data: result.data,
+         meta: result.meta
+       });
+     }catch(error:any){
+      console.log(error)
+     }
   });
 
 
   export const deleteWaitingUser: RequestHandler = asyncHandler(async (req, res) => {
+    try{
     const { id } = req.params;
     
     if (!id) {
@@ -40,9 +47,11 @@ export const getWaitingUsers: RequestHandler = asyncHandler(async (req, res) => 
     }
   
     await waitingService.deleteWaitingUser(id);
-    
     res.status(200).json({
       success: true,
       message: 'Waiting user deleted successfully'
     });
+  }catch(error:any){
+    console.log(error)
+  }
   });
