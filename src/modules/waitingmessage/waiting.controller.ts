@@ -26,7 +26,7 @@ export const createWaitingUser: RequestHandler = asyncHandler(async (req, res) =
 
 
 export const getSingleWaitingUserById: RequestHandler = asyncHandler(async (req, res) => {
-  const  id  = req.params.id;
+  const  { id }  = req.body;
   
   const existingUser = await waitingService.getUserById(id);
   if (existingUser) {
