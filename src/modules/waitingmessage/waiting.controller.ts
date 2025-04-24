@@ -23,6 +23,27 @@ export const createWaitingUser: RequestHandler = asyncHandler(async (req, res) =
   }
 });
 
+
+
+export const getSingleWaitingUserById: RequestHandler = asyncHandler(async (req, res) => {
+  const  id  = req.params.id;
+  
+  const existingUser = await waitingService.getUserById(id);
+  if (existingUser) {
+    throw new ApiError(409, 'Email already exists in waiting list');
+  }
+
+  const user = await waitingService.searchById(id);
+  try{
+    res.status(201).json({
+      success: true,
+      data: user
+    });
+  }catch(error:any){
+    console.log(error);
+  }
+});
+
 export const getWaitingUsers: RequestHandler = asyncHandler(async (req, res) => {
     const { query } = req as unknown as GetWaitingUsersInput;
      try{

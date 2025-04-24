@@ -22,6 +22,11 @@ router.get(
   waitingController.allWaitingUser
 );
 
+router.post(
+  '/get-single-user',
+  waitingController.getSingleWaitingUserById
+);
+
 router.get(
     '/get-waiting/:id',
     waitingController.deleteWaitingUser

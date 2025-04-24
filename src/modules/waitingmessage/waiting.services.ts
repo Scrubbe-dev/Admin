@@ -49,6 +49,22 @@ export const getWaitingUsers = async (query: GetWaitingUsersInput['query']) => {
   };
 };
 
+
+
+
+export const searchById = async (id:string) => {
+  const existingUser = await getUserById(id);
+  if (existingUser) {
+    throw new ApiError(409, 'Email already exists in waiting list');
+  }
+
+return prisma.waitingUser.findFirst({
+  where:{
+    id
+  }
+});
+};
+
 export const getUserByEmail = async (email: string) => {
     return prisma.waitingUser.findUnique({
       where: { email },
@@ -70,6 +86,17 @@ export const getUserByEmail = async (email: string) => {
   
     return prisma.waitingUser.delete({
       where: { id }
+    });
+  };
+
+
+  export const getUserById = async (id: string) => {
+    return prisma.waitingUser.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true
+      }
     });
   };
 
