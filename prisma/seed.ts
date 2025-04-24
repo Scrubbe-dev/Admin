@@ -106,6 +106,28 @@ async function main() {
     )
   );
 
+
+
+
+  // Create waiting users
+const waitingUsers = await prisma.$transaction(
+  Array.from({ length: 15 }).map(() =>
+    prisma.waitingUser.create({
+      data: {
+        fullName: `${faker.person.firstName()} ${faker.person.lastName()}`,
+        email: faker.internet.email().toLowerCase(),
+        company: faker.company.name(),
+        role: faker.helpers.arrayElement(['CISO', 'SECURITY_ENGINEER', 'SOC_ANALYST', 'IT_MANAGER', 'OTHERS']),
+        message: faker.datatype.boolean(0.7) 
+          ? faker.lorem.paragraph() 
+          : undefined, // 70% chance of having a message
+      },
+    })
+  )
+);
+
+console.log(`Created ${waitingUsers.length} waiting users`);
+
   // Create sample incidents with related data
   await prisma.$transaction(
     customers.map((customer) =>
