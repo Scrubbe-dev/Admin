@@ -72,3 +72,14 @@ export const getUserByEmail = async (email: string) => {
       where: { id }
     });
   };
+
+
+  export const getAllWaitingUser = async () => {
+    const waitingUser = await prisma.waitingUser.findMany();
+  
+    if (!waitingUser) {
+      throw new ApiError(404, 'No waiting users found');
+    }
+  
+    return waitingUser
+  };

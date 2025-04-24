@@ -18,6 +18,11 @@ router.get(
 );
 
 router.get(
+  '/all-users',
+  waitingController.allWaitingUser
+);
+
+router.get(
     '/get-waiting/:id',
     waitingController.deleteWaitingUser
   );

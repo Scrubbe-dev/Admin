@@ -55,3 +55,14 @@ export const getWaitingUsers: RequestHandler = asyncHandler(async (req, res) => 
     console.log(error)
   }
   });
+
+
+
+  export const allWaitingUser: RequestHandler = asyncHandler(async (req, res) => {
+   try{
+   const allUsers = await waitingService.getAllWaitingUser();
+    res.status(200).json(allUsers);
+  }catch(error:any){
+    console.log(error)
+  }
+  });
