@@ -38,6 +38,9 @@ export type User = {
     password: string;
     firstName?: string;
     lastName?: string;
+    username?: string;
+    experience?: string;
+
   };
   
   export type LoginInput = {

@@ -19,29 +19,28 @@ export class AuthService {
   ) {}
 
   async register(input: RegisterInput): Promise<AuthResponse> {
+    console.log(input)
     const exists = await this.prisma.user.findUnique({
       where: { email: input.email },
     });
-
     if (exists) {
       throw new ConflictError('Email already in use');
     }
-
     const passwordHash = await this.securityUtils.hashPassword(input.password);
     const user = await this.prisma.user.create({
       data: {
         email: input.email,
         passwordHash,
-        apiKey:"",
         firstName: input.firstName,
         lastName: input.lastName,
+        experience: input.experience,
+        username: input.username,
         role:Role.USER,
       },
     });
-
     const tokens = await this.tokenService.generateTokens(user as any);
-    await this.emailService.sendVerificationEmail(user.email);
-
+    // await this.emailService.sendVerificationEmail(user.email);
+    console.log(tokens)
     return {
       user: this.excludePassword(user) as any,
       tokens,
