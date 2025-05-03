@@ -1,15 +1,12 @@
 import nodemailer from 'nodemailer';
-import { PrismaClient } from '@prisma/client';
+import { emailConfig } from '../../../config/nodemailer.config';
 
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(
-    private prisma: PrismaClient,
-    private fromEmail: string,
-    private smtpOptions: any
   ) {
-    this.transporter = nodemailer.createTransport(smtpOptions);
+    this.transporter = nodemailer.createTransport(emailConfig);
   }
 
   async sendVerificationEmail(email: string): Promise<void> {
@@ -17,7 +14,7 @@ export class EmailService {
     const verificationUrl = `${process.env.BASE_EMAIL_VERIFICATION}?token=${token}`;
 
     await this.transporter.sendMail({
-      from: this.fromEmail,
+      from: emailConfig.from,
       to: email,
       subject: 'Verify Your Email',
       html: `

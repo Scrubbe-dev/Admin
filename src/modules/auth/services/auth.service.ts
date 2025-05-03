@@ -14,37 +14,41 @@ export class AuthService {
   constructor(
     private prisma: PrismaClient,
     private tokenService: TokenService,
-    private emailService: EmailService,
     private securityUtils: SecurityUtils
   ) {}
 
-  async register(input: RegisterInput): Promise<AuthResponse> {
-    console.log(input)
-    const exists = await this.prisma.user.findUnique({
-      where: { email: input.email },
-    });
-    if (exists) {
-      throw new ConflictError('Email already in use');
+  async register(input: RegisterInput): Promise<AuthResponse | void> {
+    try{
+      console.log(input)
+      const exists = await this.prisma.user.findUnique({
+        where: { email: input.email },
+      });
+      if (exists) {
+        throw new ConflictError('Email already in use');
+      }
+      const passwordHash = await this.securityUtils.hashPassword(input.password);
+      const user = await this.prisma.user.create({
+        data: {
+          email: input.email,
+          passwordHash,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          experience: input.experience,
+          username: input.username,
+          role:Role.USER,
+        },
+      });
+      const tokens = await this.tokenService.generateTokens(user as any);
+      // await this.emailService.sendVerificationEmail(user.email);
+      console.log(tokens)
+      return {
+        user: this.excludePassword(user) as any,
+        tokens,
+      };
+
+    }catch(error){
+      throw new UnauthorizedError(`Error occured ${error}`);
     }
-    const passwordHash = await this.securityUtils.hashPassword(input.password);
-    const user = await this.prisma.user.create({
-      data: {
-        email: input.email,
-        passwordHash,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        experience: input.experience,
-        username: input.username,
-        role:Role.USER,
-      },
-    });
-    const tokens = await this.tokenService.generateTokens(user as any);
-    // await this.emailService.sendVerificationEmail(user.email);
-    console.log(tokens)
-    return {
-      user: this.excludePassword(user) as any,
-      tokens,
-    };
   }
 
   async login(input: LoginInput): Promise<AuthResponse> {
