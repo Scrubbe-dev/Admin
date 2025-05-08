@@ -18,7 +18,7 @@ export class EmailServices {
 
   constructor(
     // templateDir: string = path.join(__dirname,'..','..','..', 'templates','emails'),
-    baseUrl: string = process.env.BASE_URL || 'http://localhost:3000'
+    baseUrl: string = process.env.BASE_URLS || 'http://localhost:3001'
   ) {;
     this.transporter = nodemailer.createTransport(emailConfig);
     this.templates = this.loadTemplates();
@@ -157,6 +157,7 @@ export class EmailServices {
       };
       
       const info = await this.transporter.sendMail(mailOptions);
+      
       this.logger.info(`Email sent: ${info.messageId}`);
       return info;
     } catch (error:any) {
@@ -172,7 +173,7 @@ export class EmailServices {
    */
   async sendVerificationEmail(email: string): Promise<nodemailer.SentMessageInfo> {
     const token = await this.generateVerificationToken(email);
-    const verificationUrl = `${this.baseUrl}/verify-email?token=${token}`;
+    const verificationUrl = `${this.baseUrl}/pages/verify-email?token=${token}`;
     
     return this.sendEmail(
       email,
@@ -216,7 +217,7 @@ export class EmailServices {
    * @returns Information about the sent message
    */
   async sendPasswordResetLink(email: string, token: string): Promise<nodemailer.SentMessageInfo> {
-    const resetUrl = `${this.baseUrl}/reset-password?token=${token}`;
+    const resetUrl = `${this.baseUrl}/pages/reset-password?token=${token}`;
     
     return this.sendEmail(
       email,

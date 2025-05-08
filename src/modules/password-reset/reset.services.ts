@@ -165,9 +165,11 @@ export class PasswordResetService {
 
         if (usedToken) {
           return {
-            valid: false,
-            tokenStatus: TokenStatus.USED,
-            message: 'Verification code has already been sent'
+            valid: true,
+            userId: user.id,
+            email: user.email,
+            tokenStatus: TokenStatus.VALID,
+            message: 'Verification successful, reset link sent'
           };
         }
 
