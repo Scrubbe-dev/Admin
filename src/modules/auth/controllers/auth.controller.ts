@@ -14,6 +14,7 @@ export class AuthController {
   register = async (req: Request, res: Response) => {
     // const input = await validateRequest<RegisterInput>(registerSchema, req.body);
     const input = req.body;
+    console.log(input)
     const result = await this.authService.register(input);
     res.status(201).json(result);
   };
