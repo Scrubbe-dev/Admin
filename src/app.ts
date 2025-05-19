@@ -87,7 +87,7 @@ const passwordResetRoutes = new PasswordResetRoutes(passwordResetController, pas
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000','http://localhost:3001'],
+  origin:"*",
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
