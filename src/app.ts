@@ -33,6 +33,7 @@ import { PasswordResetMiddleware } from './modules/password-reset/reset.middlewa
 import { PasswordResetRoutes } from './modules/password-reset/reset.route';
 import { Logger } from './modules/password-reset/utils/logger';
 import { RateLimiterService } from './modules/password-reset/utils/rate-limiter';
+import { EmailService } from './modules/auth/services/email.service';
 dotenvConfig()
 
 const app = express();
@@ -73,14 +74,16 @@ const tokenService = new TokenService(
   config.jwtExpiresIn,
   config.refreshTokenExpiresInDays
 );
-const emailService = new EmailServices();
-const authService = new AuthService(prisma, tokenService, securityUtils);
+// TODO - BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
+const emailService = new EmailService(); // verification token service
+const emailServices = new EmailServices();
+const authService = new AuthService(prisma, tokenService, securityUtils, emailService);
 const authMiddleware = new AuthMiddleware(tokenService);
 const authController = new AuthController(authService);
 console.log(__dirname, "CURRENT DIRECTORY NAME")
 // Initialize password reset services
 // const PasswordEmailServices =  new EmailService
-const passwordResetService = new PasswordResetService(prisma, emailService, logger);
+const passwordResetService = new PasswordResetService(prisma, emailServices, logger);
 const passwordResetMiddleware = new PasswordResetMiddleware(passwordResetService, logger, rateLimiter);
 const passwordResetController = new PasswordResetController(passwordResetService, logger);
 const passwordResetRoutes = new PasswordResetRoutes(passwordResetController, passwordResetMiddleware);

@@ -52,6 +52,11 @@ export const changePasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+export const verifyOTPSchema = z.object({
+  userId: z.string().uuid('Invalid user ID'),
+  code: z.string().min(4, 'OTP code is required'),
+});
+
 // Export all schemas
 export const authSchemas = {
   register: registerSchema,
@@ -61,6 +66,7 @@ export const authSchemas = {
   resetPassword: resetPasswordSchema,
   verifyEmail: verifyEmailSchema,
   changePassword: changePasswordSchema,
+  verifyOTP: verifyOTPSchema,
 };
 
 // Type exports
