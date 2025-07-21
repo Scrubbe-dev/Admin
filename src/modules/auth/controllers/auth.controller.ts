@@ -1,12 +1,19 @@
-import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
+import { Request, Response } from "express";
+import { AuthService } from "../services/auth.service";
 import {
   RegisterInput,
   LoginInput,
   RefreshTokenInput,
-} from '../types/auth.types';
-import { validateRequest } from '../utils/validators';
-import { registerSchema, loginSchema, refreshTokenSchema } from '../schemas/auth.schema';
+  VerifyEmailRequest,
+  ResendOtpRequest,
+} from "../types/auth.types";
+import { validateRequest } from "../utils/validators";
+import {
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  verifyOTPSchema,
+} from "../schemas/auth.schema";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -14,9 +21,26 @@ export class AuthController {
   register = async (req: Request, res: Response) => {
     // const input = await validateRequest<RegisterInput>(registerSchema, req.body);
     const input = req.body;
-    console.log(input)
+    console.log(input);
     const result = await this.authService.register(input);
     res.status(201).json(result);
+  };
+
+  verifyEmail = async (req: Request, res: Response) => {
+    const input = await validateRequest<VerifyEmailRequest>(verifyOTPSchema, req.body);
+    // const input: VerifyEmailRequest = req.body;
+
+    const response = this.authService.verifyEmail(input);
+
+    res.json(response);
+  };
+
+  resendOTP = async (req: Request, res: Response) => {
+    const input: ResendOtpRequest = req.body;
+
+    const response = this.authService.resendOTP(input);
+
+    res.json(response);
   };
 
   login = async (req: Request, res: Response) => {

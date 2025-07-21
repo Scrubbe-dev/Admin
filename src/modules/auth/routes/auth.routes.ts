@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import { AuthController } from '../controllers/auth.controller';
-import { AuthMiddleware } from '../middleware/auth.middleware';
+import { Router } from "express";
+import { AuthController } from "../controllers/auth.controller";
+import { AuthMiddleware } from "../middleware/auth.middleware";
 
 export function createAuthRouter(
   authController: AuthController,
@@ -20,7 +20,7 @@ export function createAuthRouter(
    * /api/v1/register:
    *   post:
    *     summary: Register a new user
-   *     description: Creates a new user account with the provided credentials
+   *     description: Creates a new user account and sends a verification email with an OTP code to the provided email address
    *     tags: [Authentication]
    *     requestBody:
    *       required: true
@@ -52,7 +52,7 @@ export function createAuthRouter(
    *                 description: User's last name
    *     responses:
    *       201:
-   *         description: User registered successfully
+   *         description: User registered successfully and verification email sent
    *         content:
    *           application/json:
    *             schema:
@@ -96,7 +96,9 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.post('/register', authController.register);
+  router.post("/register", authController.register);
+  // router.post("/resend_otp", authController.resendOTP);
+  // router.post("/verify_email", authController.verifyEmail);
 
   /**
    * @swagger
@@ -169,7 +171,7 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.post('/login', authController.login);
+  router.post("/login", authController.login);
 
   /**
    * @swagger
@@ -209,7 +211,7 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.post('/refresh-token', authController.refreshTokens);
+  router.post("/refresh-token", authController.refreshTokens);
 
   /**
    * @swagger
@@ -240,7 +242,7 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.post('/logout', authController.logout);
+  router.post("/logout", authController.logout);
 
   /**
    * @swagger
@@ -283,7 +285,7 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.get('/me', authMiddleware.authenticate, authController.me);
+  router.get("/me", authMiddleware.authenticate, authController.me);
 
   return router;
 }
