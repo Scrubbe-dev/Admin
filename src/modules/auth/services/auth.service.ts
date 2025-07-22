@@ -11,7 +11,11 @@ import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
 import { EmailService } from "./email.service";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
+import { NextFunction, Response } from "express";
 
+// TODO - fix error handling
+// TODO - run changes to production db with this command - npx prisma migrate deploy
+//  npx prisma migrate dev --name modify-verification-otp-schema
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
@@ -22,7 +26,6 @@ export class AuthService {
 
   async register(input: RegisterInput): Promise<AuthResponse | void> {
     try {
-      // console.log(input);
       const exists = await this.prisma.user.findUnique({
         where: { email: input.email },
       });
@@ -45,9 +48,8 @@ export class AuthService {
       });
       const tokens = await this.tokenService.generateTokens(user as any);
 
-      const code = await this.generateAndSaveOTP(user.id);
+      const code = await this.generateAndSaveOTP(user.id, user.email);
       await this.emailService.sendVerificationEmail(user.email, code);
-      // console.log(tokens)
       return {
         user: this.excludePassword(user) as any,
         tokens,
@@ -99,42 +101,71 @@ export class AuthService {
   }
 
   async resendOTP(input: ResendOtpRequest): Promise<{ message: string }> {
+    const RESEND_COOLDOWN_SECONDS = 60;
+
     try {
-      const user = await this.prisma.user.findFirst({
-        where: { email: input.email },
+      const userOtp = await this.prisma.verificationOTP.findFirst({
+        where: { userId: input.userId },
 
         orderBy: {
           createdAt: "desc",
         },
       });
 
-      if (!user) {
-        throw new ConflictError("User does not exist");
+      if (!userOtp) {
+        throw new UnauthorizedError("No OTP request found for this user");
       }
 
-      const code = await this.generateAndSaveOTP(user.id);
-      await this.emailService.sendVerificationEmail(user.email, code);
+      const now = Date.now();
+      const lastSent = new Date(userOtp.updatedAt).getTime();
+
+      if (now - lastSent < RESEND_COOLDOWN_SECONDS * 1000) {
+        const waitTime =
+          RESEND_COOLDOWN_SECONDS - Math.floor((now - lastSent) / 1000);
+        throw new ConflictError(
+          `Please wait ${waitTime}s before resending OTP`
+        );
+      }
+
+
+      await this.resendVerificationOTP(userOtp.userId);
 
       return {
-        message: "OTP verified successfully!",
+        message: "OTP resent successfully!",
       };
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }
   }
 
-  private async generateAndSaveOTP(userId: string) {
+  private async generateAndSaveOTP(userId: string, sentTo: string) {
     const code = this.emailService.generateVerificationOTP();
 
     const otp = await this.prisma.verificationOTP.create({
       data: {
         code,
         userId,
+        sentTo,
         expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 mins
       },
     });
 
     return otp.code;
+  }
+
+  private async resendVerificationOTP(userId: string) {
+    const code = this.emailService.generateVerificationOTP();
+
+    const otp = await this.prisma.verificationOTP.update({
+      where: { userId: userId },
+      data: {
+        code,
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 mins
+        updatedAt: new Date(), // force updated at refresh
+      },
+    });
+
+    await this.emailService.sendVerificationEmail(otp.sentTo, code);
   }
 
   async login(input: LoginInput): Promise<AuthResponse> {

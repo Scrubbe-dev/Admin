@@ -34,6 +34,7 @@ import { PasswordResetRoutes } from './modules/password-reset/reset.route';
 import { Logger } from './modules/password-reset/utils/logger';
 import { RateLimiterService } from './modules/password-reset/utils/rate-limiter';
 import { EmailService } from './modules/auth/services/email.service';
+import { errorHandler } from './middleware/error.middleware';
 dotenvConfig()
 
 const app = express();
@@ -112,7 +113,7 @@ app.use(limiter);
 // Routes
 app.use('/api/v1', waitingRouter);
 app.use('/api/v1', adminRouter);
-app.use('/api/v1', createAuthRouter(authController, authMiddleware));
+app.use('/api/v1/auth/', createAuthRouter(authController, authMiddleware));
 app.use('/api/v1', analysisRouter);
 app.use('/api/v1', systemRouter);
 app.use('/api/v1', fraudDictation);
@@ -122,12 +123,16 @@ app.use('/api/v1', passwordResetRoutes.getRouter())
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 
-app.use((err: Error, req: express.Request, res: express.Response) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode).json({
-    success: false,
-    error: 'Internal server error'
-  });
+// app.use((err: Error, req: express.Request, res: express.Response) => {
+//   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+//   res.status(statusCode).json({
+//     success: false,
+//     error: 'Internal server error'
+//   });
+// });
+
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  errorHandler(err, req, res, next);
 });
 
 app.listen(env.PORT, () => {

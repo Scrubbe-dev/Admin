@@ -15,8 +15,8 @@ const passwordSchema = z
 export const registerSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  firstName: z.string().max(100, 'First name must be less than 100 characters').optional(),
-  lastName: z.string().max(100, 'Last name must be less than 100 characters').optional(),
+  firstName: z.string().min(100, 'First name must be less than 100 characters').optional(),
+  lastName: z.string().min(100, 'Last name must be less than 100 characters').optional(),
 });
 
 // Login schema

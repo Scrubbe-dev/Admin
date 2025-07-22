@@ -17,7 +17,7 @@ export function createAuthRouter(
 
   /**
    * @swagger
-   * /api/v1/register:
+   * /api/v1/auth/register:
    *   post:
    *     summary: Register a new user
    *     description: Creates a new user account and sends a verification email with an OTP code to the provided email address
@@ -97,12 +97,103 @@ export function createAuthRouter(
    *         description: Internal server error
    */
   router.post("/register", authController.register);
-  // router.post("/resend_otp", authController.resendOTP);
-  // router.post("/verify_email", authController.verifyEmail);
+  /**
+   * @swagger
+   * /api/v1/auth/verify_email:
+   *   post:
+   *     summary: Verify email using otp sent to your email when you register
+   *     description: |
+   *       This endpoint verifies a user's email address by validating the One-Time Password (OTP) sent to the user's email upon registration.
+   *       The OTP must be a valid, unused, and unexpired 6-digit code associated with the given `userId`.
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - code
+   *               - userId
+   *             properties:
+   *               code:
+   *                 type: string
+   *                 description: 6-digit OTP code sent to the user's email
+   *                 example: "382938"
+   *               userId:
+   *                 type: string
+   *                 format: uuid
+   *                 description: Unique identifier of the user
+   *                 example: "143c3d28-4b95-4807-9827-13r6ff96c6b4"
+   *     responses:
+   *       200:
+   *         description: OTP verified successfully!
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: OTP verified successfully!
+   *
+   *       400:
+   *         description: Bad request (invalid input)
+   *       409:
+   *         description: Conflict (email already exists)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post("/verify_email", authController.verifyEmail);
+  /**
+ * @swagger
+ * /api/v1/auth/resend_otp:
+ *   post:
+ *     summary: Resend OTP to user email
+ *     description: |
+ *       This endpoint resends the email verification OTP to the user, using the `userId` provided.
+ *       To prevent abuse, resending is restricted by a cooldown period (e.g., 60 seconds) between requests.
+ *       If a resend is attempted too soon, the request will return a conflict response with the remaining wait time.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Unique identifier of the user
+ *                 example: "143c3d28-4b95-4807-9827-13r6ff96c6b4"
+ *     responses:
+ *       200:
+ *         description: OTP resent successfully!
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: OTP resent successfully!
+ *       400:
+ *         description: Bad request (invalid input)
+ *       401:
+ *         description: Unauthorized (no existing OTP or invalid user)
+ *       409:
+ *         description: Conflict (cooldown in effect, must wait before resending)
+ *       500:
+ *         description: Internal server error
+ */
+  router.post("/resend_otp", authController.resendOTP);
 
   /**
    * @swagger
-   * /api/v1/login:
+   * /api/v1/auth/login:
    *   post:
    *     summary: Authenticate a user
    *     description: Logs in a user and returns access and refresh tokens
@@ -175,7 +266,7 @@ export function createAuthRouter(
 
   /**
    * @swagger
-   * /api/v1/refresh-token:
+   * /api/v1/auth/refresh-token:
    *   post:
    *     summary: Refresh access token
    *     description: Generates a new access token using a valid refresh token
@@ -215,7 +306,7 @@ export function createAuthRouter(
 
   /**
    * @swagger
-   * /api/v1/logout:
+   * /api/v1/auth/logout:
    *   post:
    *     summary: Log out a user
    *     description: Invalidates the provided refresh token
@@ -246,7 +337,7 @@ export function createAuthRouter(
 
   /**
    * @swagger
-   * /api/v1/me:
+   * /api/v1/auth/me:
    *   get:
    *     summary: Get current user profile
    *     description: Returns the profile of the currently authenticated user

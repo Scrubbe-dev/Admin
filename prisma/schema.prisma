@@ -50,6 +50,7 @@ model VerificationOTP {
   expiresAt DateTime
   used      Boolean  @default(false)
   userId    String   @unique
+  sentTo    String   @unique
   user      User     @relation(fields: [userId], references: [id])
 
   createdAt         DateTime            @default(now())
