@@ -21,6 +21,11 @@ export type ResendOtpRequest = {
   userId: string;
 };
 
+export enum AccountType {
+  DEVELOPER,
+  BUSINESS,
+}
+
 export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";
 
 export type Tokens = {
@@ -41,13 +46,23 @@ export type AuthResponse = {
   tokens: Tokens;
 };
 
-export type RegisterInput = {
+export type RegisterDevRequest = {
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  experience?: string;
+  githubUserame?: string;
+  experienceLevel: string;
+};
+
+export type RegisterBusinessRequest = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  businessAddress?: string;
+  companySize: string;
+  purpose: string;
+  password: string;
 };
 
 export type LoginInput = {

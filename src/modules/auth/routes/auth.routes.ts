@@ -17,10 +17,10 @@ export function createAuthRouter(
 
   /**
    * @swagger
-   * /api/v1/auth/register:
+   * /api/v1/auth/dev/register:
    *   post:
-   *     summary: Register a new user
-   *     description: Creates a new user account and sends a verification email with an OTP code to the provided email address
+   *     summary: Register a new developer user
+   *     description: Creates a new developer user account and sends a verification email with an OTP code to the provided email address. This endpoint automatically sets the account type to "DEVELOPER".
    *     tags: [Authentication]
    *     requestBody:
    *       required: true
@@ -50,6 +50,14 @@ export function createAuthRouter(
    *                 type: string
    *                 example: "Doe"
    *                 description: User's last name
+   *               experienceLevel:
+   *                 type: string
+   *                 example: "Intermediate"
+   *                 description: Developer's experience level
+   *               githubUserame:
+   *                 type: string
+   *                 example: "johndoe-dev"
+   *                 description: GitHub username (used for developer profiling)
    *     responses:
    *       201:
    *         description: User registered successfully and verification email sent
@@ -76,6 +84,9 @@ export function createAuthRouter(
    *                     isVerified:
    *                       type: boolean
    *                       example: false
+   *                     accountType:
+   *                       type: string
+   *                       example: "DEVELOPER"
    *                     createdAt:
    *                       type: string
    *                       format: date-time
@@ -96,7 +107,108 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.post("/register", authController.register);
+  router.post("/dev/register", authController.registerDev);
+
+  /**
+   * @swagger
+   * /api/v1/auth/business/register:
+   *   post:
+   *     summary: Register a new business user
+   *     description: Creates a new business user account and sends a verification email with an OTP code to the provided email address. This endpoint automatically sets the account type to "BUSINESS".
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - password
+   *               - businessAddress
+   *               - companySize
+   *               - purpose
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: "owner@company.com"
+   *                 description: Business email address
+   *               password:
+   *                 type: string
+   *                 format: password
+   *                 example: "SecurePassword123!"
+   *                 description: User's password (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)
+   *               firstName:
+   *                 type: string
+   *                 example: "Jane"
+   *                 description: User's first name
+   *               lastName:
+   *                 type: string
+   *                 example: "Smith"
+   *                 description: User's last name
+   *               businessAddress:
+   *                 type: string
+   *                 example: "123 Main St, Springfield"
+   *                 description: Physical address of the business
+   *               companySize:
+   *                 type: string
+   *                 example: "11-50"
+   *                 description: Size range of the company
+   *               purpose:
+   *                 type: string
+   *                 example: "Monitoring cloud infrastructure"
+   *                 description: Purpose of using the platform
+   *     responses:
+   *       201:
+   *         description: Business user registered successfully and verification email sent
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                     email:
+   *                       type: string
+   *                       example: "owner@company.com"
+   *                     firstName:
+   *                       type: string
+   *                       example: "Jane"
+   *                     lastName:
+   *                       type: string
+   *                       example: "Smith"
+   *                     accountType:
+   *                       type: string
+   *                       example: "BUSINESS"
+   *                     isVerified:
+   *                       type: boolean
+   *                       example: false
+   *                     createdAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-04-20T12:00:00Z"
+   *                 tokens:
+   *                   type: object
+   *                   properties:
+   *                     accessToken:
+   *                       type: string
+   *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   *                     refreshToken:
+   *                       type: string
+   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       409:
+   *         description: Conflict (email already exists)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post("/business/register", authController.registerBusiness);
   /**
    * @swagger
    * /api/v1/auth/verify_email:
@@ -146,49 +258,49 @@ export function createAuthRouter(
    */
   router.post("/verify_email", authController.verifyEmail);
   /**
- * @swagger
- * /api/v1/auth/resend_otp:
- *   post:
- *     summary: Resend OTP to user email
- *     description: |
- *       This endpoint resends the email verification OTP to the user, using the `userId` provided.
- *       To prevent abuse, resending is restricted by a cooldown period (e.g., 60 seconds) between requests.
- *       If a resend is attempted too soon, the request will return a conflict response with the remaining wait time.
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - userId
- *             properties:
- *               userId:
- *                 type: string
- *                 format: uuid
- *                 description: Unique identifier of the user
- *                 example: "143c3d28-4b95-4807-9827-13r6ff96c6b4"
- *     responses:
- *       200:
- *         description: OTP resent successfully!
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: OTP resent successfully!
- *       400:
- *         description: Bad request (invalid input)
- *       401:
- *         description: Unauthorized (no existing OTP or invalid user)
- *       409:
- *         description: Conflict (cooldown in effect, must wait before resending)
- *       500:
- *         description: Internal server error
- */
+   * @swagger
+   * /api/v1/auth/resend_otp:
+   *   post:
+   *     summary: Resend OTP to user email
+   *     description: |
+   *       This endpoint resends the email verification OTP to the user, using the `userId` provided.
+   *       To prevent abuse, resending is restricted by a cooldown period (e.g., 60 seconds) between requests.
+   *       If a resend is attempted too soon, the request will return a conflict response with the remaining wait time.
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - userId
+   *             properties:
+   *               userId:
+   *                 type: string
+   *                 format: uuid
+   *                 description: Unique identifier of the user
+   *                 example: "143c3d28-4b95-4807-9827-13r6ff96c6b4"
+   *     responses:
+   *       200:
+   *         description: OTP resent successfully!
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: OTP resent successfully!
+   *       400:
+   *         description: Bad request (invalid input)
+   *       401:
+   *         description: Unauthorized (no existing OTP or invalid user)
+   *       409:
+   *         description: Conflict (cooldown in effect, must wait before resending)
+   *       500:
+   *         description: Internal server error
+   */
   router.post("/resend_otp", authController.resendOTP);
 
   /**

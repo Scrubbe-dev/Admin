@@ -1,11 +1,12 @@
-import { PrismaClient, User, Role } from "@prisma/client";
+import { PrismaClient, User, Role, AccountType } from "@prisma/client";
 import {
-  RegisterInput,
   LoginInput,
   AuthResponse,
   Tokens,
   VerifyEmailRequest,
   ResendOtpRequest,
+  RegisterDevRequest,
+  RegisterBusinessRequest,
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
@@ -13,9 +14,7 @@ import { EmailService } from "./email.service";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 import { NextFunction, Response } from "express";
 
-// TODO - fix error handling
 // TODO - run changes to production db with this command - npx prisma migrate deploy
-//  npx prisma migrate dev --name modify-verification-otp-schema
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
@@ -24,7 +23,45 @@ export class AuthService {
     private emailService: EmailService
   ) {}
 
-  async register(input: RegisterInput): Promise<AuthResponse | void> {
+  async registerDev(input: RegisterDevRequest): Promise<AuthResponse | void> {
+    try {
+      const exists = await this.prisma.user.findUnique({
+        where: { email: input.email },
+      });
+      if (exists) {
+        throw new ConflictError("Email already in use");
+      }
+      const passwordHash = await this.securityUtils.hashPassword(
+        input.password
+      );
+      const user = await this.prisma.user.create({
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          passwordHash,
+          role: Role.USER,
+          accountType: AccountType.DEVELOPER,
+          experience: input.experienceLevel,
+          username: input.githubUserame,
+        },
+      });
+      const tokens = await this.tokenService.generateTokens(user as any);
+
+      const code = await this.generateAndSaveOTP(user.id, user.email);
+      await this.emailService.sendVerificationEmail(user.email, code);
+      return {
+        user: this.excludePassword(user) as any,
+        tokens,
+      };
+    } catch (error) {
+      throw new UnauthorizedError(`Error occured ${error}`);
+    }
+  }
+
+  async registerBusiness(
+    input: RegisterBusinessRequest
+  ): Promise<AuthResponse | void> {
     try {
       const exists = await this.prisma.user.findUnique({
         where: { email: input.email },
@@ -39,11 +76,14 @@ export class AuthService {
         data: {
           email: input.email,
           passwordHash,
+          accountType: AccountType.BUSINESS,
           firstName: input.firstName,
           lastName: input.lastName,
-          experience: input.experience,
-          username: input.username,
+          address: input.businessAddress,
+          companySize: input.companySize,
+          purpose: input.purpose,
           role: Role.USER,
+          // role: Role.ADMIN,
         },
       });
       const tokens = await this.tokenService.generateTokens(user as any);
@@ -126,7 +166,6 @@ export class AuthService {
           `Please wait ${waitTime}s before resending OTP`
         );
       }
-
 
       await this.resendVerificationOTP(userOtp.userId);
 
