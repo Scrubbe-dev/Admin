@@ -1,29 +1,45 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import {
-  RegisterInput,
   LoginInput,
   RefreshTokenInput,
   VerifyEmailRequest,
   ResendOtpRequest,
+  RegisterDevRequest,
+  RegisterBusinessRequest,
 } from "../types/auth.types";
 import { validateRequest } from "../utils/validators";
 import {
-  registerSchema,
   loginSchema,
   refreshTokenSchema,
   verifyOTPSchema,
+  registerDevSchema,
+  registerBusinessSchema,
 } from "../schemas/auth.schema";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  register = async (req: Request, res: Response, next: NextFunction) => {
+  registerDev = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // const input = await validateRequest<RegisterInput>(registerSchema, req.body);
-      const input = req.body;
-      console.log(input);
-      const result = await this.authService.register(input);
+      const request = await validateRequest<RegisterDevRequest>(registerDevSchema, req.body);
+
+      const result = await this.authService.registerDev(request);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  registerBusiness = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const request = await validateRequest<RegisterBusinessRequest>(registerBusinessSchema, req.body);
+
+      const result = await this.authService.registerBusiness(request);
       res.status(201).json(result);
     } catch (error) {
       next(error);
@@ -48,12 +64,12 @@ export class AuthController {
   resendOTP = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const input: ResendOtpRequest = req.body;
-  
+
       const response = await this.authService.resendOTP(input);
-  
+
       res.json(response);
     } catch (error) {
-      next(error)
+      next(error);
     }
   };
 

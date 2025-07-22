@@ -15,6 +15,9 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
+//   purpose: string;
+//   password: string;
+
 model User {
   id                String              @id @default(uuid())
   email             String              @unique
@@ -23,6 +26,10 @@ model User {
   lastName          String?
   experience        String?
   username          String?
+  address           String?
+  purpose           String?
+  companySize       String?
+  accountType       AccountType?
   isVerified        Boolean             @default(false)
   isActive          Boolean             @default(true)
   lastLogin         DateTime?
@@ -53,8 +60,8 @@ model VerificationOTP {
   sentTo    String   @unique
   user      User     @relation(fields: [userId], references: [id])
 
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // New ResetToken model
@@ -363,4 +370,9 @@ enum Roles {
   SOC_ANALYST
   IT_MANAGER
   OTHERS
+}
+
+enum AccountType {
+  DEVELOPER
+  BUSINESS
 }
