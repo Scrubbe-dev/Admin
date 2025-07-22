@@ -18,7 +18,7 @@ export type VerifyEmailRequest = {
 };
 
 export type ResendOtpRequest = {
-  email: string;
+  userId: string;
 };
 
 export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import {
   RegisterInput,
@@ -18,29 +18,43 @@ import {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  register = async (req: Request, res: Response) => {
-    // const input = await validateRequest<RegisterInput>(registerSchema, req.body);
-    const input = req.body;
-    console.log(input);
-    const result = await this.authService.register(input);
-    res.status(201).json(result);
+  register = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // const input = await validateRequest<RegisterInput>(registerSchema, req.body);
+      const input = req.body;
+      console.log(input);
+      const result = await this.authService.register(input);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
   };
 
-  verifyEmail = async (req: Request, res: Response) => {
-    const input = await validateRequest<VerifyEmailRequest>(verifyOTPSchema, req.body);
-    // const input: VerifyEmailRequest = req.body;
+  verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = await validateRequest<VerifyEmailRequest>(
+        verifyOTPSchema,
+        req.body
+      );
 
-    const response = this.authService.verifyEmail(input);
+      const response = await this.authService.verifyEmail(input);
 
-    res.json(response);
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
   };
 
-  resendOTP = async (req: Request, res: Response) => {
-    const input: ResendOtpRequest = req.body;
-
-    const response = this.authService.resendOTP(input);
-
-    res.json(response);
+  resendOTP = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input: ResendOtpRequest = req.body;
+  
+      const response = await this.authService.resendOTP(input);
+  
+      res.json(response);
+    } catch (error) {
+      next(error)
+    }
   };
 
   login = async (req: Request, res: Response) => {
