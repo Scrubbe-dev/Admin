@@ -77,6 +77,20 @@ export interface OAuthRequest {
   oAuthProvider: OAuthProviders;
 }
 
+export interface OAuthBusinesRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  isVerified: boolean;
+  image?: string;
+  id: string; // oauthproviderid
+  oAuthProvider: OAuthProviders;
+
+  businessAddress?: string;
+  companySize: string;
+  purpose: string;
+}
+
 export enum OAuthProviders {
   GOOGLE,
   AWS,

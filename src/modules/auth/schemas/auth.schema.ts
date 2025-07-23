@@ -78,6 +78,10 @@ export const registerBusinessByOauth = z.object({
     invalid_type_error: "Invalid OAuth provider",
   }),
   email: businessEmailSchema,
+
+  businessAddress: z.string().min(10, "Please provide a valid address"),
+  companySize: z.string().min(1, "Company size is required"),
+  purpose: z.string().min(1, "Purpose is required"),
 });
 
 // Register business schema

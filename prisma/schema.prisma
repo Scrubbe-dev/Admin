@@ -1,60 +1,46 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output = "../../node_modules/.prisma/client"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-//   purpose: string;
-//   password: string;
-
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  passwordHash String? // optional because users can register with OAuth
-  firstName    String?
-  lastName     String?
-  experience   String?
-  username     String?
-  address      String?
-  purpose      String?
-  companySize  String?
-  accountType  AccountType?
-
-  // oAuth
-  oauthprovider      OAuthProvider?
-  oauthProvider_uuid String?
-  registerdWithOauth Boolean        @default(false)
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  passwordHash       String?
+  firstName          String?
+  lastName           String?
+  isVerified         Boolean             @default(false)
+  isActive           Boolean             @default(true)
+  lastLogin          DateTime?
+  apiKeyDuration     DateTime            @default(now())
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  apiKey             String?             @default(cuid())
+  role               Role                @default(USER)
+  experience         String?
+  passwordChangedAt  DateTime?
+  username           String?
+  accountType        AccountType?
+  address            String?
+  companySize        String?
+  purpose            String?
   image              String?
-
-  isVerified        Boolean             @default(false)
-  isActive          Boolean             @default(true)
-  lastLogin         DateTime?
-  apiKeyDuration    DateTime            @default(now())
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  passwordChangedAt DateTime? // Added to track password changes
-  refreshToken      RefreshToken[]
-  resetTokens       ResetToken[] // Relation to ResetToken
-  apiKey            String?             @default(cuid())
-  role              Role                @default(USER)
-  DetectionRule     DetectionRule[]
-  PlaybookExecution PlaybookExecution[]
-  IncidentComment   IncidentComment[]
-  Customer          Customer[]
-  Incident          Incident[]
-  VerificationOTP   VerificationOTP[]
+  oauthprovider      OAuthProvider?
+  registerdWithOauth Boolean             @default(false)
+  oauthProvider_uuid String?
+  DetectionRule      DetectionRule[]
+  Incident           Incident[]
+  IncidentComment    IncidentComment[]
+  PlaybookExecution  PlaybookExecution[]
+  refreshToken       RefreshToken[]
+  resetTokens        ResetToken[]
+  VerificationOTP    VerificationOTP?
+  Customer           Customer[]          @relation("CustomerToUser")
 
   @@index([apiKey])
 }
@@ -65,34 +51,27 @@ model VerificationOTP {
   expiresAt DateTime
   used      Boolean  @default(false)
   userId    String   @unique
-  sentTo    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  sentTo    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
 }
 
-// New ResetToken model
 model ResetToken {
   id        String         @id @default(uuid())
   userId    String
-  user      User           @relation(fields: [userId], references: [id])
   email     String
   token     String
   type      ResetTokenType
   expiresAt DateTime
   createdAt DateTime       @default(now())
   usedAt    DateTime?
+  user      User           @relation(fields: [userId], references: [id])
 
   @@index([token])
   @@index([userId])
   @@index([type])
   @@index([expiresAt])
-}
-
-enum ResetTokenType {
-  VERIFICATION_CODE
-  RESET_LINK
 }
 
 model WaitingUser {
@@ -102,8 +81,8 @@ model WaitingUser {
   fullName  String
   email     String   @unique @db.VarChar(255)
   company   String
-  role      String
   message   String?
+  role      String
 
   @@index([email])
   @@index([createdAt])
@@ -123,7 +102,6 @@ model Admin {
 model RefreshToken {
   id              String    @id @default(uuid())
   userId          String
-  user            User      @relation(fields: [userId], references: [id])
   token           String    @unique
   expiresAt       DateTime
   createdAt       DateTime  @default(now())
@@ -131,13 +109,7 @@ model RefreshToken {
   replacedByToken String?
   ipAddress       String?
   userAgent       String?
-}
-
-enum Role {
-  USER
-  ADMIN
-  CUSTOMER
-  INTEGRATION
+  user            User      @relation(fields: [userId], references: [id])
 }
 
 model SecurityEvent {
@@ -148,10 +120,10 @@ model SecurityEvent {
   severity   Int       @default(0)
   rawData    Json
   processed  Boolean   @default(false)
-  alert      Alert?    @relation(fields: [alertid], references: [id])
   alertid    String?
-  customer   Customer? @relation(fields: [customerId], references: [id])
   customerId String?
+  alert      Alert?    @relation(fields: [alertid], references: [id])
+  customer   Customer? @relation(fields: [customerId], references: [id])
 
   @@index([source, type])
   @@index([timestamp])
@@ -160,21 +132,14 @@ model SecurityEvent {
 model Alert {
   id        String          @id @default(uuid())
   createdAt DateTime        @default(now())
-  rule      DetectionRule   @relation(fields: [ruleId], references: [id])
   ruleId    String
-  events    SecurityEvent[]
-  incidents Incident[]
   status    AlertStatus     @default(OPEN)
   severity  Int
+  rule      DetectionRule   @relation(fields: [ruleId], references: [id])
+  events    SecurityEvent[]
+  incidents Incident[]      @relation("AlertToIncident")
 
   @@index([status])
-}
-
-enum AlertStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  SUPPRESSED
 }
 
 model Incident {
@@ -185,13 +150,13 @@ model Incident {
   priority    Priority            @default(MEDIUM)
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-  alerts      Alert[]
-  playbooks   PlaybookExecution[]
-  comments    IncidentComment[]
-  customer    Customer?           @relation(fields: [customerId], references: [id])
   customerId  String?
   assigneeId  String?
   assignee    User?               @relation(fields: [assigneeId], references: [id])
+  customer    Customer?           @relation(fields: [customerId], references: [id])
+  comments    IncidentComment[]
+  playbooks   PlaybookExecution[]
+  alerts      Alert[]             @relation("AlertToIncident")
 
   @@index([status, priority])
 }
@@ -204,10 +169,10 @@ model Customer {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   isActive     Boolean         @default(true)
-  users        User[]
+  contracts    Contract[]
   incidents    Incident[]
   events       SecurityEvent[]
-  contracts    Contract[]
+  users        User[]          @relation("CustomerToUser")
 
   @@index([tenantId])
   @@index([contactEmail])
@@ -219,10 +184,10 @@ model IncidentComment {
   isInternal Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  incident   Incident @relation(fields: [incidentId], references: [id])
   incidentId String
-  author     User     @relation(fields: [authorId], references: [id])
   authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  incident   Incident @relation(fields: [incidentId], references: [id])
 
   @@index([incidentId])
   @@index([authorId])
@@ -235,34 +200,26 @@ model PlaybookExecution {
   startedAt     DateTime       @default(now())
   endedAt       DateTime?
   logs          Json
-  steps         Json // Stores executed steps with timestamps
-  parameters    Json // Input parameters used for execution
-  incident      Incident       @relation(fields: [incidentId], references: [id])
+  steps         Json
+  parameters    Json
   incidentId    String
-  initiatedBy   User?          @relation(fields: [initiatedById], references: [id])
   initiatedById String?
+  incident      Incident       @relation(fields: [incidentId], references: [id])
+  initiatedBy   User?          @relation(fields: [initiatedById], references: [id])
 
   @@index([incidentId])
   @@index([status])
   @@index([startedAt])
 }
 
-enum PlaybookStatus {
-  RUNNING
-  COMPLETED
-  FAILED
-  TERMINATED
-}
-
-// Additional supporting model for customer contracts
 model Contract {
   id           String        @id @default(uuid())
-  customer     Customer      @relation(fields: [customerId], references: [id])
   customerId   String
   serviceLevel AgreementType
   startDate    DateTime
   endDate      DateTime
   isActive     Boolean       @default(true)
+  customer     Customer      @relation(fields: [customerId], references: [id])
 
   @@index([customerId])
 }
@@ -271,31 +228,31 @@ model DetectionRule {
   id                   String                @id @default(uuid())
   name                 String                @unique
   description          String
-  condition            Json // Rule logic in Sigma format or custom DSL
-  query                String? // Actual query used (SQL, KQL, etc)
+  condition            Json
+  query                String?
   severity             DetectionRuleSeverity @default(MEDIUM)
   status               DetectionRuleStatus   @default(DRAFT)
   type                 DetectionRuleType
   source               DetectionRuleSource   @default(CUSTOM)
-  mitreTactics         String[] // MITRE ATT&CK Tactics IDs
-  mitreTechniques      String[] // MITRE ATT&CK Technique IDs
+  mitreTactics         String[]
+  mitreTechniques      String[]
   version              Int                   @default(1)
   whocreated           String
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   createdById          String
-  updatedBy            User?                 @relation(fields: [updatedById], references: [id])
   updatedById          String?
-  interval             Int                   @default(3600) // Execution interval in seconds
+  interval             Int                   @default(3600)
   lastExecuted         DateTime?
-  alerts               Alert[]
   isActive             Boolean               @default(true)
-  falsePositives       String[] // Common false positive scenarios
-  mitigation           String? // Recommended mitigation steps
-  references           String[] // Reference URLs
+  falsePositives       String[]
+  mitigation           String?
+  references           String[]
   tags                 String[]
   platform             DetectionRulePlatform @default(CUSTOM)
   autoGenerateIncident Boolean               @default(false)
+  alerts               Alert[]
+  updatedBy            User?                 @relation(fields: [updatedById], references: [id])
 
   @@index([severity])
   @@index([status])
@@ -304,6 +261,32 @@ model DetectionRule {
   @@index([createdById])
   @@index([isActive])
   @@index([lastExecuted])
+}
+
+enum ResetTokenType {
+  VERIFICATION_CODE
+  RESET_LINK
+}
+
+enum Role {
+  USER
+  ADMIN
+  CUSTOMER
+  INTEGRATION
+}
+
+enum AlertStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  SUPPRESSED
+}
+
+enum PlaybookStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  TERMINATED
 }
 
 enum DetectionRuleSeverity {
@@ -389,7 +372,6 @@ enum OAuthProvider {
   GOOGLE
   AWS
   GITHUB
-  // FIREFOX
   GITLAB
   AZURE
 }

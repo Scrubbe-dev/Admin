@@ -8,6 +8,7 @@ import {
   RegisterDevRequest,
   RegisterBusinessRequest,
   OAuthRequest,
+  OAuthBusinesRequest,
 } from "../types/auth.types";
 import { validateRequest } from "../utils/validators";
 import {
@@ -51,7 +52,7 @@ export class AuthController {
 
   registerDevByOauth = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const request = await validateRequest<OAuthRequest>(registerBusinessByOauth, req.body);
+      const request = await validateRequest<OAuthRequest>(registerDevByOauth, req.body);
 
       const result = await this.authService.registerDevByOauth(request);
 
@@ -63,7 +64,7 @@ export class AuthController {
   
   registerBusinessByOauth = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const request = await validateRequest<OAuthRequest>(registerBusinessByOauth, req.body);
+      const request = await validateRequest<OAuthBusinesRequest>(registerBusinessByOauth, req.body);
 
       const result = await this.authService.registerBusinessByOauth(request);
 

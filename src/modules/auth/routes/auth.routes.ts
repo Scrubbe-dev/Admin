@@ -236,11 +236,11 @@ export function createAuthRouter(
    *               firstName:
    *                 type: string
    *                 example: "John"
-   *                 description: User's first name
+   *                 description: Developer's first name
    *               lastName:
    *                 type: string
    *                 example: "Doe"
-   *                 description: User's last name
+   *                 description: Developer's last name
    *               id:
    *                 type: string
    *                 format: uuid
@@ -278,26 +278,86 @@ export function createAuthRouter(
    *                   properties:
    *                     id:
    *                       type: string
-   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                       example: "fa016a41-0b28-4e6f-842b-35d2b9f637dd"
    *                     email:
    *                       type: string
-   *                       example: "user@example.com"
+   *                       example: "emmmanu2l@gmail.com"
    *                     firstName:
    *                       type: string
    *                       example: "John"
    *                     lastName:
    *                       type: string
    *                       example: "Doe"
-   *                     isVerified:
-   *                       type: boolean
-   *                       example: false
+   *                     experience:
+   *                       type: string
+   *                       nullable: true
+   *                       example: null
+   *                     username:
+   *                       type: string
+   *                       nullable: true
+   *                       example: null
+   *                     address:
+   *                       type: string
+   *                       nullable: true
+   *                       example: null
+   *                     purpose:
+   *                       type: string
+   *                       nullable: true
+   *                       example: null
+   *                     companySize:
+   *                       type: string
+   *                       nullable: true
+   *                       example: null
    *                     accountType:
    *                       type: string
    *                       example: "DEVELOPER"
+   *                     oauthprovider:
+   *                       type: string
+   *                       example: "GOOGLE"
+   *                     oauthProvider_uuid:
+   *                       type: string
+   *                       example: "9d3b3871-82a5-4e0c-adc1-42ca28be8aed"
+   *                     registerdWithOauth:
+   *                       type: boolean
+   *                       example: true
+   *                     image:
+   *                       type: string
+   *                       nullable: true
+   *                       example: null
+   *                     isVerified:
+   *                       type: boolean
+   *                       example: false
+   *                     isActive:
+   *                       type: boolean
+   *                       example: true
+   *                     lastLogin:
+   *                       type: string
+   *                       format: date-time
+   *                       nullable: true
+   *                       example: null
+   *                     apiKeyDuration:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-07-23T18:32:51.402Z"
    *                     createdAt:
    *                       type: string
    *                       format: date-time
-   *                       example: "2025-04-20T12:00:00Z"
+   *                       example: "2025-07-23T18:32:51.402Z"
+   *                     updatedAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-07-23T18:32:51.402Z"
+   *                     passwordChangedAt:
+   *                       type: string
+   *                       format: date-time
+   *                       nullable: true
+   *                       example: null
+   *                     apiKey:
+   *                       type: string
+   *                       example: "cmdgawx550001tyyo4aonwq6w"
+   *                     role:
+   *                       type: string
+   *                       example: "USER"
    *                 tokens:
    *                   type: object
    *                   properties:
@@ -306,7 +366,7 @@ export function createAuthRouter(
    *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
    *                     refreshToken:
    *                       type: string
-   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                       example: "121f9faa-fa97-4dfc-a242-89a4b92310a6"
    *       400:
    *         description: Bad request (invalid input)
    *       409:
@@ -340,6 +400,8 @@ export function createAuthRouter(
    *               - oAuthProvider
    *               - email
    *               - isVerified
+   *               - companySize
+   *               - purpose
    *             properties:
    *               firstName:
    *                 type: string
@@ -373,6 +435,18 @@ export function createAuthRouter(
    *                 format: uri
    *                 example: "https://example.com/logo.png"
    *                 description: Optional profile or company logo from the OAuth provider
+   *               businessAddress:
+   *                 type: string
+   *                 example: "123 Main Street, New York"
+   *                 description: Optional business address of the company
+   *               companySize:
+   *                 type: string
+   *                 example: "1-10 people"
+   *                 description: Size of the company
+   *               purpose:
+   *                 type: string
+   *                 example: "Data analysis tools"
+   *                 description: Purpose of creating the business account
    *     responses:
    *       201:
    *         description: Business account registered successfully
@@ -386,26 +460,57 @@ export function createAuthRouter(
    *                   properties:
    *                     id:
    *                       type: string
-   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                       example: "b68639fa-8125-47e7-bad6-bb2ae160e980"
    *                     email:
    *                       type: string
-   *                       example: "owner@company.com"
+   *                       example: "jusj@scrubbe.com"
    *                     firstName:
    *                       type: string
-   *                       example: "Alice"
+   *                       example: "John"
    *                     lastName:
    *                       type: string
-   *                       example: "Brown"
-   *                     isVerified:
-   *                       type: boolean
-   *                       example: false
+   *                       example: "Doe"
+   *                     address:
+   *                       type: string
+   *                       example: "123 street"
+   *                     purpose:
+   *                       type: string
+   *                       example: "data analyst"
+   *                     companySize:
+   *                       type: string
+   *                       example: "1-10 people"
    *                     accountType:
    *                       type: string
    *                       example: "BUSINESS"
+   *                     oauthprovider:
+   *                       type: string
+   *                       example: "GOOGLE"
+   *                     oauthProvider_uuid:
+   *                       type: string
+   *                       example: "9d3b3871-82a5-4e0c-adc1-42ca28be8aed"
+   *                     registerdWithOauth:
+   *                       type: boolean
+   *                       example: true
+   *                     isVerified:
+   *                       type: boolean
+   *                       example: false
+   *                     isActive:
+   *                       type: boolean
+   *                       example: true
    *                     createdAt:
    *                       type: string
    *                       format: date-time
-   *                       example: "2025-07-23T12:00:00Z"
+   *                       example: "2025-07-23T18:33:19.740Z"
+   *                     updatedAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-07-23T18:33:19.740Z"
+   *                     apiKey:
+   *                       type: string
+   *                       example: "cmdgaxj0c0002tyyokgb4hvsk"
+   *                     role:
+   *                       type: string
+   *                       example: "ADMIN"
    *                 tokens:
    *                   type: object
    *                   properties:
@@ -414,7 +519,7 @@ export function createAuthRouter(
    *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
    *                     refreshToken:
    *                       type: string
-   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                       example: "54282bd1-1421-44a7-ae15-d4520f143b7c"
    *       400:
    *         description: Bad request (invalid input)
    *       409:
