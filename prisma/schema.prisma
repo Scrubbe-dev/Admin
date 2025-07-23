@@ -19,17 +19,24 @@ datasource db {
 //   password: string;
 
 model User {
-  id                String              @id @default(uuid())
-  email             String              @unique
-  passwordHash      String
-  firstName         String?
-  lastName          String?
-  experience        String?
-  username          String?
-  address           String?
-  purpose           String?
-  companySize       String?
-  accountType       AccountType?
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  passwordHash       String? // optional because users can register with OAuth
+  firstName          String?
+  lastName           String?
+  experience         String?
+  username           String?
+  address            String?
+  purpose            String?
+  companySize        String?
+  accountType        AccountType?
+  
+  // oAuth
+  oauthprovider      OAuthProvider?
+  oauthProvider_uuid String?
+  registerdWithOauth Boolean        @default(false)
+  image              String?
+
   isVerified        Boolean             @default(false)
   isActive          Boolean             @default(true)
   lastLogin         DateTime?
@@ -375,4 +382,13 @@ enum Roles {
 enum AccountType {
   DEVELOPER
   BUSINESS
+}
+
+enum OAuthProvider {
+  GOOGLE
+  AWS
+  GITHUB
+  // FIREFOX
+  GITLAB
+  AZURE
 }

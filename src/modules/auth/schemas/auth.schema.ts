@@ -1,3 +1,4 @@
+import { OAuthProvider } from "@prisma/client";
 import { z } from "zod";
 
 const freeEmailDomains: string[] = [
@@ -55,6 +56,28 @@ export const registerDevSchema = z.object({
     .optional(),
   email: emailSchema,
   password: passwordSchema,
+});
+
+// register by Oauth
+export const registerDevByOauth = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  id: z.string({ required_error: "Auth provider id is required" }).uuid(),
+  oAuthProvider: z.nativeEnum(OAuthProvider, {
+    invalid_type_error: "Invalid OAuth provider",
+  }),
+  email: emailSchema,
+});
+
+// register busines by Oauth
+export const registerBusinessByOauth = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  id: z.string({ required_error: "Auth provider id is required" }).uuid(),
+  oAuthProvider: z.nativeEnum(OAuthProvider, {
+    invalid_type_error: "Invalid OAuth provider",
+  }),
+  email: businessEmailSchema,
 });
 
 // Register business schema
@@ -120,6 +143,8 @@ export const authSchemas = {
 
 // Type exports
 export type RegisterDevRequest = z.infer<typeof registerDevSchema>;
+export type RegisterByOAth = z.infer<typeof registerDevByOauth>;
+export type RegisterBusinessByOAth = z.infer<typeof registerBusinessByOauth>;
 export type RegisterBusinessRequest = z.infer<typeof registerBusinessSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;

@@ -7,6 +7,7 @@ import {
   ResendOtpRequest,
   RegisterDevRequest,
   RegisterBusinessRequest,
+  OAuthRequest,
 } from "../types/auth.types";
 import { validateRequest } from "../utils/validators";
 import {
@@ -15,6 +16,8 @@ import {
   verifyOTPSchema,
   registerDevSchema,
   registerBusinessSchema,
+  registerDevByOauth,
+  registerBusinessByOauth,
 } from "../schemas/auth.schema";
 
 export class AuthController {
@@ -45,6 +48,30 @@ export class AuthController {
       next(error);
     }
   };
+
+  registerDevByOauth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const request = await validateRequest<OAuthRequest>(registerBusinessByOauth, req.body);
+
+      const result = await this.authService.registerDevByOauth(request);
+
+      res.status(201).json(result)
+    } catch (error) {
+      next(error)
+    }
+  }
+  
+  registerBusinessByOauth = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const request = await validateRequest<OAuthRequest>(registerBusinessByOauth, req.body);
+
+      const result = await this.authService.registerBusinessByOauth(request);
+
+      res.status(201).json(result);
+    } catch (error) {
+      next(error)
+    }
+  }
 
   verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
