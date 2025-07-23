@@ -1,3 +1,5 @@
+import { OAuthProvider } from "@prisma/client";
+
 export type User = {
   id: string;
   email: string;
@@ -51,7 +53,7 @@ export type RegisterDevRequest = {
   lastName: string;
   email: string;
   password: string;
-  githubUserame?: string;
+  githubUsername?: string;
   experienceLevel: string;
 };
 
@@ -64,6 +66,25 @@ export type RegisterBusinessRequest = {
   purpose: string;
   password: string;
 };
+
+export interface OAuthRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  isVerified: boolean;
+  image?: string;
+  id: string;
+  oAuthProvider: OAuthProviders;
+}
+
+export enum OAuthProviders {
+  GOOGLE,
+  AWS,
+  GITHUB,
+  // FIREFOX,
+  GITLAB,
+  AZURE,
+}
 
 export type LoginInput = {
   email: string;

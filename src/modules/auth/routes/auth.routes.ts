@@ -54,7 +54,7 @@ export function createAuthRouter(
    *                 type: string
    *                 example: "Intermediate"
    *                 description: Developer's experience level
-   *               githubUserame:
+   *               githubUsername:
    *                 type: string
    *                 example: "johndoe-dev"
    *                 description: GitHub username (used for developer profiling)
@@ -209,6 +209,226 @@ export function createAuthRouter(
    *         description: Internal server error
    */
   router.post("/business/register", authController.registerBusiness);
+
+  /**
+   * @swagger
+   * /api/v1/auth/oauth/dev/register:
+   *   post:
+   *     summary: Register a developer account via OAuth
+   *     description: >
+   *       Creates a new developer account using details provided by an OAuth provider (e.g., Google, GitHub).
+   *       If the account already exists, an error is returned instructing the user to log in via OAuth instead.
+   *     tags: [Authentication, OAuth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - firstName
+   *               - lastName
+   *               - id
+   *               - oAuthProvider
+   *               - email
+   *               - isVerified
+   *             properties:
+   *               firstName:
+   *                 type: string
+   *                 example: "John"
+   *                 description: User's first name
+   *               lastName:
+   *                 type: string
+   *                 example: "Doe"
+   *                 description: User's last name
+   *               id:
+   *                 type: string
+   *                 format: uuid
+   *                 example: "123e4567-e89b-12d3-a456-426614174000"
+   *                 description: Unique identifier from the OAuth provider
+   *               oAuthProvider:
+   *                 type: string
+   *                 enum: [GOOGLE, AWS, GITHUB, GITLAB, AZURE]
+   *                 example: "GOOGLE"
+   *                 description: OAuth provider used for authentication
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: "dev@example.com"
+   *                 description: Developer's email address
+   *               isVerified:
+   *                 type: boolean
+   *                 example: true
+   *                 description: Indicates if the email is verified by the OAuth provider
+   *               image:
+   *                 type: string
+   *                 format: uri
+   *                 example: "https://example.com/avatar.png"
+   *                 description: Optional profile image URL from the OAuth provider
+   *     responses:
+   *       201:
+   *         description: Developer account registered successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                     email:
+   *                       type: string
+   *                       example: "user@example.com"
+   *                     firstName:
+   *                       type: string
+   *                       example: "John"
+   *                     lastName:
+   *                       type: string
+   *                       example: "Doe"
+   *                     isVerified:
+   *                       type: boolean
+   *                       example: false
+   *                     accountType:
+   *                       type: string
+   *                       example: "DEVELOPER"
+   *                     createdAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-04-20T12:00:00Z"
+   *                 tokens:
+   *                   type: object
+   *                   properties:
+   *                     accessToken:
+   *                       type: string
+   *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   *                     refreshToken:
+   *                       type: string
+   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       409:
+   *         description: Conflict (email already exists with same or different OAuth provider)
+   *       401:
+   *         description: Unauthorized (invalid OAuth data or verification failed)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post("/oauth/dev/register", authController.registerDevByOauth);
+
+  /**
+   * @swagger
+   * /api/v1/auth/oauth/business/register:
+   *   post:
+   *     summary: Register a business account via OAuth
+   *     description: >
+   *       Creates a new business account using details provided by an OAuth provider (e.g., Google, GitHub).
+   *       If the account already exists, an error is returned instructing the user to log in via OAuth instead.
+   *     tags: [Authentication, OAuth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - firstName
+   *               - lastName
+   *               - id
+   *               - oAuthProvider
+   *               - email
+   *               - isVerified
+   *             properties:
+   *               firstName:
+   *                 type: string
+   *                 example: "Alice"
+   *                 description: Business user's first name
+   *               lastName:
+   *                 type: string
+   *                 example: "Brown"
+   *                 description: Business user's last name
+   *               id:
+   *                 type: string
+   *                 format: uuid
+   *                 example: "123e4567-e89b-12d3-a456-426614174000"
+   *                 description: Unique identifier from the OAuth provider
+   *               oAuthProvider:
+   *                 type: string
+   *                 enum: [GOOGLE, AWS, GITHUB, GITLAB, AZURE]
+   *                 example: "GOOGLE"
+   *                 description: OAuth provider used for authentication
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: "owner@company.com"
+   *                 description: Business email address
+   *               isVerified:
+   *                 type: boolean
+   *                 example: true
+   *                 description: Indicates if the email is verified by the OAuth provider
+   *               image:
+   *                 type: string
+   *                 format: uri
+   *                 example: "https://example.com/logo.png"
+   *                 description: Optional profile or company logo from the OAuth provider
+   *     responses:
+   *       201:
+   *         description: Business account registered successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *                     email:
+   *                       type: string
+   *                       example: "owner@company.com"
+   *                     firstName:
+   *                       type: string
+   *                       example: "Alice"
+   *                     lastName:
+   *                       type: string
+   *                       example: "Brown"
+   *                     isVerified:
+   *                       type: boolean
+   *                       example: false
+   *                     accountType:
+   *                       type: string
+   *                       example: "BUSINESS"
+   *                     createdAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-07-23T12:00:00Z"
+   *                 tokens:
+   *                   type: object
+   *                   properties:
+   *                     accessToken:
+   *                       type: string
+   *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   *                     refreshToken:
+   *                       type: string
+   *                       example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       409:
+   *         description: Conflict (email already exists with same or different OAuth provider)
+   *       401:
+   *         description: Unauthorized (invalid OAuth data or verification failed)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post(
+    "/oauth/business/register",
+    authController.registerBusinessByOauth
+  );
+
   /**
    * @swagger
    * /api/v1/auth/verify_email:
