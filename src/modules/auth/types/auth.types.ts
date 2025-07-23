@@ -53,7 +53,7 @@ export type RegisterDevRequest = {
   lastName: string;
   email: string;
   password: string;
-  githubUserame?: string;
+  githubUsername?: string;
   experienceLevel: string;
 };
 

@@ -54,7 +54,7 @@ export function createAuthRouter(
    *                 type: string
    *                 example: "Intermediate"
    *                 description: Developer's experience level
-   *               githubUserame:
+   *               githubUsername:
    *                 type: string
    *                 example: "johndoe-dev"
    *                 description: GitHub username (used for developer profiling)

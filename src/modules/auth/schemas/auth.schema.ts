@@ -50,7 +50,7 @@ export const registerDevSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   experienceLevel: z.string().min(1, "Experience is required"),
-  githubUserame: z
+  githubUsername: z
     .string()
     .min(1, "Please provide a valid github username")
     .optional(),

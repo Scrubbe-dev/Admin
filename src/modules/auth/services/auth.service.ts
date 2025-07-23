@@ -55,7 +55,7 @@ export class AuthService {
           role: Role.USER,
           accountType: AccountType.DEVELOPER,
           experience: input.experienceLevel,
-          username: input.githubUserame,
+          username: input.githubUsername,
         },
       });
       const tokens = await this.tokenService.generateTokens(user as any);
