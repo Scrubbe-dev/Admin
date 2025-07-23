@@ -14,19 +14,20 @@ import {
   RegisterDevRequest,
   RegisterBusinessRequest,
   OAuthRequest,
+  OAuthBusinesRequest,
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
 import { EmailService } from "./email.service";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 import { RegisterBusinessByOAth, RegisterByOAth } from "../schemas/auth.schema";
+import { Logger } from "../../password-reset/utils/logger";
 
 // TODO - run changes to production db with this command - npx prisma migrate deploy
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
 
 // TODO(#4): Validate `isVerified` flag from the OAuth provider.
 //              - If `isVerified` is false or missing, initiate OTP verification.
-//              - Ensure this check runs before completing user registration.
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
@@ -40,9 +41,32 @@ export class AuthService {
       const exists = await this.prisma.user.findUnique({
         where: { email: input.email },
       });
+
       if (exists) {
         throw new ConflictError("Email already in use");
       }
+
+      // // TODO - REMOVE THIS IN PRODUCTION!!!!
+      // // THIS WAS DONE SO THAT DAVID (FRONTEND GUY) CAN TEST AS MUCH AS HE WANTS
+      // const WHITELIST = "D.Morakinyo@scrubbe.com";
+      //   if (exists) {
+      //     if (exists.email.toLowerCase() === WHITELIST.toLowerCase()) {
+      //       // Delete whitelist user for testing
+      //       await this.prisma.refreshToken.deleteMany({
+      //         where: { userId: exists.id },
+      //       });
+
+      //       await this.prisma.verificationOTP.deleteMany({
+      //         where: { userId: exists.id },
+      //       });
+
+      //       await this.prisma.user.delete({ where: { email: exists.email } });
+      //     } else {
+      //       // Non whitelisted email  error
+      //       throw new ConflictError("Email already in use");
+      //     }
+      // }
+
       const passwordHash = await this.securityUtils.hashPassword(
         input.password
       );
@@ -148,7 +172,7 @@ export class AuthService {
         },
       });
 
-      const tokens = this.tokenService.generateTokens(newUser as any);
+      const tokens = await this.tokenService.generateTokens(newUser as any);
 
       return {
         user: this.excludePassword(newUser),
@@ -159,7 +183,7 @@ export class AuthService {
     }
   }
 
-  async registerBusinessByOauth(input: OAuthRequest) {
+  async registerBusinessByOauth(input: OAuthBusinesRequest) {
     try {
       const exists = await this.prisma.user.findUnique({
         where: {
@@ -189,10 +213,14 @@ export class AuthService {
           firstName: input.firstName,
           lastName: input.lastName,
           role: Role.ADMIN,
+
+          address: input.businessAddress,
+          companySize: input.companySize,
+          purpose: input.purpose,
         },
       });
 
-      const tokens = this.tokenService.generateTokens(newUser as any);
+      const tokens = await this.tokenService.generateTokens(newUser as any);
 
       return {
         user: this.excludePassword(newUser),
