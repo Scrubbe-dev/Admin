@@ -35,6 +35,7 @@ import { Logger } from './modules/password-reset/utils/logger';
 import { RateLimiterService } from './modules/password-reset/utils/rate-limiter';
 import { EmailService } from './modules/auth/services/email.service';
 import { errorHandler } from './middleware/error.middleware';
+import businessRouter from './modules/business-profile/business.router';
 dotenvConfig()
 
 const app = express();
@@ -114,6 +115,7 @@ app.use(limiter);
 app.use('/api/v1', waitingRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1/auth/', createAuthRouter(authController, authMiddleware));
+app.use('/api/v1/business/', businessRouter);
 app.use('/api/v1', analysisRouter);
 app.use('/api/v1', systemRouter);
 app.use('/api/v1', fraudDictation);

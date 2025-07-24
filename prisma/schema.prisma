@@ -9,40 +9,84 @@ datasource db {
 }
 
 model User {
-  id                 String              @id @default(uuid())
-  email              String              @unique
-  passwordHash       String?
-  firstName          String?
-  lastName           String?
-  isVerified         Boolean             @default(false)
-  isActive           Boolean             @default(true)
-  lastLogin          DateTime?
-  apiKeyDuration     DateTime            @default(now())
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  apiKey             String?             @default(cuid())
-  role               Role                @default(USER)
-  experience         String?
-  passwordChangedAt  DateTime?
-  username           String?
-  accountType        AccountType?
-  address            String?
-  companySize        String?
-  purpose            String?
-  image              String?
-  oauthprovider      OAuthProvider?
-  registerdWithOauth Boolean             @default(false)
-  oauthProvider_uuid String?
-  DetectionRule      DetectionRule[]
-  Incident           Incident[]
-  IncidentComment    IncidentComment[]
-  PlaybookExecution  PlaybookExecution[]
-  refreshToken       RefreshToken[]
-  resetTokens        ResetToken[]
-  VerificationOTP    VerificationOTP?
-  Customer           Customer[]          @relation("CustomerToUser")
+  id                String       @id @default(uuid())
+  email             String       @unique
+  passwordHash      String?
+  firstName         String?
+  lastName          String?
+  isVerified        Boolean      @default(false)
+  isActive          Boolean      @default(true)
+  lastLogin         DateTime?
+  apiKeyDuration    DateTime     @default(now())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  apiKey            String?      @default(cuid())
+  role              Role         @default(USER)
+  experience        String?
+  passwordChangedAt DateTime?
+  username          String?
+  jobTitle          String?
+  accountType       AccountType?
+  address           String?
+  companySize       String?
+  purpose           String?
+  image             String?
+
+  companyName   String?
+  industry      String? // e.g. finance, IT etc
+  primaryRegion String?
+  companyLogo   String?
+
+  oauthprovider             OAuthProvider?
+  registerdWithOauth        Boolean                     @default(false)
+  oauthProvider_uuid        String?
+  DetectionRule             DetectionRule[]
+  Incident                  Incident[]
+  IncidentComment           IncidentComment[]
+  PlaybookExecution         PlaybookExecution[]
+  refreshToken              RefreshToken[]
+  resetTokens               ResetToken[]
+  VerificationOTP           VerificationOTP?
+  Customer                  Customer[]                  @relation("CustomerToUser")
+  Invites                   Invites[]
+  BusinessDashboardSettings BusinessDashboardSettings[]
 
   @@index([apiKey])
+}
+
+model Invites {
+  id String @id @default(uuid())
+
+  firstName         String
+  lastName          String
+  email             String            @unique
+  role              Role
+  accessPermissions AccessPermissions
+
+  // details of the company that sent the invite
+  sentById String
+  user     User   @relation(fields: [sentById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sentById])
+}
+
+// or company dashboard
+model BusinessDashboardSettings {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownedById String @unique
+  user      User   @relation(fields: [ownedById], references: [id])
+
+  colorAccent          String
+  defaultDashboard     DashboardType
+  prefferedIntegration BusinessPrefferedIntegration
+  notificationChannels BusinessNotificationChannels
+  defaultPriority      Priority
 }
 
 model VerificationOTP {
@@ -374,4 +418,29 @@ enum OAuthProvider {
   GITHUB
   GITLAB
   AZURE
+}
+
+enum AccessPermissions {
+  VIEW_DASHBOARD
+  MODIFY_DASHBOARD
+  EXECUTE_ACTIONS
+  MANAGE_USERS
+}
+
+enum DashboardType {
+  SCRUBBE_DASHBOARD_SIEM
+  SCRUBBE_DASHBOARD_SOUR
+  CUSTOM
+}
+
+enum BusinessPrefferedIntegration {
+  JIRA
+  FRESH_DESK
+  SERVICE_NOW
+}
+
+enum BusinessNotificationChannels {
+  JIRA
+  FRESH_DESK
+  SERVICE_NOW
 }
