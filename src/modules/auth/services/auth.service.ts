@@ -22,10 +22,12 @@ import { SecurityUtils } from "../utils/security.utils";
 import { EmailService } from "./email.service";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 import { RegisterBusinessByOAth, RegisterByOAth } from "../schemas/auth.schema";
-import { Logger } from "../../password-reset/utils/logger";
 
 // TODO - run changes to production db with this command - npx prisma migrate deploy
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
+
+//  TODO - CREATE A MAPPER CLASS TO REDUCE AS MUCH RESPONSE AS POSSIBLE FOR REGISTERED, LOGGED IN USERS
+//  TODO - CREATE SEPERATE SCHEMAS FOR DEVELOPER AND BUSINESS PROFILES
 
 // TODO(#4): Validate `isVerified` flag from the OAuth provider.
 //              - If `isVerified` is false or missing, initiate OTP verification.
