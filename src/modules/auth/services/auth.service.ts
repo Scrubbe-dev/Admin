@@ -15,6 +15,7 @@ import {
   RegisterBusinessRequest,
   OAuthRequest,
   OAuthBusinesRequest,
+  OAuthLoginRequest,
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
@@ -360,6 +361,34 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
+    });
+
+    const tokens = await this.tokenService.generateTokens(user as any);
+
+    return {
+      user: this.excludePassword(user) as any,
+      tokens,
+    };
+  }
+
+  async oAuthLogin(input: OAuthLoginRequest): Promise<AuthResponse> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: input.email,
+        oauthprovider: input.oAuthProvider,
+        oauthProvider_uuid: input.provider_uuid,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundError("User does not exists, Please sign up first");
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        lastLogin: new Date(),
+      },
     });
 
     const tokens = await this.tokenService.generateTokens(user as any);

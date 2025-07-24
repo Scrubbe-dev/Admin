@@ -101,6 +101,17 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Login with oauth schema
+export const loginWithOauthSchema = z.object({
+  email: emailSchema,
+  provider_uuid: z
+    .string({ required_error: "Auth provider id is required" })
+    .uuid(),
+  oAuthProvider: z.nativeEnum(OAuthProvider, {
+    invalid_type_error: "Invalid OAuth provider",
+  }),
+});
+
 // Refresh token schema
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
@@ -147,6 +158,7 @@ export const authSchemas = {
 
 // Type exports
 export type RegisterDevRequest = z.infer<typeof registerDevSchema>;
+export type OAuthLoginRequest = z.infer<typeof loginWithOauthSchema>;
 export type RegisterByOAth = z.infer<typeof registerDevByOauth>;
 export type RegisterBusinessByOAth = z.infer<typeof registerBusinessByOauth>;
 export type RegisterBusinessRequest = z.infer<typeof registerBusinessSchema>;

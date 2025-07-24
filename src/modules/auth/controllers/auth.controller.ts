@@ -9,6 +9,7 @@ import {
   RegisterBusinessRequest,
   OAuthRequest,
   OAuthBusinesRequest,
+  OAuthLoginRequest,
 } from "../types/auth.types";
 import { validateRequest } from "../utils/validators";
 import {
@@ -19,6 +20,7 @@ import {
   registerBusinessSchema,
   registerDevByOauth,
   registerBusinessByOauth,
+  loginWithOauthSchema,
 } from "../schemas/auth.schema";
 
 export class AuthController {
@@ -26,7 +28,10 @@ export class AuthController {
 
   registerDev = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const request = await validateRequest<RegisterDevRequest>(registerDevSchema, req.body);
+      const request = await validateRequest<RegisterDevRequest>(
+        registerDevSchema,
+        req.body
+      );
 
       const result = await this.authService.registerDev(request);
       res.status(201).json(result);
@@ -41,7 +46,10 @@ export class AuthController {
     next: NextFunction
   ) => {
     try {
-      const request = await validateRequest<RegisterBusinessRequest>(registerBusinessSchema, req.body);
+      const request = await validateRequest<RegisterBusinessRequest>(
+        registerBusinessSchema,
+        req.body
+      );
 
       const result = await this.authService.registerBusiness(request);
       res.status(201).json(result);
@@ -50,29 +58,43 @@ export class AuthController {
     }
   };
 
-  registerDevByOauth = async (req: Request, res: Response, next: NextFunction) => {
+  registerDevByOauth = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const request = await validateRequest<OAuthRequest>(registerDevByOauth, req.body);
+      const request = await validateRequest<OAuthRequest>(
+        registerDevByOauth,
+        req.body
+      );
 
       const result = await this.authService.registerDevByOauth(request);
 
-      res.status(201).json(result)
+      res.status(201).json(result);
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
-  
-  registerBusinessByOauth = async (req: Request, res: Response, next: NextFunction) => {
+  };
+
+  registerBusinessByOauth = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const request = await validateRequest<OAuthBusinesRequest>(registerBusinessByOauth, req.body);
+      const request = await validateRequest<OAuthBusinesRequest>(
+        registerBusinessByOauth,
+        req.body
+      );
 
       const result = await this.authService.registerBusinessByOauth(request);
 
       res.status(201).json(result);
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 
   verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -101,31 +123,60 @@ export class AuthController {
     }
   };
 
-  login = async (req: Request, res: Response) => {
-    const input = await validateRequest<LoginInput>(loginSchema, req.body);
-    const result = await this.authService.login(input);
-    res.json(result);
+  login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = await validateRequest<LoginInput>(loginSchema, req.body);
+
+      const result = await this.authService.login(input);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   };
 
-  refreshTokens = async (req: Request, res: Response) => {
-    const input = await validateRequest<RefreshTokenInput>(
-      refreshTokenSchema,
-      req.body
-    );
-    const tokens = await this.authService.refreshTokens(input.refreshToken);
-    res.json(tokens);
+  oAuthLogin = async(req: Request, res: Response, next: NextFunction) => {
+    try {
+      const request = await validateRequest<OAuthLoginRequest>(loginWithOauthSchema, req.body);
+
+      const result = await this.authService.oAuthLogin(request);
+
+      res.json(result)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  refreshTokens = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const input = await validateRequest<RefreshTokenInput>(
+        refreshTokenSchema,
+        req.body
+      );
+      const tokens = await this.authService.refreshTokens(input.refreshToken);
+      res.json(tokens);
+    } catch (error) {
+      next(error);
+    }
   };
 
-  logout = async (req: Request, res: Response) => {
-    const { refreshToken } = await validateRequest<RefreshTokenInput>(
-      refreshTokenSchema,
-      req.body
-    );
-    await this.authService.logout(refreshToken);
-    res.status(204).send();
+  logout = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { refreshToken } = await validateRequest<RefreshTokenInput>(
+        refreshTokenSchema,
+        req.body
+      );
+      await this.authService.logout(refreshToken);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
   };
 
-  me = async (req: Request, res: Response) => {
-    res.json(req.user);
+  me = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(req.user);
+    } catch (error) {
+      next(error);
+    }
   };
 }

@@ -91,6 +91,12 @@ export interface OAuthBusinesRequest {
   purpose: string;
 }
 
+export interface OAuthLoginRequest {
+  email: string;
+  provider_uuid: string;
+  oAuthProvider: OAuthProvider;
+}
+
 export enum OAuthProviders {
   GOOGLE,
   AWS,
