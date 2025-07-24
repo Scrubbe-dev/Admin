@@ -703,6 +703,120 @@ export function createAuthRouter(
 
   /**
    * @swagger
+   * /api/v1/auth/oauth/login:
+   *   post:
+   *     summary: Authenticate a user via OAuth
+   *     description: Logs in a user using their OAuth provider credentials (e.g., Google, GitHub). Returns access and refresh tokens if the user exists.
+   *     tags: [Authentication, OAuth]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *               - provider_uuid
+   *               - oAuthProvider
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: "user@example.com"
+   *               provider_uuid:
+   *                 type: string
+   *                 description: The unique identifier provided by the OAuth provider
+   *                 format: uuid
+   *                 example: "123e4567-e89b-12d3-a456-426614174000"
+   *               oAuthProvider:
+   *                 type: string
+   *                 enum: [GOOGLE, GITHUB, FACEBOOK]
+   *                 description: The OAuth provider used for login
+   *                 example: "GOOGLE"
+   *     responses:
+   *       200:
+   *         description: OAuth login successful
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 user:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                       example: "b68639fa-8125-47e7-bad6-bb2ae160e980"
+   *                     email:
+   *                       type: string
+   *                       example: "jusj@scrubbe.com"
+   *                     firstName:
+   *                       type: string
+   *                       example: "John"
+   *                     lastName:
+   *                       type: string
+   *                       example: "Doe"
+   *                     address:
+   *                       type: string
+   *                       example: "123 street"
+   *                     purpose:
+   *                       type: string
+   *                       example: "data analyst"
+   *                     companySize:
+   *                       type: string
+   *                       example: "1-10 people"
+   *                     accountType:
+   *                       type: string
+   *                       example: "BUSINESS"
+   *                     oauthprovider:
+   *                       type: string
+   *                       example: "GOOGLE"
+   *                     oauthProvider_uuid:
+   *                       type: string
+   *                       example: "9d3b3871-82a5-4e0c-adc1-42ca28be8aed"
+   *                     registerdWithOauth:
+   *                       type: boolean
+   *                       example: true
+   *                     isVerified:
+   *                       type: boolean
+   *                       example: false
+   *                     isActive:
+   *                       type: boolean
+   *                       example: true
+   *                     createdAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-07-23T18:33:19.740Z"
+   *                     updatedAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-07-23T18:33:19.740Z"
+   *                     apiKey:
+   *                       type: string
+   *                       example: "cmdgaxj0c0002tyyokgb4hvsk"
+   *                     role:
+   *                       type: string
+   *                       example: "ADMIN"
+   *                 tokens:
+   *                   type: object
+   *                   properties:
+   *                     accessToken:
+   *                       type: string
+   *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   *                     refreshToken:
+   *                       type: string
+   *                       example: "54282bd1-1421-44a7-ae15-d4520f143b7c"
+   *       404:
+   *         description: User not found (must sign up first)
+   *       400:
+   *         description: Missing or invalid OAuth credentials
+   *       500:
+   *         description: Internal server error
+   */
+  router.post("/oauth/login", authController.oAuthLogin);
+
+  /**
+   * @swagger
    * /api/v1/auth/refresh-token:
    *   post:
    *     summary: Refresh access token
