@@ -1,36 +1,60 @@
-import { Request, Response, NextFunction } from 'express';
-import { TokenService } from '../services/token.service';
-import { UnauthorizedError, ForbiddenError } from '../error';
-import { Role, User } from '../types/auth.types';
+import { Request, Response, NextFunction } from "express";
+import { TokenService } from "../services/token.service";
+import { UnauthorizedError, ForbiddenError } from "../error";
+import { AccountType, Role, User } from "../types/auth.types";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        sub: string;
+        email: string;
+        AccountType?: AccountType;
+      };
+    }
+  }
+}
 
 export class AuthMiddleware {
   constructor(private tokenService: TokenService) {}
 
-  authenticate = (req: Request, res: Response, next: NextFunction) => {
+  authenticate = async (req: Request, res: Response, next: NextFunction) => {
+    console.log("=============================================================Auth middleware triggered=============================================================");
+    console.log("=============================================================Req.User=============================================================", req.user);
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedError('Authentication required');
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new UnauthorizedError("Authentication required");
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
     try {
-      const payload = this.tokenService.verifyAccessToken(token);
+      const payload = await this.tokenService.verifyAccessToken(token);
       req.user = payload as any;
       next();
     } catch (err) {
-      throw new UnauthorizedError('Invalid or expired token');
+      next(new UnauthorizedError("Invalid or expired token"));
     }
   };
 
   authorize = (roles: Role[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
       if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
+        throw new UnauthorizedError("Authentication required");
       }
 
-      const hasRequiredRole = roles.some(role => (req.user as { id: string; sub: string; email: string; roles: string[] }).roles.includes(role));
+      const hasRequiredRole = roles.some((role) =>
+        (
+          req.user as {
+            id: string;
+            sub: string;
+            email: string;
+            roles: string[];
+          }
+        ).roles.includes(role)
+      );
       if (!hasRequiredRole) {
-        throw new ForbiddenError('Insufficient permissions');
+        throw new ForbiddenError("Insufficient permissions");
       }
 
       next();

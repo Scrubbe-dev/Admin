@@ -30,10 +30,10 @@ export const dashboardPreferenceSchema = z.object({
     required_error: "Default dashboard is required",
     invalid_type_error: "Invalid dashboard type",
   }),
-  preferredIntegration: z.nativeEnum(PrefferedIntegration, {
+  preferredIntegration: z.array(z.nativeEnum(PrefferedIntegration, {
     required_error: "Preferred integration is required",
     invalid_type_error: "Invalid integration type",
-  }),
+  })),
   notificationChannels: z
     .array(
       z.nativeEnum(NotificationChannels, {
@@ -61,5 +61,7 @@ export const businessSetUpSchema = z.object({
   adminJobTitle: z.string().min(1, "Job title is required"),
 
   // Invite team members (optional array)
-  inviteMembers: z.array(inviteMembersSchema).optional(),
+  inviteMembers: z.array(inviteMembersSchema).max(2, "Maximum of 2 invites are allowed").optional(),
+
+  dashboardPreference: dashboardPreferenceSchema.optional(),
 });

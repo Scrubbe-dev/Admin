@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken';
-import  {PrismaClient}  from '@prisma/client';
-import { User, Tokens, JwtPayload } from '../types/auth.types';
-import { addDays } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
-import { UnauthorizedError } from '../error';
+import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+import { User, Tokens, JwtPayload } from "../types/auth.types";
+import { addDays } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
+import { UnauthorizedError } from "../error";
 
 export class TokenService {
   constructor(
@@ -14,13 +14,13 @@ export class TokenService {
   ) {}
 
   async generateTokens(user: User): Promise<Tokens> {
-    const accessToken = this.generateAccessToken(user);
+    const accessToken = await this.generateAccessToken(user);
     const refreshToken = await this.generateRefreshToken(user);
 
     return { accessToken, refreshToken };
   }
 
-  private generateAccessToken(user: User): string {
+  private async generateAccessToken(user: User): Promise<string> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -29,7 +29,13 @@ export class TokenService {
       exp: Math.floor(Date.now() / 1000) + parseInt(this.jwtExpiresIn),
     };
 
-    return jwt.sign(payload, this.jwtSecret);
+    const jwtSign = await jwt.sign(payload, this.jwtSecret);
+    console.log(
+      "================================Jwt sign and secrete ================================",
+      jwtSign,
+      this.jwtSecret
+    );
+    return jwtSign;
   }
 
   private async generateRefreshToken(user: User): Promise<string> {
@@ -53,8 +59,12 @@ export class TokenService {
       include: { user: true },
     });
 
-    if (!tokenRecord || tokenRecord.revokedAt || tokenRecord.expiresAt < new Date()) {
-      throw new UnauthorizedError('Invalid refresh token');
+    if (
+      !tokenRecord ||
+      tokenRecord.revokedAt ||
+      tokenRecord.expiresAt < new Date()
+    ) {
+      throw new UnauthorizedError("Invalid refresh token");
     }
 
     // Revoke the current refresh token
@@ -75,9 +85,15 @@ export class TokenService {
 
   async verifyAccessToken(token: string): Promise<JwtPayload> {
     try {
-      return jwt.verify(token, this.jwtSecret) as JwtPayload;
+      const verify = (await jwt.verify(token, this.jwtSecret)) as JwtPayload;
+
+      console.log(
+        "================================Token verified================================",
+        verify
+      );
+      return verify;
     } catch (err) {
-      throw new UnauthorizedError('Invalid access token');
+      throw new UnauthorizedError("Invalid access token");
     }
   }
 }

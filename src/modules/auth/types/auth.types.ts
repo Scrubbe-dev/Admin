@@ -24,8 +24,8 @@ export type ResendOtpRequest = {
 };
 
 export enum AccountType {
-  DEVELOPER,
-  BUSINESS,
+  DEVELOPER = "DEVELOPER",
+  BUSINESS = "BUSINESS",
 }
 
 export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";

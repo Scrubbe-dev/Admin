@@ -1,5 +1,4 @@
-import { Priority } from "@prisma/client";
-import { Role } from "../auth/types/auth.types";
+import { Priority, Role } from "@prisma/client";
 
 export interface BusinessSetUpRequest {
   companyName: string;
@@ -22,41 +21,53 @@ export interface BusinessSetUpRequest {
 
 export interface DashBoardPreference {
   colorScheme: string;
-  defaultDashboard: string;
-  prefferedIntegration: PrefferedIntegration;
-  notificationChannels: NotificationChannels;
-  defaultPriority: Priority;
+  defaultDashboard: DashboardType;
+  prefferedIntegration: PrefferedIntegration[];
+  notificationChannels: NotificationChannels[];
+  defaultPriority: Priority[];
 }
 
 export interface InviteMembers {
   firstName: string;
   lastName: string;
-  email: string;
+  inviteEmail: string;
   role: Role;
-  accessPermisions: AccessPermissions[];
+  accessPermissions: AccessPermissions[];
 }
 
 export enum AccessPermissions {
-  VIEW_DASHBOARD,
-  MODIFY_DASHBOARD,
-  EXECUTE_ACTIONS,
-  MANAGE_USERS,
+  VIEW_DASHBOARD = "VIEW_DASHBOARD",
+  MODIFY_DASHBOARD = "MODIFY_DASHBOARD",
+  EXECUTE_ACTIONS = "EXECUTE_ACTIONS",
+  MANAGE_USERS = "MANAGE_USERS",
 }
 
 export enum DashboardType {
-  SCRUBBE_DASHBOARD_SIEM,
-  SCRUBBE_DASHBOARD_SOUR,
-  CUSTOM,
+  SCRUBBE_DASHBOARD_SIEM = "SCRUBBE_DASHBOARD_SIEM",
+  SCRUBBE_DASHBOARD_SOUR = "SCRUBBE_DASHBOARD_SOUR",
+  CUSTOM = "CUSTOM",
 }
 
 export enum PrefferedIntegration {
-  JIRA,
-  FRESH_DESK,
-  SERVICE_NOW,
+  JIRA = "JIRA",
+  FRESH_DESK = "FRESH_DESK",
+  SERVICE_NOW = "SERVICE_NOW",
 }
 
 export enum NotificationChannels {
-  JIRA,
-  FRESH_DESK,
-  SERVICE_NOW,
+  SLACK = "SLACK",
+  MICROSOFT_TEAMS = "MICROSOFT_TEAMS",
+  EMAIL = "EMAIL",
+  SMS = "SMS",
+}
+
+export interface SignedPayload {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface DecodeInviteTokenResult {
+  existingUser: boolean;
+  inviteData: SignedPayload;
 }

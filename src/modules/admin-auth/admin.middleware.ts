@@ -1,3 +1,4 @@
+import { AccountType } from './../auth/types/auth.types';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ApiError } from './admin.utils';
@@ -9,6 +10,7 @@ declare global {
         id: string;
         sub: string;
         email: string;
+        AccountType?: AccountType;
       };
     }
   }

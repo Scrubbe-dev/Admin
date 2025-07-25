@@ -1,6 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { AppError, NotFoundError, ValidationError } from '../modules/auth/error';
-import { logger } from '../common/logger/logger';
+import { Request, Response, NextFunction } from "express";
+import {
+  AppError,
+  NotFoundError,
+  ValidationError,
+} from "../modules/auth/error";
+import { logger } from "../common/logger/logger";
 
 /**
  * Error handling middleware for Express applications
@@ -14,12 +18,12 @@ export function errorHandler(
   req: Request,
   res: Response,
   next: NextFunction
-): string | unknown{
+): string | unknown {
   // Handle specific error types
   if (err instanceof AppError) {
     const statusCode = err.statusCode || 500;
     const response = {
-      status: 'error',
+      status: "error",
       message: err.message,
       ...(err.details && { details: err.details }),
     };
@@ -40,26 +44,26 @@ export function errorHandler(
   }
 
   // Handle mongoose validation errors
-  if (err.name === 'ValidationError') {
-    const validationError = new ValidationError('Validation failed', err);
+  if (err.name === "ValidationError") {
+    const validationError = new ValidationError("Validation failed", err);
     return errorHandler(validationError, req, res, next);
   }
 
   // Handle JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    const jwtError = new AppError('Invalid token', 401);
+  if (err.name === "JsonWebTokenError") {
+    const jwtError = new AppError("Invalid token", 401);
     return errorHandler(jwtError, req, res, next);
   }
 
-  if (err.name === 'TokenExpiredError') {
-    const tokenExpiredError = new AppError('Token expired', 401);
+  if (err.name === "TokenExpiredError") {
+    const tokenExpiredError = new AppError("Token expired", 401);
     return errorHandler(tokenExpiredError, req, res, next);
   }
 
   // Handle Prisma errors
-  if (err.name === 'PrismaClientKnownRequestError') {
-    // Handle specific Prisma errors
-    const prismaError = new AppError('Database error', 400);
+  if (err.name === "PrismaClientKnownRequestError") {
+    // Provide actual Prisma error message and details
+    const prismaError = new AppError(err.message || "Database error", 400, err);
     return errorHandler(prismaError, req, res, next);
   }
 
@@ -75,14 +79,14 @@ export function errorHandler(
   );
 
   // Default to 500 server error for unhandled cases
-  const unexpectedError = new AppError('Internal server error', 500);
+  const unexpectedError = new AppError(err.message || "Internal server error", 500);
   res.status(500).json({
-    status: 'error',
+    status: "error",
     message: unexpectedError.message,
   });
 
   // In development, include the error stack trace
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.error(err.stack);
   }
 }
@@ -90,7 +94,11 @@ export function errorHandler(
 /**
  * Middleware to catch 404 errors and forward to error handler
  */
-export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
+export function notFoundHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   const error = new NotFoundError(`Not found - ${req.originalUrl}`);
   next(error);
 }
