@@ -18,9 +18,23 @@ export class BusinessController {
         req.body
       );
 
-      const result = await this.businessService.businessSetUp(request);
+      const result = await this.businessService.businessSetUp(request, req);
 
       res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async validateInvite(req: Request, res: Response, next: NextFunction) {
+    try {
+      const token = req.body.token;
+      if (!token) {
+        return res.status(400).json({ error: "Token is required" });
+      }
+
+      const decoded = await this.businessService.validateInvite(token);
+      res.json(decoded);
     } catch (error) {
       next(error);
     }

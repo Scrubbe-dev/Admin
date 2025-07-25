@@ -9,36 +9,28 @@ datasource db {
 }
 
 model User {
-  id                String       @id @default(uuid())
-  email             String       @unique
-  passwordHash      String?
-  firstName         String?
-  lastName          String?
-  isVerified        Boolean      @default(false)
-  isActive          Boolean      @default(true)
-  lastLogin         DateTime?
-  apiKeyDuration    DateTime     @default(now())
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  apiKey            String?      @default(cuid())
-  role              Role         @default(USER)
-  experience        String?
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String?
+  firstName      String?
+  lastName       String?
+  profileImage   String?
+  isVerified     Boolean   @default(false)
+  isActive       Boolean   @default(true)
+  lastLogin      DateTime?
+  apiKeyDuration DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  apiKey         String?   @default(cuid())
+  role           Role      @default(USER)
+
   passwordChangedAt DateTime?
   username          String?
-  jobTitle          String?
-  accountType       AccountType?
-  address           String?
-  companySize       String?
-  purpose           String?
-  image             String?
 
-  companyName   String?
-  industry      String? // e.g. finance, IT etc
-  primaryRegion String?
-  companyLogo   String?
+  accountType AccountType?
 
   oauthprovider             OAuthProvider?
-  registerdWithOauth        Boolean                     @default(false)
+  registerdWithOauth        Boolean             @default(false)
   oauthProvider_uuid        String?
   DetectionRule             DetectionRule[]
   Incident                  Incident[]
@@ -47,11 +39,64 @@ model User {
   refreshToken              RefreshToken[]
   resetTokens               ResetToken[]
   VerificationOTP           VerificationOTP?
-  Customer                  Customer[]                  @relation("CustomerToUser")
-  Invites                   Invites[]
-  BusinessDashboardSettings BusinessDashboardSettings[]
+  Customer                  Customer[]          @relation("CustomerToUser")
+  // BusinessDashboardSettings BusinessDashboard[]
+  developer                 Developer?
+  business                  Business?
 
   @@index([apiKey])
+}
+
+model Developer {
+  id             String  @id @default(uuid())
+  experience     String?
+  githubUsername String?
+  jobTitle       String?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Business {
+  id            String  @id @default(uuid())
+  name          String?
+  industry      String? // e.g. finance, IT etc
+  primaryRegion String?
+  logo          String?
+  address       String?
+  companySize   String
+  purpose       String?
+
+  dashBoardId String?            @unique
+  dashboard   BusinessDashboard? @relation("BusinessToDashboard")
+
+  userId  String    @unique
+  user    User      @relation(fields: [userId], references: [id])
+  invites Invites[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// or company dashboard
+model BusinessDashboard {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessId String   @unique
+  business   Business @relation("BusinessToDashboard", fields: [businessId], references: [id])
+
+  colorAccent          String                         @default("#4A90E2")
+  defaultDashboard     DashboardType                  @default(SCRUBBE_DASHBOARD_SOUR)
+  prefferedIntegration BusinessPrefferedIntegration[] @default([JIRA])
+  notificationChannels BusinessNotificationChannels[] @default([EMAIL])
+  defaultPriority      Priority[]                     @default([MEDIUM])
+  // User                 User?                          @relation(fields: [userId], references: [id])
+  // userId               String?
 }
 
 model Invites {
@@ -59,34 +104,18 @@ model Invites {
 
   firstName         String
   lastName          String
-  email             String            @unique
+  email             String              @unique
   role              Role
-  accessPermissions AccessPermissions
+  accessPermissions AccessPermissions[]
 
   // details of the company that sent the invite
   sentById String
-  user     User   @relation(fields: [sentById], references: [id])
+  business Business @relation(fields: [sentById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sentById])
-}
-
-// or company dashboard
-model BusinessDashboardSettings {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ownedById String @unique
-  user      User   @relation(fields: [ownedById], references: [id])
-
-  colorAccent          String
-  defaultDashboard     DashboardType
-  prefferedIntegration BusinessPrefferedIntegration
-  notificationChannels BusinessNotificationChannels
-  defaultPriority      Priority
 }
 
 model VerificationOTP {
@@ -440,7 +469,8 @@ enum BusinessPrefferedIntegration {
 }
 
 enum BusinessNotificationChannels {
-  JIRA
-  FRESH_DESK
-  SERVICE_NOW
+  SLACK
+  MICROSOFT_TEAMS
+  EMAIL
+  SMS
 }

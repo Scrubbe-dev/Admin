@@ -21,7 +21,6 @@ import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
 import { EmailService } from "./email.service";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
-import { RegisterBusinessByOAth, RegisterByOAth } from "../schemas/auth.schema";
 
 // TODO - run changes to production db with this command - npx prisma migrate deploy
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
@@ -49,30 +48,10 @@ export class AuthService {
         throw new ConflictError("Email already in use");
       }
 
-      // // TODO - REMOVE THIS IN PRODUCTION!!!!
-      // // THIS WAS DONE SO THAT DAVID (FRONTEND GUY) CAN TEST AS MUCH AS HE WANTS
-      // const WHITELIST = "D.Morakinyo@scrubbe.com";
-      //   if (exists) {
-      //     if (exists.email.toLowerCase() === WHITELIST.toLowerCase()) {
-      //       // Delete whitelist user for testing
-      //       await this.prisma.refreshToken.deleteMany({
-      //         where: { userId: exists.id },
-      //       });
-
-      //       await this.prisma.verificationOTP.deleteMany({
-      //         where: { userId: exists.id },
-      //       });
-
-      //       await this.prisma.user.delete({ where: { email: exists.email } });
-      //     } else {
-      //       // Non whitelisted email  error
-      //       throw new ConflictError("Email already in use");
-      //     }
-      // }
-
       const passwordHash = await this.securityUtils.hashPassword(
         input.password
       );
+
       const user = await this.prisma.user.create({
         data: {
           firstName: input.firstName,
@@ -81,10 +60,15 @@ export class AuthService {
           passwordHash,
           role: Role.USER,
           accountType: AccountType.DEVELOPER,
-          experience: input.experienceLevel,
-          username: input.githubUsername,
+          developer: {
+            create: {
+              experience: input.experienceLevel,
+              githubUsername: input.githubUsername,
+            },
+          },
         },
       });
+
       const tokens = await this.tokenService.generateTokens(user as any);
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
@@ -121,13 +105,17 @@ export class AuthService {
           accountType: AccountType.BUSINESS,
           firstName: input.firstName,
           lastName: input.lastName,
-          address: input.businessAddress,
-          companySize: input.companySize,
-          purpose: input.purpose,
-          // role: Role.USER,
           role: Role.ADMIN,
+          business: {
+            create: {
+              address: input.businessAddress,
+              companySize: input.companySize,
+              purpose: input.purpose,
+            },
+          },
         },
       });
+
       const tokens = await this.tokenService.generateTokens(user as any);
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
@@ -166,8 +154,8 @@ export class AuthService {
           oauthProvider_uuid: input.id,
           isVerified: input.isVerified,
           registerdWithOauth: true,
-          image: input.image,
           email: input.email,
+          profileImage: input.image,
           accountType: AccountType.DEVELOPER,
           firstName: input.firstName,
           lastName: input.lastName,
@@ -210,16 +198,20 @@ export class AuthService {
           oauthProvider_uuid: input.id,
           registerdWithOauth: true,
           isVerified: input.isVerified,
-          image: input.image,
+          profileImage: input.image,
           email: input.email,
           accountType: AccountType.BUSINESS,
           firstName: input.firstName,
           lastName: input.lastName,
           role: Role.ADMIN,
 
-          address: input.businessAddress,
-          companySize: input.companySize,
-          purpose: input.purpose,
+          business: {
+            create: {
+              address: input.businessAddress,
+              companySize: input.companySize,
+              purpose: input.purpose,
+            },
+          },
         },
       });
 

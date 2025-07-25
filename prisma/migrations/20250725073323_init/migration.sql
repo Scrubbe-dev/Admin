@@ -1,4 +1,7 @@
 -- CreateEnum
+CREATE TYPE "ResetTokenType" AS ENUM ('VERIFICATION_CODE', 'RESET_LINK');
+
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'CUSTOMER', 'INTEGRATION');
 
 -- CreateEnum
@@ -31,23 +34,140 @@ CREATE TYPE "IncidentStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED
 -- CreateEnum
 CREATE TYPE "Priority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 
+-- CreateEnum
+CREATE TYPE "Roles" AS ENUM ('CISO', 'SECURITY_ENGINEER', 'SOC_ANALYST', 'IT_MANAGER', 'OTHERS');
+
+-- CreateEnum
+CREATE TYPE "AccountType" AS ENUM ('DEVELOPER', 'BUSINESS');
+
+-- CreateEnum
+CREATE TYPE "OAuthProvider" AS ENUM ('GOOGLE', 'AWS', 'GITHUB', 'GITLAB', 'AZURE');
+
+-- CreateEnum
+CREATE TYPE "AccessPermissions" AS ENUM ('VIEW_DASHBOARD', 'MODIFY_DASHBOARD', 'EXECUTE_ACTIONS', 'MANAGE_USERS');
+
+-- CreateEnum
+CREATE TYPE "DashboardType" AS ENUM ('SCRUBBE_DASHBOARD_SIEM', 'SCRUBBE_DASHBOARD_SOUR', 'CUSTOM');
+
+-- CreateEnum
+CREATE TYPE "BusinessPrefferedIntegration" AS ENUM ('JIRA', 'FRESH_DESK', 'SERVICE_NOW');
+
+-- CreateEnum
+CREATE TYPE "BusinessNotificationChannels" AS ENUM ('SLACK', 'MICROSOFT_TEAMS', 'EMAIL', 'SMS');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "passwordHash" TEXT NOT NULL,
+    "passwordHash" TEXT,
     "firstName" TEXT,
     "lastName" TEXT,
+    "profileImage" TEXT,
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "lastLogin" TIMESTAMP(3),
     "apiKeyDuration" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "apiKey" TEXT NOT NULL,
+    "apiKey" TEXT,
     "role" "Role" NOT NULL DEFAULT 'USER',
+    "passwordChangedAt" TIMESTAMP(3),
+    "username" TEXT,
+    "accountType" "AccountType",
+    "oauthprovider" "OAuthProvider",
+    "registerdWithOauth" BOOLEAN NOT NULL DEFAULT false,
+    "oauthProvider_uuid" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Developer" (
+    "id" TEXT NOT NULL,
+    "experience" TEXT,
+    "githubUsername" TEXT,
+    "jobTitle" TEXT,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Developer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Business" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "industry" TEXT,
+    "primaryRegion" TEXT,
+    "logo" TEXT,
+    "address" TEXT,
+    "companySize" TEXT NOT NULL,
+    "purpose" TEXT,
+    "dashBoardId" TEXT,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Business_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BusinessDashboard" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "businessId" TEXT NOT NULL,
+    "colorAccent" TEXT NOT NULL,
+    "defaultDashboard" "DashboardType" NOT NULL,
+    "prefferedIntegration" "BusinessPrefferedIntegration"[],
+    "notificationChannels" "BusinessNotificationChannels"[],
+    "defaultPriority" "Priority"[],
+
+    CONSTRAINT "BusinessDashboard_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Invites" (
+    "id" TEXT NOT NULL,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "role" "Role" NOT NULL,
+    "accessPermissions" "AccessPermissions"[],
+    "sentById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Invites_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerificationOTP" (
+    "id" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "used" BOOLEAN NOT NULL DEFAULT false,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "sentTo" TEXT NOT NULL,
+
+    CONSTRAINT "VerificationOTP_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ResetToken" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "type" "ResetTokenType" NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "usedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ResetToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -58,8 +178,8 @@ CREATE TABLE "WaitingUser" (
     "fullName" TEXT NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "company" TEXT NOT NULL,
-    "role" "Role" NOT NULL,
     "message" TEXT,
+    "role" TEXT NOT NULL,
 
     CONSTRAINT "WaitingUser_pkey" PRIMARY KEY ("id")
 );
@@ -238,10 +358,43 @@ CREATE TABLE "_CustomerToUser" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_apiKey_key" ON "User"("apiKey");
+CREATE INDEX "User_apiKey_idx" ON "User"("apiKey");
 
 -- CreateIndex
-CREATE INDEX "User_apiKey_idx" ON "User"("apiKey");
+CREATE UNIQUE INDEX "Developer_userId_key" ON "Developer"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Business_dashBoardId_key" ON "Business"("dashBoardId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Business_userId_key" ON "Business"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BusinessDashboard_businessId_key" ON "BusinessDashboard"("businessId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invites_email_key" ON "Invites"("email");
+
+-- CreateIndex
+CREATE INDEX "Invites_sentById_idx" ON "Invites"("sentById");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerificationOTP_userId_key" ON "VerificationOTP"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerificationOTP_sentTo_key" ON "VerificationOTP"("sentTo");
+
+-- CreateIndex
+CREATE INDEX "ResetToken_token_idx" ON "ResetToken"("token");
+
+-- CreateIndex
+CREATE INDEX "ResetToken_userId_idx" ON "ResetToken"("userId");
+
+-- CreateIndex
+CREATE INDEX "ResetToken_type_idx" ON "ResetToken"("type");
+
+-- CreateIndex
+CREATE INDEX "ResetToken_expiresAt_idx" ON "ResetToken"("expiresAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WaitingUser_email_key" ON "WaitingUser"("email");
@@ -334,6 +487,27 @@ CREATE INDEX "_AlertToIncident_B_index" ON "_AlertToIncident"("B");
 CREATE INDEX "_CustomerToUser_B_index" ON "_CustomerToUser"("B");
 
 -- AddForeignKey
+ALTER TABLE "Developer" ADD CONSTRAINT "Developer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Business" ADD CONSTRAINT "Business_dashBoardId_fkey" FOREIGN KEY ("dashBoardId") REFERENCES "BusinessDashboard"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Business" ADD CONSTRAINT "Business_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BusinessDashboard" ADD CONSTRAINT "BusinessDashboard_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invites" ADD CONSTRAINT "Invites_sentById_fkey" FOREIGN KEY ("sentById") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VerificationOTP" ADD CONSTRAINT "VerificationOTP_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ResetToken" ADD CONSTRAINT "ResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -346,16 +520,16 @@ ALTER TABLE "SecurityEvent" ADD CONSTRAINT "SecurityEvent_customerId_fkey" FOREI
 ALTER TABLE "Alert" ADD CONSTRAINT "Alert_ruleId_fkey" FOREIGN KEY ("ruleId") REFERENCES "DetectionRule"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Incident" ADD CONSTRAINT "Incident_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Incident" ADD CONSTRAINT "Incident_assigneeId_fkey" FOREIGN KEY ("assigneeId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "IncidentComment" ADD CONSTRAINT "IncidentComment_incidentId_fkey" FOREIGN KEY ("incidentId") REFERENCES "Incident"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Incident" ADD CONSTRAINT "Incident_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "IncidentComment" ADD CONSTRAINT "IncidentComment_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "IncidentComment" ADD CONSTRAINT "IncidentComment_incidentId_fkey" FOREIGN KEY ("incidentId") REFERENCES "Incident"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlaybookExecution" ADD CONSTRAINT "PlaybookExecution_incidentId_fkey" FOREIGN KEY ("incidentId") REFERENCES "Incident"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
