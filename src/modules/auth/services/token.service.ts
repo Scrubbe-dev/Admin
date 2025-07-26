@@ -24,17 +24,14 @@ export class TokenService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      accountType: user.accountType,
       roles: user.roles,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + parseInt(this.jwtExpiresIn),
+      // corrected from secs to mins -> added '*60'
+      exp: Math.floor(Date.now() / 1000) + parseInt(this.jwtExpiresIn) * 60,
     };
 
-    const jwtSign = await jwt.sign(payload, this.jwtSecret);
-    console.log(
-      "================================Jwt sign and secrete ================================",
-      jwtSign,
-      this.jwtSecret
-    );
+    const jwtSign = jwt.sign(payload, this.jwtSecret);
     return jwtSign;
   }
 
@@ -85,12 +82,8 @@ export class TokenService {
 
   async verifyAccessToken(token: string): Promise<JwtPayload> {
     try {
-      const verify = (await jwt.verify(token, this.jwtSecret)) as JwtPayload;
-
-      console.log(
-        "================================Token verified================================",
-        verify
-      );
+      const verify = jwt.verify(token, this.jwtSecret) as JwtPayload;
+      
       return verify;
     } catch (err) {
       throw new UnauthorizedError("Invalid access token");

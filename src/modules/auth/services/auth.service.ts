@@ -26,10 +26,6 @@ import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
 
 //  TODO - CREATE A MAPPER CLASS TO REDUCE AS MUCH RESPONSE AS POSSIBLE FOR REGISTERED, LOGGED IN USERS
-//  TODO - CREATE SEPERATE SCHEMAS FOR DEVELOPER AND BUSINESS PROFILES
-
-// TODO(#4): Validate `isVerified` flag from the OAuth provider.
-//              - If `isVerified` is false or missing, initiate OTP verification.
 export class AuthService {
   constructor(
     private prisma: PrismaClient,

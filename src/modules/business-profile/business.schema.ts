@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { emailSchema } from "../../shared/validation.schema";
+import { emailSchema } from "../../shared/validation/validation.schema";
 import {
   AccessPermissions,
   DashboardType,
