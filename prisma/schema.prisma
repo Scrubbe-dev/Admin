@@ -234,6 +234,17 @@ model Incident {
   @@index([status, priority])
 }
 
+model EzraRule {
+  id          String   @id @default(cuid())
+  description String   // User natural language
+  metric      String
+  threshold   Int
+  timeWindow  String
+  actions     String   // comma-separated actions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Customer {
   id           String          @id @default(uuid())
   name         String

@@ -134,17 +134,20 @@ export class AuthController {
     }
   };
 
-  oAuthLogin = async(req: Request, res: Response, next: NextFunction) => {
+  oAuthLogin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const request = await validateRequest<OAuthLoginRequest>(loginWithOauthSchema, req.body);
+      const request = await validateRequest<OAuthLoginRequest>(
+        loginWithOauthSchema,
+        req.body
+      );
 
       const result = await this.authService.oAuthLogin(request);
 
-      res.json(result)
+      res.json(result);
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 
   refreshTokens = async (req: Request, res: Response, next: NextFunction) => {
     try {
