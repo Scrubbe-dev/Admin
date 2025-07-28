@@ -8,7 +8,7 @@ import { ExtraData, PromptType } from "../ezra.types";
 export const buildPrompt = (
   type: PromptType,
   userPrompt: string,
-  extra: ExtraData = {}
+  data: ExtraData = {}
 ) => {
   const enforceJson = `
 IMPORTANT:
@@ -76,22 +76,24 @@ You are Ezra, an AI analyst. Summarize these incidents in plain language with st
 
 INCIDENTS JSON:
 ${JSON.stringify(
-  extra.incidents?.map((i) => ({
+  data.incidents?.map((i) => ({
     id: i.id,
     title: i.title,
     priority: i.priority,
+    description: i.description,
+    status: i.status,
     createdAt: i.createdAt,
   }))
 )}
 
 TASK:
 - Summarize incidents clearly.
-- Each summary must include: incident, priority, action, impact.
+- Each summary must include: incident, priority, description, status.
 
 OUTPUT SCHEMA:
 {
   "summaries": [
-    { "incident": "string", "priority": "string", "action": "string", "impact": "string" }
+    { "incident": "string", "priority": "string", "status": "string", "description": "string" }
   ]
 }
 

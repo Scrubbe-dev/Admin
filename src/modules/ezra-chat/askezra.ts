@@ -6,20 +6,19 @@ import { buildPrompt } from "./prompt/promptbuilder";
  * Generic Ezra function:
  * @param {string} type - "rule", "interpretSummary", or "summarizeIncidents"
  * @param {string} userPrompt - user input (natural language)
- * @param {object} schema - JSON schema to enforce structured response
  * @param {object} extra - extra data (like incidents for summarization)
  */
 
 //  TODO - add type for extra
 //  TODO - MAKE ASK EZRA GENERIC
 
-export const askEzra = async (
+export const askEzra = async <T>(
   type: PromptType,
   userPrompt: string,
-  schema: Object | null,
   extra: object = {}
-) => {
+): Promise<T> => {
   const systemPrompt = buildPrompt(type, userPrompt, extra);
+  
   try {
     const completion = await openai.chat.completions.create({
       model: "mistralai/mistral-small-3.2-24b-instruct:free",

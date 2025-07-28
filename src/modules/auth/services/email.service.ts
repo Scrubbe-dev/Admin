@@ -11,23 +11,29 @@ export class EmailService {
   }
 
   async sendVerificationEmail(email: string, code: string): Promise<void> {
-    console.log("Send verification email function called");
     // const token = await this.generateVerificationToken(email);
     // const code = this.generateVerificationOTP();
     // const verificationUrl = `${process.env.BASE_EMAIL_VERIFICATION}?token=${token}`;
+    try {
+      await this.transporter.sendMail({
+        from: emailConfig.from,
+        to: email,
+        subject: "Verify Your Email",
+        html: `
+          <h1>Welcome!</h1>
+          <p>Please verify your email with this code:</p>
+          <p>${code}</p>
+        `,
+      });
 
-    await this.transporter.sendMail({
-      from: emailConfig.from,
-      to: email,
-      subject: "Verify Your Email",
-      html: `
-        <h1>Welcome!</h1>
-        <p>Please verify your email with this code:</p>
-        <p>${code}</p>
-      `,
-    });
-
-    console.log("sent verification otp");
+      console.log("sent verification otp");
+    } catch (error) {
+      throw new Error(
+        `Failed to send verification email: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
   }
 
   private async generateVerificationToken(email: string): Promise<string> {
@@ -53,8 +59,7 @@ export class EmailService {
         from: emailConfig.from,
         to: invite.inviteEmail,
         subject: `You're Invited to Join ${process.env.APP_NAME || "Scrubbe"}`,
-        html:
-         /* html */ `
+        html: /* html */ `
           <h1>Hi ${invite.firstName} ${invite.lastName},</h1>
           <p>
             You have been invited to join

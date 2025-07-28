@@ -1,9 +1,9 @@
-import { IncidentStatus, Priority } from "@prisma/client";
+import { Incident, IncidentStatus, Priority } from "@prisma/client";
 
 export type PromptType = "rule" | "interpretSummary" | "summarizeIncidents";
 
 export interface ExtraData {
-  incidents?: any[];
+  incidents?: Incident[];
 }
 
 export type JsonSchemaFormat = {
@@ -29,4 +29,13 @@ export type SummarizeIncidentResponse = {
     start: Date;
     end: Date;
   };
+};
+
+export type SummariesResponse = {
+  summaries: {
+    incident: string;
+    priority: string;
+    status: string;
+    description: string;
+  }[];
 };

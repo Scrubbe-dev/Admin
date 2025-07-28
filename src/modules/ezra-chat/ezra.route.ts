@@ -25,7 +25,7 @@ ezraRouter.post(
   (req, res, next) => ezraController.summarizeIncidents(req, res, next)
 );
 
-ezraRouter.post("/rule", (req, res, next) =>
+ezraRouter.post("/rule", authMiddleware.authenticate, (req, res, next) =>
   ezraController.createRuleFromPrompt(req, res, next)
 );
 
