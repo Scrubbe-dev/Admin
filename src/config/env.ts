@@ -26,7 +26,7 @@ const envSchema = z.object({
   BASE_SEARCH_URL: z.string().url().default('https://api.apilayer.com/ip_to_location'),
   BASE_EMAIL_VERIFICATION: z.string().url().default('https://yourapp.com/verify-email'),
   SMTP_HOST: z.string().min(1),
-  SMTP_PORT: z.string().min(4),
+  SMTP_PORT: z.string().min(3),
   SMTP_USER: z.string().min(1),
   SMTP_PASS: z.string().min(3),
   FROM_EMAIL: z.string()

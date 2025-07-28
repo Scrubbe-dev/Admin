@@ -29,7 +29,7 @@ export class EzraUtils {
       const incidents = await this.prisma.incident.findMany({
         where: {
           assigneeId: userId,
-          // ...(normalizedPriority && { priority: normalizedPriority }),
+          ...(normalizedPriority && { priority: normalizedPriority }),
           createdAt: {
             gte: cleanTimeframe.start,
             lte: cleanTimeframe.end,
@@ -68,7 +68,8 @@ export class EzraUtils {
       critical: "CRITICAL",
     };
 
-    let normalizedPriority = null;
+    let normalizedPriority: Priority | null = null;
+
     if (priority) {
       const key = priority.toLowerCase();
       if (priorityMap[key]) {
@@ -83,6 +84,7 @@ export class EzraUtils {
       timeframe: { start, end },
     };
   }
+
   private remapDateRangeToCurrent = (range: TimeFrame): TimeFrame => {
     const { start, end } = range;
 
@@ -102,7 +104,7 @@ export class EzraUtils {
       now.getUTCDate()
     );
 
-    const msPerDay = 24 * 60 * 60 * 1000;
+    const msPerDay = 24 * 60 * 60 * 1000; // 1 day in milliseconds
     const dayOffset = Math.floor((today - baseline) / msPerDay);
 
     // Shift dates

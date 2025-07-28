@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { EzraService } from "./ezra.service";
 import { askEzra } from "./askezra";
+import { SummarizeIncidentResponse } from "./ezra.types";
 
 export class EzraController {
   constructor(private ezraService: EzraService) {}
@@ -18,10 +19,9 @@ export class EzraController {
   async summarizeIncidents(req: Request, res: Response, next: NextFunction) {
     try {
       const { prompt } = req.body;
-      const { priority, timeframe } = await askEzra(
+      const { priority, timeframe } = await askEzra<SummarizeIncidentResponse>(
         "interpretSummary",
         prompt,
-        null
       );
 
       console.log(

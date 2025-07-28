@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { EzraUtils } from "./ezra.utils";
 import { askEzra } from "./askezra";
-import { TimeFrame } from "./ezra.types";
+import { SummariesResponse, TimeFrame } from "./ezra.types";
 
 export class EzraService {
   constructor(
@@ -33,13 +33,9 @@ export class EzraService {
       incidents
     );
 
-    const summary = await askEzra("summarizeIncidents", prompt, null, {
+    const summary = await askEzra<SummariesResponse>("summarizeIncidents", prompt, {
       incidents,
     });
-
-    if (!summary) {
-      throw new Error("Failed to summarize incidents");
-    }
 
     return summary;
   }
