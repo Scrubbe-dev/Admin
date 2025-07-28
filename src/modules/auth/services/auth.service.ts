@@ -335,7 +335,11 @@ export class AuthService {
       where: { email: input.email },
     });
 
-    if (!user || !user.isActive) {
+    // if (!user || !user.isActive) {
+    //   throw new UnauthorizedError("Invalid credentials");
+    // }
+
+    if (!user) {
       throw new UnauthorizedError("Invalid credentials");
     }
 

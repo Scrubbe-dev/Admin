@@ -60,6 +60,7 @@
     "multer": "1.4.5-lts.2",
     "net": "^1.0.2",
     "nodemailer": "^6.10.1",
+    "openai": "^5.10.2",
     "rate-limiter-flexible": "^7.0.0",
     "redis": "^4.7.0",
     "satelize": "^0.2.0",
