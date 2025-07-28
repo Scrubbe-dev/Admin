@@ -10,7 +10,7 @@ declare global {
         id: string;
         sub: string;
         email: string;
-        AccountType?: AccountType;
+        accountType?: AccountType;
       };
     }
   }
@@ -20,8 +20,6 @@ export class AuthMiddleware {
   constructor(private tokenService: TokenService) {}
 
   authenticate = async (req: Request, res: Response, next: NextFunction) => {
-    console.log("=============================================================Auth middleware triggered=============================================================");
-    console.log("=============================================================Req.User=============================================================", req.user);
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       throw new UnauthorizedError("Authentication required");

@@ -6,9 +6,7 @@ export const businessAccountOnly = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("=============================================================Business account middleware triggered=============================================================");
-  console.log("=============================================================Req.User=============================================================", req.user);
-  if (req.user && req.user.AccountType === "BUSINESS") {
+  if (req.user && req.user.accountType === "BUSINESS") {
     return next();
   }
 

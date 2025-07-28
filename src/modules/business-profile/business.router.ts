@@ -2,13 +2,25 @@ import express from "express";
 import { BusinessController } from "./business.controller";
 import { BusinessService } from "./business.service";
 import { PrismaClient } from "@prisma/client";
-import { EmailServices } from "../password-reset/email.services";
+import { AuthMiddleware } from "../auth/middleware/auth.middleware";
+import { TokenService } from "../auth/services/token.service";
+import dotenv from "dotenv";
+import { businessAccountOnly } from "./business.middleware";
+dotenv.config();
 
 const businessRouter = express.Router();
 
 const prismaClient = new PrismaClient();
+const tokenService = new TokenService(
+  prismaClient,
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+
 const businessService = new BusinessService(prismaClient);
 const businessController = new BusinessController(businessService);
+const authMiddleware = new AuthMiddleware(tokenService);
 
 /**
  * @swagger
@@ -118,9 +130,14 @@ const businessController = new BusinessController(businessService);
  *                   type: string
  *                   example: "Setup successful. 1 invite sent. Skipped: test@example.com (already invited)."
  */
-businessRouter.put("/setup", (req, res, next) => {
-  businessController.businessSetUp(req, res, next);
-});
+businessRouter.put(
+  "/setup",
+  authMiddleware.authenticate,
+  businessAccountOnly,
+  (req, res, next) => {
+    businessController.businessSetUp(req, res, next);
+  }
+);
 
 /**
  * @swagger

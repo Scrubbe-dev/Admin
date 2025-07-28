@@ -142,7 +142,6 @@ app.use(limiter);
 app.use("/api/v1", waitingRouter);
 app.use("/api/v1", adminRouter);
 app.use("/api/v1/auth/", createAuthRouter(authController, authMiddleware));
-// TODO - ADD MIDDLEWARE TO SOME OF THESE ROUTES IN BUSINESS FOR AUTHENTICATION AND BUSINESS ACCOUNTS ONLY
 app.use("/api/v1/business/", businessRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);

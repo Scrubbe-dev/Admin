@@ -10,7 +10,7 @@ declare global {
         id: string;
         sub: string;
         email: string;
-        AccountType?: AccountType;
+        accountType?: AccountType;
       };
     }
   }

@@ -7,7 +7,7 @@ import {
 } from "./business.types";
 import { Request } from "express";
 import { BusinessUtil } from "./business.util";
-import { ConflictError } from "../auth/error";
+import { ConflictError, ForbiddenError } from "../auth/error";
 
 export class BusinessService {
   constructor(
@@ -19,9 +19,14 @@ export class BusinessService {
     input: BusinessSetUpRequest,
     req: Request
   ): Promise<{ message: string }> {
+    // TODO - REPLACE THESE CONDITIONS WITH MIDDLEWARE PROPERLY
     const { newInvites, skippedInvites } = await this.prisma.$transaction(
       async (tx) => {
-        const business = await this.businessUtil.updateBusinessAdmin(tx, input);
+        const business = await this.businessUtil.updateBusinessAdmin(
+          tx,
+          input,
+          req.user?.sub!
+        );
 
         // Ensure dashboard exists
         await this.businessUtil.ensureBusinessDashboard(
@@ -44,9 +49,8 @@ export class BusinessService {
       await this.businessUtil.sendInviteEmail(invite);
     }
 
-    // 2 because invite with 0 is invite not invites (I know english)
     let message = `Setup successful. ${newInvites.length} ${
-      newInvites.length < 2 ? "invite" : "invites"
+      newInvites.length == 1 ? "invite" : "invites"
     } sent.`;
     if (skippedInvites.length > 0) {
       message += ` Skipped: ${skippedInvites.join(", ")} (already invited).`;

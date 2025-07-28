@@ -8,18 +8,18 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { EmailService } from "../auth/services/email.service";
 import { Prisma } from "@prisma/client";
-import { ConflictError } from "../auth/error";
+import { ConflictError, ForbiddenError } from "../auth/error";
 
 dotenv.config();
 
 export class BusinessUtil {
   async updateBusinessAdmin(
     tx: Prisma.TransactionClient,
-    input: BusinessSetUpRequest
+    input: BusinessSetUpRequest,
+    id: string // or sub from req.user
   ) {
     const updatedBusinessAdmin = await tx.user.update({
-      // where: { email: req.user?.email }, // TODO - ADD MIDDLEWARE SO THAT AUTHENTICATED USERS CAN BE USED FOR LOOKUP
-      where: { email: input.adminEmail },
+      where: { id },
       data: {
         firstName: input.firstName,
         lastName: input.lastName,
