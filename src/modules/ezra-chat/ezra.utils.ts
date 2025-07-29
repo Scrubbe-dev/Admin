@@ -17,22 +17,24 @@ export class EzraUtils {
         timeframe
       );
 
-      const { priority: normalizedPriority, timeframe: cleanTimeframe } =
-        this.normalizePriorityAndTimeframe(priority, timeframe);
+      const normalized = await this.normalizePriorityAndTimeframe(
+        priority,
+        timeframe
+      );
 
       console.log(
         "======================= normalized priority and timeframe: =======================",
-        priority,
-        timeframe
+        normalized.priority,
+        normalized.timeframe
       );
 
       const incidents = await this.prisma.incident.findMany({
         where: {
           assigneeId: userId,
-          ...(normalizedPriority && { priority: normalizedPriority }),
+          ...(normalized.priority && { priority: normalized.priority }),
           createdAt: {
-            gte: cleanTimeframe.start,
-            lte: cleanTimeframe.end,
+            gte: normalized.timeframe.start,
+            lte: normalized.timeframe.end,
           },
         },
         select: {
@@ -57,7 +59,7 @@ export class EzraUtils {
     }
   };
 
-  private normalizePriorityAndTimeframe(
+  private async normalizePriorityAndTimeframe(
     priority: string | null,
     timeframe: TimeFrame
   ) {
@@ -77,7 +79,7 @@ export class EzraUtils {
       }
     }
 
-    const { start, end } = this.remapDateRangeToCurrent(timeframe);
+    const { start, end } = await this.remapDateRangeToCurrent(timeframe);
 
     return {
       priority: normalizedPriority,
@@ -85,35 +87,31 @@ export class EzraUtils {
     };
   }
 
-  private remapDateRangeToCurrent = (range: TimeFrame): TimeFrame => {
-    const { start, end } = range;
+  private remapDateRangeToCurrent = async (
+    range: TimeFrame
+  ): Promise<TimeFrame> => {
+    const startDate = new Date(range.start);
+    const endDate = new Date(range.end);
 
-    const startDate = new Date(start);
-    const endDate = new Date(end);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new Error("Invalid date input to remapDateRangeToCurrent");
+    }
 
-    const baseline = Date.UTC(
-      startDate.getUTCFullYear(),
-      startDate.getUTCMonth(),
-      startDate.getUTCDate()
-    );
+    // Duration (in ms)
+    const duration = endDate.getTime() - startDate.getTime();
 
+    // Today midnight UTC
     const now = new Date();
-    const today = Date.UTC(
+    const todayMidnightUTC = Date.UTC(
       now.getUTCFullYear(),
       now.getUTCMonth(),
       now.getUTCDate()
     );
 
-    const msPerDay = 24 * 60 * 60 * 1000; // 1 day in milliseconds
-    const dayOffset = Math.floor((today - baseline) / msPerDay);
+    // End at today, start is duration before
+    const newEnd = new Date(todayMidnightUTC);
+    const newStart = new Date(todayMidnightUTC - duration);
 
-    // Shift dates
-    const shiftedStart = new Date(startDate.getTime() + dayOffset * msPerDay);
-    const shiftedEnd = new Date(endDate.getTime() + dayOffset * msPerDay);
-
-    return {
-      start: shiftedStart,
-      end: shiftedEnd,
-    };
+    return { start: newStart, end: newEnd };
   };
 }
