@@ -10,22 +10,9 @@ export class EzraUtils {
     timeframe: TimeFrame
   ) => {
     try {
-      console.log(
-        "======================= fetchIncidentsbyId called with: =======================",
-        userId,
-        priority,
-        timeframe
-      );
-
       const normalized = await this.normalizePriorityAndTimeframe(
         priority,
         timeframe
-      );
-
-      console.log(
-        "======================= normalized priority and timeframe: =======================",
-        normalized.priority,
-        normalized.timeframe
       );
 
       const incidents = await this.prisma.incident.findMany({
@@ -46,11 +33,6 @@ export class EzraUtils {
           createdAt: true,
         },
       });
-
-      console.log(
-        "======================= Incidents fetched from DB: =======================",
-        incidents
-      );
 
       return incidents;
     } catch (error) {
@@ -100,7 +82,6 @@ export class EzraUtils {
     // Duration (in ms)
     const duration = endDate.getTime() - startDate.getTime();
 
-    // Today midnight UTC
     const now = new Date();
     const todayMidnightUTC = Date.UTC(
       now.getUTCFullYear(),
@@ -108,7 +89,6 @@ export class EzraUtils {
       now.getUTCDate()
     );
 
-    // End at today, start is duration before
     const newEnd = new Date(todayMidnightUTC);
     const newStart = new Date(todayMidnightUTC - duration);
 

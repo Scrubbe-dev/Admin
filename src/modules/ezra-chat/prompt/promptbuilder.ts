@@ -47,16 +47,30 @@ ${enforceJson}
 
     case "interpretSummary":
       return `
-You are Ezra, an AI analyst. Extract filters and timeframe from the user's incident summary request.
+You are Ezra, an AI analyst. Convert the user's natural language request into structured filters and timeframe.
 
 USER REQUEST:
 "${userPrompt}"
 
 TASK:
-- Identify priority (High/Medium/Low) if specified.
-- Identify incident type (e.g., Failed Login, Account Takeover).
-- Convert relative dates ("yesterday", "last 3 hours") into ISO 8601 start/end.
-- Default timeframe: last 24 hours if none given.
+- Determine priority (High/Medium/Low/Critical) if explicitly stated; otherwise null.
+- Determine timeframe:
+  * Interpret any relative or vague date range (e.g., "yesterday", "3 days ago", "2 weeks ago", "last month", "ever").
+  * For phrases like "ever" or "all time", set start far in the past (e.g., 1970-01-01T00:00:00Z) and end as today’s midnight UTC.
+  * For **exact day mentions** ("yesterday", "1 day ago"), return that day’s midnight-to-midnight range.
+  * For phrases like "**X days ago**" or "**X weeks ago**", interpret as a **range of that duration ending on that date**.  
+    Example: "7 days ago" → { start: 14 days ago 00:00Z, end: 7 days ago 00:00Z }
+  * For explicit ranges like "last month" or "past 2 weeks", calculate full range appropriately.
+  * If no timeframe is mentioned, default to last 7 days (start = 7 days ago midnight, end = today midnight).
+- Always output ISO 8601 UTC format: YYYY-MM-DDTHH:mm:ssZ
+- Always align start to 00:00:00 UTC of the starting day, and end to 00:00:00 UTC of the day after the period ends.
+
+Examples:
+- "yesterday" → { start: [yesterday 00:00Z], end: [today 00:00Z] }
+- "3 days ago" → { start: [6 days ago 00:00Z], end: [3 days ago 00:00Z] }
+- "2 weeks ago" → { start: [28 days ago 00:00Z], end: [14 days ago 00:00Z] }
+- "last month" → { start: [first day of last month 00:00Z], end: [first day of current month 00:00Z] }
+- "ever" → { start: 1970-01-01T00:00:00Z, end: [today 00:00Z] }
 
 OUTPUT SCHEMA:
 {
@@ -71,33 +85,32 @@ ${enforceJson}
 `;
 
     case "summarizeIncidents":
+      if (!data.incidents || data.incidents.length === 0) {
+        return "No incidents found for the selected time range.";
+      }
       return `
-You are Ezra, an AI analyst. Summarize these incidents in plain language with structured fields.
+You are Ezra, an AI analyst. Summarize the incidents into a **readable report**.
 
-INCIDENTS JSON:
+INCIDENTS DATA (JSON):
 ${JSON.stringify(
   data.incidents?.map((i) => ({
-    id: i.id,
     title: i.title,
     priority: i.priority,
     description: i.description,
-    status: i.status,
     createdAt: i.createdAt,
   }))
 )}
 
 TASK:
-- Summarize incidents clearly.
-- Each summary must include: incident, priority, description, status.
+- Summarize in **plain text**, not JSON.
+- For each incident, use this structure (no numbering or bullets):
+  Title: <summarized title>
+  Priority: <priority level>
+  Description: <detailed but concise explanation, combine key context and actions taken or pending>
 
-OUTPUT SCHEMA:
-{
-  "summaries": [
-    { "incident": "string", "priority": "string", "status": "string", "description": "string" }
-  ]
-}
-
-${enforceJson}
+- Ensure descriptions include **context of impact, cause (if known), and next steps**.
+- Do NOT wrap with code blocks or JSON.
+- Separate each incident with a blank line.
 `;
 
     default:
