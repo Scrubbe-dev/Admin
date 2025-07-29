@@ -29,20 +29,21 @@ model User {
 
   accountType AccountType?
 
-  oauthprovider             OAuthProvider?
-  registerdWithOauth        Boolean             @default(false)
-  oauthProvider_uuid        String?
-  DetectionRule             DetectionRule[]
-  Incident                  Incident[]
-  IncidentComment           IncidentComment[]
-  PlaybookExecution         PlaybookExecution[]
-  refreshToken              RefreshToken[]
-  resetTokens               ResetToken[]
-  VerificationOTP           VerificationOTP?
-  Customer                  Customer[]          @relation("CustomerToUser")
+  oauthprovider        OAuthProvider?
+  registerdWithOauth   Boolean                @default(false)
+  oauthProvider_uuid   String?
+  DetectionRule        DetectionRule[]
+  Incident             Incident[]
+  IncidentComment      IncidentComment[]
+  PlaybookExecution    PlaybookExecution[]
+  refreshToken         RefreshToken[]
+  resetTokens          ResetToken[]
+  VerificationOTP      VerificationOTP?
+  Customer             Customer[]             @relation("CustomerToUser")
   // BusinessDashboardSettings BusinessDashboard[]
-  developer                 Developer?
-  business                  Business?
+  developer            Developer?
+  business             Business?
+  ProjectConfiguration ProjectConfiguration[]
 
   @@index([apiKey])
 }
@@ -236,13 +237,31 @@ model Incident {
 
 model EzraRule {
   id          String   @id @default(cuid())
-  description String   // User natural language
+  description String // User natural language
   metric      String
   threshold   Int
   timeWindow  String
-  actions     String   // comma-separated actions
+  actions     String // comma-separated actions
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ProjectConfiguration {
+  id          String        @id @default(uuid())
+  name        String
+  enviroment  String
+  domain      String?
+  description String?
+  modules     String[]
+  package     PackageModule
+  lastseen    DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id])
+
+  @@unique([ownerId, package])
+  @@index([ownerId])
 }
 
 model Customer {
@@ -484,4 +503,8 @@ enum BusinessNotificationChannels {
   MICROSOFT_TEAMS
   EMAIL
   SMS
+}
+
+enum PackageModule {
+  FINGERPRINT
 }

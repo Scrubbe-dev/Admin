@@ -38,6 +38,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import businessRouter from "./modules/business-profile/business.router";
 import { businessAccountOnly } from "./modules/business-profile/business.middleware";
 import ezraRouter from "./modules/ezra-chat/ezra.route";
+import fingerprintRouter from "./modules/fingerprint/fingerprint.route";
 dotenvConfig();
 
 const app = express();
@@ -145,6 +146,7 @@ app.use("/api/v1", adminRouter);
 app.use("/api/v1/auth/", createAuthRouter(authController, authMiddleware));
 app.use("/api/v1/business/", businessRouter);
 app.use("/api/v1/ezra/", ezraRouter);
+app.use("/api/v1/fingerprint/", fingerprintRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);
