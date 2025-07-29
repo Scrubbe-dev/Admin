@@ -30,10 +30,10 @@ const authMiddleware = new AuthMiddleware(tokenService);
  * @swagger
  * /api/v1/ezra/incidents/summary:
  *   post:
- *     summary: Summarize user-assigned incidents with optional priority and timeframe
+ *     summary: Stream summarized incidents in markdown with optional priority and timeframe
  *     description: >
- *       This endpoint uses **Ezra AI** to interpret a natural language prompt, extract filters (priority and timeframe),
- *       fetch matching incidents assigned to the authenticated user, and return an AI-generated summary of those incidents.
+ *       This endpoint uses Ezra AI to interpret a natural language prompt, extract filters (priority and timeframe),
+ *       fetch matching incidents assigned to the authenticated user, and stream back a markdown-formatted summary.
  *     tags: [Ezra]
  *     security:
  *       - bearerAuth: []
@@ -52,30 +52,21 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *                 example: "Ezra summarize today's high priority incidents"
  *     responses:
  *       200:
- *         description: Summarized incidents based on interpreted filters
+ *         description: Streamed markdown summaries of incidents
  *         content:
- *           application/json:
+ *           text/event-stream:
  *             schema:
- *               type: object
- *               properties:
- *                 summaries:
- *                   type: array
- *                   description: AI-generated summaries of incidents
- *                   items:
- *                     type: object
- *                     properties:
- *                       incident:
- *                         type: string
- *                         example: "Network outage affecting payment systems"
- *                       priority:
- *                         type: string
- *                         example: "HIGH"
- *                       status:
- *                         type: string
- *                         example: "OPEN"
- *                       description:
- *                         type: string
- *                         example: "Outage detected at 3 AM impacting all payment processing servers."
+ *               type: string
+ *               example: |
+ *                 **Title:** Network outage affecting payment systems
+ *                 **Priority:** HIGH
+ *                 **Description:** Outage detected at 3 AM impacting payment processing servers.
+ *
+ *                 ---
+ *
+ *                 **Title:** Firewall misconfiguration
+ *                 **Priority:** LOW
+ *                 **Description:** Privilege escalation vulnerability in admin portal, under investigation.
  *       400:
  *         description: Bad request (e.g., missing prompt)
  *       401:
