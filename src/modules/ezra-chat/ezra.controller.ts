@@ -16,33 +16,40 @@ export class EzraController {
     }
   }
 
+  // sends as stream response
   async summarizeIncidents(req: Request, res: Response, next: NextFunction) {
     try {
       const { prompt } = req.body;
       const { priority, timeframe } = await askEzra<SummarizeIncidentResponse>(
         "interpretSummary",
-        prompt,
+        prompt
       );
 
-      console.log(
-        "======================= Filters and timeframe extracted: =======================",
-        priority,
-        timeframe
-      );
-
-      const response = await this.ezraService.summarizeIncidents(
+      const streamResponse = await this.ezraService.summarizeIncidents(
         priority,
         timeframe,
         req.user?.sub!, // user id passed from auth middleware
         prompt
       );
 
-      console.log(
-        "======================= summarize incident service response =======================",
-        response
-      );
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("X-Accel-Buffering", "no");
 
-      res.status(200).json(response);
+      const reader = streamResponse.body?.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const result = await reader?.read();
+        if (!result) break;
+        const { value, done } = result;
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        res.write(chunk);
+      }
+
+      res.end();
     } catch (error) {
       next(error);
     }

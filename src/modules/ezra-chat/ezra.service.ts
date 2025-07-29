@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { EzraUtils } from "./ezra.utils";
-import { askEzra } from "./askezra";
+import { askEzra, askEzraStream } from "./askezra";
 import { SummariesResponse, TimeFrame } from "./ezra.types";
 
 export class EzraService {
@@ -17,26 +17,16 @@ export class EzraService {
     userId: string,
     prompt: string
   ) {
-    console.log(
-      "summarizeincidents called, priority, timeframe, userId. prompt:"
-    );
-    console.log(priority, timeframe, userId, prompt);
-
     const incidents = await this.ezraUtils.fetchIncidentsbyId(
       userId,
       priority,
       timeframe
     );
 
-    console.log(
-      "======================= Incidents fetched: =======================",
-      incidents
-    );
-
-    const summary = await askEzra<SummariesResponse>("summarizeIncidents", prompt, {
+    const streamSummary = await askEzraStream("summarizeIncidents", prompt, {
       incidents,
     });
 
-    return summary;
+    return streamSummary;
   }
 }
