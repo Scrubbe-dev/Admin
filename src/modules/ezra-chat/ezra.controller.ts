@@ -49,7 +49,7 @@ export class EzraController {
         res.write(chunk);
       }
 
-      res.end();
+    res.end();
     } catch (error) {
       next(error);
     }

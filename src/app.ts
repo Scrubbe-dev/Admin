@@ -53,14 +53,14 @@ const config = {
   jwtSecret: env.JWT_SECRET || "your-secret-key",
   jwtExpiresIn: "1440m", // in mins (1 day)
   refreshTokenExpiresInDays: 7,
-  smtpOptions: {
-    host: env.SMTP_HOST,
-    port: parseInt(env.SMTP_PORT || "587"),
-    auth: {
-      user: env.SMTP_USER,
-      pass: env.SMTP_PASS,
-    },
-  },
+  // smtpOptions: {
+  //   host: env.SMTP_HOST,
+  //   port: parseInt(env.SMTP_PORT || "587"),
+  //   auth: {
+  //     user: env.SMTP_USER,
+  //     pass: env.SMTP_PASS,
+  //   },
+  // },
   fromEmail: env.FROM_EMAIL || "no-reply@yourdomain.com",
 };
 

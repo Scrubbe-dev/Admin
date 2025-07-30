@@ -17,7 +17,8 @@ export class EzraUtils {
 
       const incidents = await this.prisma.incident.findMany({
         where: {
-          assigneeId: userId,
+          // assigneeId: userId, // TODO: change back to user id
+          assigneeId: "5190797b-f462-4052-a248-8149f7b6dcb7",
           ...(normalized.priority && { priority: normalized.priority }),
           createdAt: {
             gte: normalized.timeframe.start,

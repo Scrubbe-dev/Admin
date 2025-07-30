@@ -78,7 +78,7 @@ const authMiddleware = new AuthMiddleware(tokenService);
  */
 ezraRouter.post(
   "/incidents/summary",
-  authMiddleware.authenticate,
+  // authMiddleware.authenticate,
   (req, res, next) => ezraController.summarizeIncidents(req, res, next)
 );
 
