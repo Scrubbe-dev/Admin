@@ -60,8 +60,6 @@ export const askEzra = async <T>(
  * @param {string} userPrompt - user input (natural language)
  * @param {object} extra - extra data (like incidents for summarization)
  */
-
-
 export const askEzraStream = async (
   type: PromptType,
   userPrompt: string,

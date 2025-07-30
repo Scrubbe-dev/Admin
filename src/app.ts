@@ -36,7 +36,6 @@ import { RateLimiterService } from "./modules/password-reset/utils/rate-limiter"
 import { EmailService } from "./modules/auth/services/email.service";
 import { errorHandler } from "./middleware/error.middleware";
 import businessRouter from "./modules/business-profile/business.router";
-import { businessAccountOnly } from "./modules/business-profile/business.middleware";
 import ezraRouter from "./modules/ezra-chat/ezra.route";
 import fingerprintRouter from "./modules/fingerprint/fingerprint.route";
 dotenvConfig();
@@ -52,7 +51,7 @@ app.set("trust proxy", (ip: string) => {
 // Configuration
 const config = {
   jwtSecret: env.JWT_SECRET || "your-secret-key",
-  jwtExpiresIn: "15m",
+  jwtExpiresIn: "1440m", // in mins (1 day)
   refreshTokenExpiresInDays: 7,
   smtpOptions: {
     host: env.SMTP_HOST,
