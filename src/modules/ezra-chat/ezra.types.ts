@@ -24,7 +24,7 @@ export interface TimeFrame {
   end: Date;
 }
 
-export type SummarizeIncidentResponse = {
+export type SummarizePromptResponse = {
   priority: string | null;
   timeframe: {
     start: Date;
@@ -32,6 +32,7 @@ export type SummarizeIncidentResponse = {
   };
   searchTerms: string[];
   wantsAction: boolean;
+  confirmSuggestion: boolean;
 };
 
 export type SummariesResponse = {
@@ -45,5 +46,5 @@ export type SummariesResponse = {
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
-// for seperation of response from Javascript and Express response
+// for seperation of uses from Javascript and Express response
 export interface ExpressResponse extends Response {}

@@ -61,9 +61,17 @@ Examples:
 - "Summarize high-risk login incidents this week". wantsAction: true
 - "Hey Ezra, how are you doing today?" → wantsAction: false
 
-2. Determine priority (High/Medium/Low/Critical) if explicitly stated; otherwise null.
+2. Determine "confirmSuggestion":
+    - true ONLY if:
+     * The user explicitly **confirms or agrees** to a **previous AI suggestion** (e.g., escalate, raise Jira ticket, report incident).
+     * Phrases like: "yes", "sure", "ok", "go ahead", "please do it", "yeah raise it".
+    - false if:
+     * The message is a **new request unrelated to a previous suggestion**.
+     * The AI previously offered generic help (“feel free to ask”) and user simply continues conversation.
 
-3. Determine timeframe:
+3. Determine priority (High/Medium/Low/Critical) if explicitly stated; otherwise null.
+
+4. Determine timeframe:
   * Interpret any relative or vague date range (e.g., "yesterday", "3 days ago", "2 weeks ago", "last month", "ever").
   * For phrases like "ever" or "all time", set start far in the past (e.g., 1970-01-01T00:00:00Z) and end as today’s midnight UTC.
   * For **exact day mentions** ("yesterday", "1 day ago"), return that day’s midnight-to-midnight range.
@@ -72,7 +80,7 @@ Examples:
   * For explicit ranges like "last month" or "past 2 weeks", calculate full range appropriately.
   * If no timeframe is mentioned, default to last 7 days (start = 7 days ago midnight, end = today midnight).
    
-4. Extract searchTerms:
+5. Extract searchTerms:
   * Identify only meaningful entities or topics (e.g., "login", "fingerprint anomalies", "location mismatches").
   * EXCLUDE:
       - Any priority words (high, medium, low, critical) if already extracted into priority.
@@ -97,6 +105,7 @@ Examples:
 OUTPUT SCHEMA:
 {
   "wantsAction": boolean,
+  "confirmSuggestion": boolean,
   "priority": "string | null",
   "timeframe": {
     "start": "YYYY-MM-DDTHH:mm:ssZ",
@@ -109,9 +118,6 @@ ${enforceJson}
 `;
 
     case "summarizeIncidents":
-      if (!data.incidents || data.incidents.length === 0) {
-        return "No incidents found for the selected time range.";
-      }
       return `
 You are Ezra, an AI analyst. Summarize the incidents into a **readable report**.
 Your name is Ezra, an AI analyst/assistant that works for scrubbe.
@@ -141,7 +147,7 @@ TASK:
 
 3. After summary or conversational advice:
    - If urgency is detected (High/Critical incidents) or user hints at reporting/escalation:
-    * Suggest next steps: “Would you like to raise an incident in Jira, Freshdesk, or ServiceNow?”
+    * Suggest next steps: “Would you like to raise an incident?”
    - Otherwise, simply summarize or advise without suggesting tools.
 
 STYLE:

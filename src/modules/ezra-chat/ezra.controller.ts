@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { EzraService } from "./ezra.service";
 import { askEzra } from "./askezra";
-import { SummarizeIncidentResponse } from "./ezra.types";
+import { SummarizePromptResponse } from "./ezra.types";
 import { EzraUtils } from "./ezra.utils";
 import { clearConversation } from "./conversation-store";
 
@@ -24,23 +24,24 @@ export class EzraController {
       const { prompt } = req.body;
       const userId = req.user?.sub!; // user id passed from auth middleware
 
-      const ezraResponse = await askEzra<SummarizeIncidentResponse>(
+      const ezraResponse = await askEzra<SummarizePromptResponse>(
         "interpretPrompt",
         prompt
       );
 
       console.log(
-        "============ priority, timeframe, searchTerm ============",
+        "============ priority, timeframe, searchTerm, confirmSuggestion ============",
         ezraResponse.priority,
         ezraResponse.timeframe,
         ezraResponse.searchTerms,
-        ezraResponse.wantsAction
+        ezraResponse.wantsAction,
+        ezraResponse.confirmSuggestion
       );
 
       const streamResponse = await this.ezraService.summarizeIncidents(
         ezraResponse,
         userId,
-        prompt
+        prompt,
       );
 
       return EzraUtils.pipeStream(streamResponse, res);

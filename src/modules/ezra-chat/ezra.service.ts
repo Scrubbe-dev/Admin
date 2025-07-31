@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { EzraUtils } from "./ezra.utils";
 import { askEzraStream } from "./askezra";
-import { SummarizeIncidentResponse } from "./ezra.types";
+import { SummarizePromptResponse } from "./ezra.types";
 
 export class EzraService {
   constructor(
@@ -12,7 +12,7 @@ export class EzraService {
   async createRuleFromPrompt(prompt: string) {}
 
   async summarizeIncidents(
-    ezraResponse: SummarizeIncidentResponse,
+    ezraResponse: SummarizePromptResponse,
     userId: string,
     prompt: string
   ) {
@@ -37,7 +37,8 @@ export class EzraService {
       {
         incidents,
       },
-      userId
+      userId,
+      ezraResponse.confirmSuggestion
     );
 
     return streamSummary;
