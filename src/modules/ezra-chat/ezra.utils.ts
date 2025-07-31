@@ -1,5 +1,5 @@
 import { Priority, PrismaClient } from "@prisma/client";
-import { TimeFrame } from "./ezra.types";
+import { ExpressResponse, TimeFrame } from "./ezra.types";
 
 export class EzraUtils {
   constructor(private prisma: PrismaClient) {}
@@ -7,7 +7,8 @@ export class EzraUtils {
   fetchIncidentsbyId = async (
     userId: string,
     priority: string | null,
-    timeframe: TimeFrame
+    timeframe: TimeFrame,
+    searchTerm: string[]
   ) => {
     try {
       const normalized = await this.normalizePriorityAndTimeframe(
@@ -15,15 +16,28 @@ export class EzraUtils {
         timeframe
       );
 
+      console.log(
+        "================ normalized ================",
+        normalized.priority,
+        normalized.timeframe
+      );
+
       const incidents = await this.prisma.incident.findMany({
         where: {
-          // assigneeId: userId, // TODO: change back to user id
-          assigneeId: "5190797b-f462-4052-a248-8149f7b6dcb7",
+          assigneeId: userId,
           ...(normalized.priority && { priority: normalized.priority }),
           createdAt: {
             gte: normalized.timeframe.start,
             lte: normalized.timeframe.end,
           },
+          ...(searchTerm.length > 0 && {
+            OR: searchTerm.map((term) => ({
+              OR: [
+                { title: { contains: term, mode: "insensitive" } },
+                { description: { contains: term, mode: "insensitive" } },
+              ],
+            })),
+          }),
         },
         select: {
           id: true,
@@ -34,6 +48,11 @@ export class EzraUtils {
           createdAt: true,
         },
       });
+
+      console.log(
+        "================ Incidents from db ================",
+        incidents
+      );
 
       return incidents;
     } catch (error) {
@@ -95,4 +114,30 @@ export class EzraUtils {
 
     return { start: newStart, end: newEnd };
   };
+
+  static pipeStream(streamResponse: Response, res: ExpressResponse) {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("X-Accel-Buffering", "no");
+
+    const reader = streamResponse.body?.getReader();
+    const decoder = new TextDecoder();
+
+    let reply = ""; // not necessary, only for logging
+    (async () => {
+      while (true) {
+        const result = await reader?.read();
+        if (!result) break;
+        const { value, done } = result;
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+
+        reply += chunk;
+        res.write(chunk);
+      }
+
+      console.log("Stream Response:", reply);
+
+      res.end();
+    })();
+  }
 }
