@@ -122,4 +122,67 @@ fingerprintRouter.post(
   }
 );
 
+/**
+ * @swagger
+ * /api/v1/fingerprint/configuration:
+ *   get:
+ *     summary: Fetch user's fingerprint project configuration
+ *     description: >
+ *       Fetches fingerprint project configuration for the authenticated user.
+ *       Throws an error if none exists for the `FINGERPRINT` package.
+ *     tags: [Fingerprint]
+ *     responses:
+ *       200:
+ *         description: Configuration successfully retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "8d2b4c4e-39a4-4b47-8a1a-4df6f7c1a4a2"
+ *                   description: Unique identifier for the configuration
+ *                 name:
+ *                   type: string
+ *                   example: "Fingerprint Project Alpha"
+ *                 enviroment:
+ *                   type: string
+ *                   example: "production"
+ *                 domain:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "example.com"
+ *                 description:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Configuration for fingerprint package in production"
+ *                 modules:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["device fingerprint", "location tracker"]
+ *                 package:
+ *                   type: string
+ *                   enum: [FINGERPRINT]
+ *                   example: "FINGERPRINT"
+ *                 lastseen:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-29T12:34:56.000Z"
+ *       404:
+ *         description: No configured fingerprint found for this user (Not found)
+ *       401:
+ *         description: Unauthorized (user not authenticated)
+ *       500:
+ *         description: Internal server error
+ */
+fingerprintRouter.get(
+  "/configuration",
+  authMiddleware.authenticate,
+  (req, res, next) => {
+    fingerprintController.getUserFingerprintConfig(req, res, next);
+  }
+);
+
 export default fingerprintRouter;

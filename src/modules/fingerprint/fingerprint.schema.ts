@@ -3,12 +3,12 @@ import { PackageModule } from "@prisma/client";
 
 export const fingerprintConfigSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  enviroment: z.string().min(1, "Environment is required"),
+  environment: z.string().min(1, "Environment is required"),
   domain: z
     .string()
     .regex(
-      /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/,
-      "Domain must be a valid hostname (e.g., example.com)"
+      /^(https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/.*)?$/,
+      "Domain must be a valid URL or hostname"
     )
     .optional(),
   description: z.string().optional(),

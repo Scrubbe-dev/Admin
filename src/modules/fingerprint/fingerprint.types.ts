@@ -2,7 +2,7 @@ import { PackageModule } from "@prisma/client";
 
 export interface FingerprintConfigRequest {
   name: string;
-  enviroment: string;
+  environment: string;
   domain?: string;
   description?: string;
   package: PackageModule;

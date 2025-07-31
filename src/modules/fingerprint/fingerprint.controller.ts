@@ -32,4 +32,21 @@ export class FingerprintController {
       next(error);
     }
   }
+
+  async getUserFingerprintConfig(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user?.sub!;
+
+      const response: FingerprintConfigResponse =
+        await this.fingerprintService.getUserFingerprintConfig(userId);
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
