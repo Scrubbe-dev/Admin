@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { EzraUtils } from "./ezra.utils";
-import { askEzra, askEzraStream } from "./askezra";
-import { SummariesResponse, TimeFrame } from "./ezra.types";
+import { askEzraStream } from "./askezra";
+import { SummarizeIncidentResponse } from "./ezra.types";
 
 export class EzraService {
   constructor(
@@ -12,20 +12,33 @@ export class EzraService {
   async createRuleFromPrompt(prompt: string) {}
 
   async summarizeIncidents(
-    priority: string | null,
-    timeframe: TimeFrame,
+    ezraResponse: SummarizeIncidentResponse,
     userId: string,
     prompt: string
   ) {
-    const incidents = await this.ezraUtils.fetchIncidentsbyId(
-      userId,
-      priority,
-      timeframe
-    );
+    let incidents;
 
-    const streamSummary = await askEzraStream("summarizeIncidents", prompt, {
-      incidents,
-    });
+    if (
+      ezraResponse.wantsAction &&
+      ezraResponse.timeframe.start &&
+      ezraResponse.timeframe.end
+    ) {
+      incidents = await this.ezraUtils.fetchIncidentsbyId(
+        userId,
+        ezraResponse.priority,
+        ezraResponse.timeframe,
+        ezraResponse.searchTerms
+      );
+    }
+
+    const streamSummary = await askEzraStream(
+      "summarizeIncidents",
+      prompt,
+      {
+        incidents,
+      },
+      userId
+    );
 
     return streamSummary;
   }

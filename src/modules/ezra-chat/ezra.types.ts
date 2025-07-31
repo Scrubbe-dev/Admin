@@ -1,6 +1,7 @@
 import { Incident, IncidentStatus, Priority } from "@prisma/client";
+import { Response } from "express";
 
-export type PromptType = "rule" | "interpretSummary" | "summarizeIncidents";
+export type PromptType = "rule" | "interpretPrompt" | "summarizeIncidents";
 
 export interface ExtraData {
   incidents?: Incident[];
@@ -29,6 +30,8 @@ export type SummarizeIncidentResponse = {
     start: Date;
     end: Date;
   };
+  searchTerms: string[];
+  wantsAction: boolean;
 };
 
 export type SummariesResponse = {
@@ -39,3 +42,8 @@ export type SummariesResponse = {
     description: string;
   }[];
 };
+
+export type ChatMessage = { role: "user" | "assistant"; content: string };
+
+// for seperation of response from Javascript and Express response
+export interface ExpressResponse extends Response {}

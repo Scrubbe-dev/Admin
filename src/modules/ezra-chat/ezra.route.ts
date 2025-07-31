@@ -25,7 +25,6 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *   description: Ezra AI operations
  */
 
-
 /**
  * @swagger
  * /api/v1/ezra/incidents/summary:
@@ -78,12 +77,48 @@ const authMiddleware = new AuthMiddleware(tokenService);
  */
 ezraRouter.post(
   "/incidents/summary",
-  // authMiddleware.authenticate,
+  authMiddleware.authenticate,
   (req, res, next) => ezraController.summarizeIncidents(req, res, next)
 );
 
 ezraRouter.post("/rule", authMiddleware.authenticate, (req, res, next) =>
   ezraController.createRuleFromPrompt(req, res, next)
+);
+
+
+/**
+ * @swagger
+ * /api/v1/ezra/reset-chat:
+ *   post:
+ *     summary: Clear Ezra AI conversation history for the current user
+ *     description: >
+ *       This endpoint clears the in-memory conversation history for the authenticated user.
+ *       Use this when you want to start a fresh conversation with Ezra without previous context.
+ *     tags: [Ezra]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Conversation history cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         description: Unauthorized (no valid token provided)
+ *       500:
+ *         description: Failed to clear conversation history
+ */
+ezraRouter.post(
+  "/reset-chat",
+  authMiddleware.authenticate,
+  (req, res, next) => {
+    ezraController.clearConversation(req, res, next);
+  }
 );
 
 export default ezraRouter;

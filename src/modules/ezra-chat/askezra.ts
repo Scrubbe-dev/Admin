@@ -1,5 +1,6 @@
 import { openai } from "../../lib/openai";
-import { JsonSchemaFormat, PromptType } from "./ezra.types";
+import { addMessage, getConversation } from "./conversation-store";
+import {  PromptType } from "./ezra.types";
 import { buildPrompt } from "./prompt/promptbuilder";
 
 /**
@@ -9,13 +10,14 @@ import { buildPrompt } from "./prompt/promptbuilder";
  * @param {object} extra - extra data (like incidents for summarization)
  */
 
-
 export const askEzra = async <T>(
   type: PromptType,
   userPrompt: string,
   extra: object = {}
 ): Promise<T> => {
   const systemPrompt = buildPrompt(type, userPrompt, extra);
+
+  console.log("============ System Prompt ============", systemPrompt);
 
   try {
     const completion = await openai.chat.completions.create({
@@ -39,6 +41,8 @@ export const askEzra = async <T>(
 
     const cleaned = raw.replace(/```json|```/g, "").trim();
 
+    console.log("============ cleaned ============", cleaned);
+
     const jsonMatch = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
 
     if (!jsonMatch) throw new Error("No JSON object in model response");
@@ -53,18 +57,16 @@ export const askEzra = async <T>(
   }
 };
 
-
 /**
- * Generic Ezra function that streams response
- * @param {string} type - "rule", "interpretSummary", or "summarizeIncidents"
- * @param {string} userPrompt - user input (natural language)
- * @param {object} extra - extra data (like incidents for summarization)
+ * Ezra function that streams model response
  */
 export const askEzraStream = async (
   type: PromptType,
   userPrompt: string,
-  extra: object = {}
+  extra: object = {},
+  userId: string
 ): Promise<Response> => {
+  const history = getConversation(userId);
   const systemPrompt = buildPrompt(type, userPrompt, extra);
 
   try {
@@ -74,15 +76,16 @@ export const askEzraStream = async (
       stream: true,
       messages: [
         {
-          role: "user",
-          content: userPrompt,
-        },
-        {
           role: "system",
           content: systemPrompt,
         },
+        ...history,
+        {
+          role: "user",
+          content: userPrompt,
+        },
       ],
-      temperature: 0.2,
+      temperature: 0.7,
     });
 
     const encoder = new TextEncoder();
@@ -90,12 +93,18 @@ export const askEzraStream = async (
     const readableStream = new ReadableStream({
       async start(controller) {
         try {
+          let responseBuffer = "";
+
           for await (const chunk of completion) {
             const text = chunk.choices[0]?.delta?.content || "";
             if (text) {
               controller.enqueue(encoder.encode(text));
             }
           }
+
+          // add both user and assistant response
+          addMessage(userId, { role: "user", content: userPrompt });
+          addMessage(userId, { role: "assistant", content: responseBuffer });
         } catch (err) {
           console.error("Streaming error:", err);
           controller.error(err);

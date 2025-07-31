@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { EzraService } from "./ezra.service";
 import { askEzra } from "./askezra";
 import { SummarizeIncidentResponse } from "./ezra.types";
+import { EzraUtils } from "./ezra.utils";
+import { clearConversation } from "./conversation-store";
 
 export class EzraController {
   constructor(private ezraService: EzraService) {}
@@ -20,38 +22,46 @@ export class EzraController {
   async summarizeIncidents(req: Request, res: Response, next: NextFunction) {
     try {
       const { prompt } = req.body;
-      const { priority, timeframe } = await askEzra<SummarizeIncidentResponse>(
-        "interpretSummary",
+      const userId = req.user?.sub!; // user id passed from auth middleware
+
+      const ezraResponse = await askEzra<SummarizeIncidentResponse>(
+        "interpretPrompt",
         prompt
+      );
+
+      console.log(
+        "============ priority, timeframe, searchTerm ============",
+        ezraResponse.priority,
+        ezraResponse.timeframe,
+        ezraResponse.searchTerms,
+        ezraResponse.wantsAction
       );
 
       const streamResponse = await this.ezraService.summarizeIncidents(
-        priority,
-        timeframe,
-        req.user?.sub!, // user id passed from auth middleware
+        ezraResponse,
+        userId,
         prompt
       );
 
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("X-Accel-Buffering", "no");
-
-      const reader = streamResponse.body?.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const result = await reader?.read();
-        if (!result) break;
-        const { value, done } = result;
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-
-        res.write(chunk);
-      }
-
-    res.end();
+      return EzraUtils.pipeStream(streamResponse, res);
     } catch (error) {
       next(error);
+    }
+  }
+
+  async clearConversation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.sub!;
+      clearConversation(userId);
+    } catch (error) {
+      console.error(`Failed to clear conversation history ${error}`);
+      next(
+        new Error(
+          `Failed to clear conversation history ${
+            error instanceof Error && error.message
+          }`
+        )
+      );
     }
   }
 }
