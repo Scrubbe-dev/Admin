@@ -2,7 +2,7 @@ import express from "express";
 import { FingerprintService } from "./fingerprint.service";
 import { FingerprintController } from "./fingerprint.controller";
 import { AuthMiddleware } from "../auth/middleware/auth.middleware";
-import prisma from "../../config/database";
+import { prisma } from "../../config/database";
 import { TokenService } from "../auth/services/token.service";
 
 const fingerprintRouter = express.Router();

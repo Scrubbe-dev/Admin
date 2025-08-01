@@ -1,5 +1,5 @@
 import { FingerprintConfigRequest } from "./fingerprint.types";
-import prisma from "../../config/database";
+import {prisma} from "../../config/database";
 import { PackageModule } from "@prisma/client";
 import { AppError, NotFoundError } from "../auth/error";
 
