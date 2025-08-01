@@ -29,14 +29,18 @@ const authMiddleware = new AuthMiddleware(tokenService);
  * @swagger
  * /api/v1/ezra/incidents/summary:
  *   post:
- *     summary: Stream summarized incidents with optional CTA metadata
+ *     summary: Stream summarized incidents with optional CTA actions
  *     description: >
  *       This endpoint uses Ezra AI to interpret a natural language prompt, extract filters (priority and timeframe),
  *       fetch matching incidents assigned to the authenticated user, and stream back a **markdown-formatted summary**.
  *
- *       If the user previously confirmed a suggestion (e.g., agreed to raise or report an incident),
- *       the response will include stringified JSON metadata at the end of the stream to signal a frontend
- *       call to action (e.g., rendering a "Raise Incident" button).
+ *       Ezra may also suggest next steps, such as raising an incident or creating an alert.
+ *       If escalation or alerting is appropriate, Ezra will include a plain-text `ACTION:` indicator at the end
+ *       (e.g., `ACTION: raise_incident` or `ACTION: alert`).
+ *
+ *       Ezra can also provide relevant URLs for user actions when requested or contextually appropriate.
+ *
+ *       No JSON metadata is returned; responses are strictly plain-text markdown with optional ACTION lines.
  *     tags: [Ezra]
  *     security:
  *       - bearerAuth: []
@@ -51,11 +55,11 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *             properties:
  *               prompt:
  *                 type: string
- *                 description: Natural language query for Ezra to summarize incidents.
+ *                 description: Natural language query for Ezra to summarize incidents or provide guidance.
  *                 example: "Ezra summarize today's high priority incidents"
  *     responses:
  *       200:
- *         description: Streamed markdown summaries of incidents followed optionally by CTA metadata
+ *         description: Streamed markdown summaries of incidents, optionally including CTA actions
  *         content:
  *           text/event-stream:
  *             schema:
@@ -71,7 +75,7 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *                 **Priority:** LOW
  *                 **Description:** Privilege escalation vulnerability in admin portal, under investigation.
  *
- *                 {"actions":[{"type":"button","label":"Raise Incident"}]}
+ *                 ACTION: raise_incident
  *       400:
  *         description: Bad request (e.g., missing prompt)
  *       401:

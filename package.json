@@ -13,6 +13,7 @@
   },
   "scripts": {
     "seedIncident": "ts-node src/seed-with-specific-table/seedIncidents.ts",
+    "seedIncidentToUser": "ts-node src/seed-with-specific-table/seedIncidentToAUser.ts",
     "start": "node dist/app.js",
     "build": "tsc",
     "migrate:init": "npx prisma migrate dev --name init",

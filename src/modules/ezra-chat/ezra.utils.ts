@@ -111,6 +111,20 @@ export class EzraUtils {
 
     const newEnd = new Date(todayMidnightUTC);
     const newStart = new Date(todayMidnightUTC - duration);
+    
+    newStart.setUTCHours(
+      startDate.getUTCHours(),
+      startDate.getUTCMinutes(),
+      startDate.getUTCSeconds(),
+      startDate.getUTCMilliseconds()
+    );
+
+    newEnd.setUTCHours(
+      endDate.getUTCHours(),
+      endDate.getUTCMinutes(),
+      endDate.getUTCSeconds(),
+      endDate.getUTCMilliseconds()
+    );
 
     return { start: newStart, end: newEnd };
   };

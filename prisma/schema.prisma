@@ -44,6 +44,7 @@ model User {
   developer            Developer?
   business             Business?
   ProjectConfiguration ProjectConfiguration[]
+  Graph                Graph[]
 
   @@index([apiKey])
 }
@@ -146,6 +147,27 @@ model ResetToken {
   @@index([userId])
   @@index([type])
   @@index([expiresAt])
+}
+
+model Graph {
+  id        String    @id @default(uuid())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  type      GraphType
+  data      Json
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userId, type]) // one graph per type per user
+}
+
+enum GraphType {
+  MULTIPLE_FAILED_LOGINS
+  UNUSUAL_LOCATIONS
+  HIGH_VELOCITY_PASSWORD_GUESS
+  IP_ADDRESSES_TARGETING_MULTIPLE_ACCOUNTS
+  GEOGRAPHICALLY_IMPOSSIBLE_LOGINS
+  TRAVEL_VELOCITY_ANALYSIS
 }
 
 model WaitingUser {
