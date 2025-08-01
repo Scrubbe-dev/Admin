@@ -1,7 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { EzraUtils } from "./ezra.utils";
 import { askEzraStream } from "./askezra";
-import { SummarizePromptResponse } from "./ezra.types";
+import { IncidentFetched, SummarizePromptResponse } from "./ezra.types";
+import {
+  getIncidentsConversation,
+  setIncidentConversations,
+} from "./conversation-store";
 
 export class EzraService {
   constructor(
@@ -16,19 +20,38 @@ export class EzraService {
     userId: string,
     prompt: string
   ) {
-    let incidents;
+    let incidents: IncidentFetched[] = [];
 
     if (
       ezraResponse.wantsAction &&
       ezraResponse.timeframe.start &&
       ezraResponse.timeframe.end
     ) {
-      incidents = await this.ezraUtils.fetchIncidentsbyId(
+      const fetchedIncidents = await this.ezraUtils.fetchIncidentsbyId(
         userId,
         ezraResponse.priority,
         ezraResponse.timeframe,
         ezraResponse.searchTerms
       );
+
+      incidents = fetchedIncidents.map((incident, idx) => ({
+        ...incident,
+        number: idx + 1,
+      }));
+
+      if (incidents?.length) {
+        const numberedIncidents = incidents.map((incident, idx) => ({
+          ...incident,
+          number: idx + 1,
+        }));
+
+        setIncidentConversations(userId, numberedIncidents);
+        incidents = numberedIncidents;
+        console.log("========== Mapped Incidents ==========", incidents)
+      }
+    } else {
+      // if no new fetch, reuse store conversation for follow up reference
+      incidents = getIncidentsConversation(userId);
     }
 
     const streamSummary = await askEzraStream(
@@ -37,8 +60,7 @@ export class EzraService {
       {
         incidents,
       },
-      userId,
-      ezraResponse.confirmSuggestion
+      userId
     );
 
     return streamSummary;

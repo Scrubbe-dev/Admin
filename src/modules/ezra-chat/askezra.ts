@@ -65,7 +65,6 @@ export const askEzraStream = async (
   userPrompt: string,
   extra: object = {},
   userId: string,
-  confirmedSuggestion: boolean = false
 ): Promise<Response> => {
   const history = getConversation(userId);
   const systemPrompt = buildPrompt(type, userPrompt, extra);
@@ -106,20 +105,6 @@ export const askEzraStream = async (
           // add both user and assistant response
           addMessage(userId, { role: "user", content: userPrompt });
           addMessage(userId, { role: "assistant", content: responseBuffer });
-
-          // input actual metadata suggested by model
-          if (confirmedSuggestion) {
-            const cta = JSON.stringify({
-              actions: [
-                {
-                  type: "button",
-                  label: "Raise Incident",
-                },
-              ],
-            });
-
-            controller.enqueue(encoder.encode(`\n\n${cta}`));
-          }
         } catch (err) {
           console.error("Streaming error:", err);
           controller.error(err);

@@ -35,7 +35,6 @@ export class EzraController {
         ezraResponse.timeframe,
         ezraResponse.searchTerms,
         ezraResponse.wantsAction,
-        ezraResponse.confirmSuggestion
       );
 
       const streamResponse = await this.ezraService.summarizeIncidents(

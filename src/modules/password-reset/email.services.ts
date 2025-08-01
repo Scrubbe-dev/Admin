@@ -39,7 +39,7 @@ export class EmailServices {
       this.logger.info('SMTP connection established successfully');
     } catch (error) {
       this.logger.error('Failed to establish SMTP connection', error);
-      throw new Error('Failed to establish SMTP connection');
+      // throw new Error('Failed to establish SMTP connection');
     }
   }
   

@@ -4,7 +4,7 @@ import { Response } from "express";
 export type PromptType = "rule" | "interpretPrompt" | "summarizeIncidents";
 
 export interface ExtraData {
-  incidents?: Incident[];
+  incidents?: IncidentFetched[];
 }
 
 export type JsonSchemaFormat = {
@@ -32,7 +32,6 @@ export type SummarizePromptResponse = {
   };
   searchTerms: string[];
   wantsAction: boolean;
-  confirmSuggestion: boolean;
 };
 
 export type SummariesResponse = {
@@ -48,3 +47,13 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 // for seperation of uses from Javascript and Express response
 export interface ExpressResponse extends Response {}
+
+export type IncidentFetched = {
+  id: string;
+  title: string;
+  description: string;
+  status: IncidentStatus;
+  priority: Priority;
+  createdAt: Date;
+  number: number;
+};
