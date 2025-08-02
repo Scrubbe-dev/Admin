@@ -1,5 +1,5 @@
+import prisma from "../../../prisma-clients/client";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
 import { User, Tokens, JwtPayload } from "../types/auth.types";
 import { addDays } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
@@ -7,7 +7,6 @@ import { UnauthorizedError } from "../error";
 
 export class TokenService {
   constructor(
-    private prisma: PrismaClient,
     private jwtSecret: string,
     private jwtExpiresIn: string,
     private refreshTokenExpiresInDays: number
@@ -25,6 +24,7 @@ export class TokenService {
       sub: user.id,
       email: user.email,
       accountType: user.accountType,
+      scopes: user.scopes,
       roles: user.roles,
       iat: Math.floor(Date.now() / 1000),
       // corrected from secs to mins -> added '*60'
@@ -39,7 +39,7 @@ export class TokenService {
     const token = uuidv4();
     const expiresAt = addDays(new Date(), this.refreshTokenExpiresInDays);
 
-    await this.prisma.refreshToken.create({
+    await prisma.refreshToken.create({
       data: {
         token,
         userId: user.id,
@@ -51,7 +51,7 @@ export class TokenService {
   }
 
   async refreshTokens(refreshToken: string): Promise<Tokens> {
-    const tokenRecord = await this.prisma.refreshToken.findUnique({
+    const tokenRecord = await prisma.refreshToken.findUnique({
       where: { token: refreshToken },
       include: { user: true },
     });
@@ -65,7 +65,7 @@ export class TokenService {
     }
 
     // Revoke the current refresh token
-    await this.prisma.refreshToken.update({
+    await prisma.refreshToken.update({
       where: { id: tokenRecord.id },
       data: { revokedAt: new Date() },
     });
@@ -74,7 +74,7 @@ export class TokenService {
   }
 
   async revokeRefreshToken(token: string): Promise<void> {
-    await this.prisma.refreshToken.updateMany({
+    await prisma.refreshToken.updateMany({
       where: { token, revokedAt: null },
       data: { revokedAt: new Date() },
     });

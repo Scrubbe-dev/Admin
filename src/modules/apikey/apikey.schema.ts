@@ -1,13 +1,18 @@
-import { z } from 'zod';
+import { Environment } from "./apikey.types";
+import { z } from "zod";
 
 export const createApiKeySchema = z.object({
   name: z.string().min(3).max(50),
   expiresInDays: z.number().int().min(1).max(365).optional(),
   scopes: z.array(z.string()).optional(),
+  environment: z.enum([Environment.DEVELOPMENT, Environment.PRODUCTION]),
 });
 
 export const verifyApiKeySchema = z.object({
   apiKey: z.string().min(32),
+  expectedEnv: z
+    .enum([Environment.DEVELOPMENT, Environment.PRODUCTION])
+    .optional(),
 });
 
 export const listApiKeysSchema = z.object({

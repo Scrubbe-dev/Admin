@@ -39,10 +39,13 @@ import businessRouter from "./modules/business-profile/business.router";
 import ezraRouter from "./modules/ezra-chat/ezra.route";
 import fingerprintRouter from "./modules/fingerprint/fingerprint.route";
 import dataVisualRouter from "./modules/data-visualization/data-visual.route";
+import incidentRouter from "./modules/incident-ticket/incident.route";
 dotenvConfig();
 
 const app = express();
 const prisma = new PrismaClient();
+
+// TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 
 app.set("trust proxy", (ip: string) => {
   if (ip === "127.0.0.1" || ip === "::1") return true;
@@ -74,7 +77,6 @@ const rateLimiter = new RateLimiterService();
 // Initialize services
 const securityUtils = new SecurityUtils();
 const tokenService = new TokenService(
-  prisma,
   config.jwtSecret,
   config.jwtExpiresIn,
   config.refreshTokenExpiresInDays
@@ -148,10 +150,11 @@ app.use("/api/v1/business/", businessRouter);
 app.use("/api/v1/ezra/", ezraRouter);
 app.use("/api/v1/data-visual/", dataVisualRouter);
 app.use("/api/v1/fingerprint/", fingerprintRouter);
+app.use("/api/v1/incident-ticket/", incidentRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);
-app.use("/api/v1", apikeyRoute);
+app.use("/api/v1/apikey", apikeyRoute);
 app.use("/api/v1", passwordResetRoutes.getRouter());
 
 // Add password reset routes

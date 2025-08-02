@@ -21,7 +21,8 @@ model User {
   apiKeyDuration DateTime  @default(now())
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  apiKey         String?   @default(cuid())
+  apiKey         String?   @default(cuid()) // this can be removed as it serves no purpose for now
+  scopes         String[]  @default(["api-key:create"]) // should be changed to 'read' only after demo @map("scope")
   role           Role      @default(USER)
 
   passwordChangedAt DateTime?
@@ -45,6 +46,8 @@ model User {
   business             Business?
   ProjectConfiguration ProjectConfiguration[]
   Graph                Graph[]
+  scrubbe_apikey       ApiKey[]
+  IncidentTicket       IncidentTicket[]
 
   @@index([apiKey])
 }
@@ -60,6 +63,23 @@ model Developer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // IncidentsAssigned  Incident[] // incidents assigned to a developer
+}
+
+model ApiKey {
+  id          String            @id @default(cuid())
+  keyHash     String            @unique
+  version     Int
+  environment APIkeyEnvironment
+  name        String
+  userId      String
+  user        User              @relation(fields: [userId], references: [id])
+  scopes      String[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  expiresAt   DateTime?
+  isActive    Boolean           @default(true)
+  lastUsed    DateTime?
 }
 
 model Business {
@@ -239,22 +259,40 @@ model Alert {
 }
 
 model Incident {
-  id          String              @id @default(uuid())
-  title       String
-  description String
-  status      IncidentStatus      @default(OPEN)
-  priority    Priority            @default(MEDIUM)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  customerId  String?
-  assigneeId  String?
-  assignee    User?               @relation(fields: [assigneeId], references: [id])
-  customer    Customer?           @relation(fields: [customerId], references: [id])
-  comments    IncidentComment[]
-  playbooks   PlaybookExecution[]
-  alerts      Alert[]             @relation("AlertToIncident")
+  id               String              @id @default(uuid())
+  title            String
+  description      String
+  status           IncidentStatus      @default(OPEN)
+  priority         Priority            @default(MEDIUM)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  customerId       String?
+  assigneeId       String?
+  assignee         User?               @relation(fields: [assigneeId], references: [id])
+  customer         Customer?           @relation(fields: [customerId], references: [id])
+  comments         IncidentComment[]
+  playbooks        PlaybookExecution[]
+  alerts           Alert[]             @relation("AlertToIncident")
+  IncidentTicket   IncidentTicket?     @relation(fields: [incidentTicketId], references: [id])
+  incidentTicketId String?
 
   @@index([status, priority])
+}
+
+model IncidentTicket {
+  id         String           @id @default(uuid())
+  template   IncidentTemplate @default(NONE)
+  userName   String
+  reason     String
+  priority   Priority?
+  assignedTo String
+
+  assignedById String
+  assignedBy   User   @relation(fields: [assignedById], references: [id])
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Incident  Incident[]
 }
 
 model EzraRule {
@@ -318,6 +356,7 @@ model IncidentComment {
   @@index([authorId])
 }
 
+// is this what ezra is supposed to query
 model PlaybookExecution {
   id            String         @id @default(uuid())
   name          String
@@ -529,4 +568,15 @@ enum BusinessNotificationChannels {
 
 enum PackageModule {
   FINGERPRINT
+}
+
+enum IncidentTemplate {
+  NONE
+  PHISHING
+  MALWARE
+}
+
+enum APIkeyEnvironment {
+  DEVELOPMENT
+  PRODUCTION
 }

@@ -370,7 +370,7 @@ export class AuthService {
       where: {
         email: input.email,
         oauthprovider: input.oAuthProvider,
-        oauthProvider_uuid: input.provider_uuid,
+        // oauthProvider_uuid: input.provider_uuid, // TODO: replace with a more consistent identifier
       },
     });
 
