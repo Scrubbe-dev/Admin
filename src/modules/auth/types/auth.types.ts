@@ -8,6 +8,7 @@ export type User = {
   lastName: string | null;
   isVerified: boolean;
   accountType: AccountType;
+  scopes: string[];
   isActive: boolean;
   lastLogin: Date | null;
   createdAt: Date;
@@ -40,6 +41,7 @@ export type JwtPayload = {
   sub: string; // User ID
   email: string;
   accountType: string;
+  scopes: string[];
   roles: Role[];
   iat: number; // Issued at
   exp: number; // Expiration time

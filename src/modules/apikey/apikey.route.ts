@@ -1,17 +1,25 @@
-import { Router } from 'express';
-import { ApiKeyController } from './apikey.controller';
-import { 
-  apiKeyAuthMiddleware,
-  requireScope 
-} from './apikey.middleware';
+import { Router } from "express";
+import { ApiKeyController } from "./apikey.controller";
+import { apiKeyAuthMiddleware, requireScopes } from "./apikey.middleware";
+import { AuthMiddleware } from "../auth/middleware/auth.middleware";
+import { TokenService } from "../auth/services/token.service";
 
 const router = Router();
 const controller = new ApiKeyController();
+const tokenService = new TokenService(
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+const authMiddleware = new AuthMiddleware(tokenService);
 
-type IRequireScope = typeof requireScope
+type IRequireScope = typeof requireScopes;
 
 // Middleware to protect all API key routes
 // router.use(apiKeyAuthMiddleware as any);
+router.use((req, res, next) => {
+  authMiddleware.authenticate(req, res, next);
+});
 
 /**
  * @swagger
@@ -22,15 +30,15 @@ type IRequireScope = typeof requireScope
 
 /**
  * @swagger
- * /api/v1/createapikey:
+ * /api/v1/apikey/createapikey:
  *   post:
  *     summary: Create a new API key
  *     description: |
- *       Generates a new API key with the specified permissions and expiration.
- *       The raw key will only be shown once - store it securely.
+ *       Generates a new API key with the specified permissions, environment, and expiration.
+ *       The raw key will only be shown once — store it securely.
  *     tags: [API Keys]
  *     security:
- *       - apiKey: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -39,6 +47,7 @@ type IRequireScope = typeof requireScope
  *             type: object
  *             required:
  *               - name
+ *               - environment
  *             properties:
  *               name:
  *                 type: string
@@ -46,6 +55,13 @@ type IRequireScope = typeof requireScope
  *                 maxLength: 50
  *                 example: "My Production Key"
  *                 description: Descriptive name for the API key
+ *               environment:
+ *                 type: string
+ *                 enum: [DEVELOPMENT, PRODUCTION]
+ *                 example: "PRODUCTION"
+ *                 description: |
+ *                   Environment for which the API key will be used.
+ *                   `test` keys are for sandbox usage, `production` keys are for live usage.
  *               expiresInDays:
  *                 type: integer
  *                 minimum: 1
@@ -73,6 +89,9 @@ type IRequireScope = typeof requireScope
  *                 name:
  *                   type: string
  *                   example: "My Production Key"
+ *                 environment:
+ *                   type: string
+ *                   example: "PRODUCTION"
  *                 createdAt:
  *                   type: string
  *                   format: date-time
@@ -92,7 +111,7 @@ type IRequireScope = typeof requireScope
  *       400:
  *         description: Invalid request payload
  *       401:
- *         description: Unauthorized (invalid or missing API key)
+ *         description: Unauthorized (invalid or missing JWT/session)
  *       403:
  *         description: Forbidden (missing required scope)
  *       429:
@@ -101,18 +120,18 @@ type IRequireScope = typeof requireScope
  *         description: Internal server error
  */
 router.post(
-  '/createapikey', 
-  requireScope('api-key:create') as any,
+  "/createapikey",
+  requireScopes(["api-key:create"]) as any,
   controller.createApiKey as any
 );
 
 /**
  * @swagger
- * /api/v1/verify:
+ * /api/v1/apikey/verify:
  *   post:
  *     summary: Verify an API key
  *     description: |
- *       Checks the validity and status of an API key.
+ *       Checks the validity, environment, and status of an API key.
  *       Returns detailed information about the key's permissions and state.
  *     tags: [API Keys]
  *     requestBody:
@@ -127,8 +146,13 @@ router.post(
  *               apiKey:
  *                 type: string
  *                 minLength: 32
- *                 example: "sk_live_1234567890abcdef1234567890abcdef"
+ *                 example: "sk_prod_1234567890abcdef1234567890abcdef"
  *                 description: The API key to verify
+ *               expectedEnv:
+ *                 type: string
+ *                 enum: [DEVELOPMENT, PRODUCTION]
+ *                 example: "PRODUCTION"
+ *                 description: (Optional) Expected environment for this key
  *     responses:
  *       200:
  *         description: API key verification result
@@ -149,6 +173,11 @@ router.post(
  *                   type: boolean
  *                   example: false
  *                   description: Whether the key has expired
+ *                 environment:
+ *                   type: string
+ *                   enum: [DEVELOPMENT, PRODUCTION]
+ *                   example: "PRODUCTION"
+ *                   description: The environment this API key is scoped to
  *                 userId:
  *                   type: string
  *                   example: "user_1234567890"
@@ -166,14 +195,11 @@ router.post(
  *       500:
  *         description: Internal server error
  */
-router.post(
-  '/verify', 
-  controller.verifyApiKey as any
-);
+router.post("/verify", controller.verifyApiKey as any);
 
 /**
  * @swagger
- * /api/v1/apikeys:
+ * /api/v1/apikey/apikeys:
  *   get:
  *     summary: List API keys
  *     description: |
@@ -246,14 +272,14 @@ router.post(
  *         description: Internal server error
  */
 router.get(
-  '/apikeys', 
-  requireScope('api-key:read') as any,
+  "/apikeys",
+  requireScopes(["api-key:read", "api-key:create"]) as any,
   controller.listApiKeys as any
 );
 
 /**
  * @swagger
- * /api/v1/{keyId}:
+ * /api/v1/apikey/{keyId}:
  *   delete:
  *     summary: Revoke an API key
  *     description: |
@@ -292,14 +318,14 @@ router.get(
  *         description: Internal server error
  */
 router.delete(
-  '/:keyId', 
-  requireScope('api-key:delete') as any,
+  "/:keyId",
+  requireScopes(["api-key:delete", "api-key:create"]) as any,
   controller.revokeApiKey as any
 );
 
 /**
  * @swagger
- * /api/v1/{keyId}:
+ * /api/v1/apikey/{keyId}:
  *   patch:
  *     summary: Update an API key
  *     description: |
@@ -381,8 +407,8 @@ router.delete(
  *         description: Internal server error
  */
 router.patch(
-  '/:keyId', 
-  requireScope('api-key:update') as any,
+  "/:keyId",
+  requireScopes(["api-key:update", "api-key:create"]) as any,
   controller.updateApiKey as any
 );
 

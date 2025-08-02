@@ -1,33 +1,42 @@
-import { v4 as uuidv4 } from 'uuid';
-import { createHash, randomBytes } from 'crypto';
-import { ApiKey, CreateApiKeyPayload, VerifyApiKeyResponse, ApiKeyFilter } from './apikey.types';
+import prisma from "../../prisma-clients/client";
+import { v4 as uuidv4 } from "uuid";
+import { createHash, randomBytes } from "crypto";
+import {
+  ApiKey,
+  CreateApiKeyPayload,
+  VerifyApiKeyResponse,
+  ApiKeyFilter,
+  Environment,
+} from "./apikey.types";
+import { PrismaClient } from "@prisma/client";
 
 // In a production environment, you would use a database
 const API_KEYS: Record<string, ApiKey> = {};
 
 export class ApiKeyService {
-  private generateApiKey(): string {
-    const prefix = 'sk_';
-    const randomPart = randomBytes(16).toString('hex');
-    const uniquePart = uuidv4().replace(/-/g, '');
+  private generateApiKey(env: Environment): string {
+    const prefix = env === Environment.PRODUCTION ? "sk_prod_" : "sk_test_";
+    const randomPart = randomBytes(16).toString("hex");
+    const uniquePart = uuidv4().replace(/-/g, "");
     return `${prefix}${randomPart}${uniquePart}`.slice(0, 64);
   }
 
   private hashApiKey(key: string): string {
-    return createHash('sha256').update(key).digest('hex');
+    return createHash("sha256").update(key).digest("hex");
   }
 
   async createApiKey(payload: CreateApiKeyPayload): Promise<ApiKey> {
-    const rawKey = this.generateApiKey();
+    const rawKey = this.generateApiKey(payload.environment);
     const hashedKey = this.hashApiKey(rawKey);
 
-    const expiresAt = payload.expiresInDays 
+    const expiresAt = payload.expiresInDays
       ? new Date(Date.now() + payload.expiresInDays * 24 * 60 * 60 * 1000)
       : undefined;
 
     const apiKey: ApiKey = {
       key: hashedKey,
       version: 1,
+      environment: payload.environment,
       metadata: {
         name: payload.name,
         userId: payload.userId,
@@ -36,7 +45,7 @@ export class ApiKeyService {
         expiresAt,
         isActive: true,
       },
-      scopes: payload.scopes || ['default'],
+      scopes: payload.scopes || ["default"],
     };
 
     API_KEYS[hashedKey] = apiKey;
@@ -48,7 +57,10 @@ export class ApiKeyService {
     };
   }
 
-  async verifyApiKey(apiKey: string): Promise<VerifyApiKeyResponse> {
+  async verifyApiKey(
+    apiKey: string,
+    expectedEnv?: Environment
+  ): Promise<VerifyApiKeyResponse> {
     const hashedKey = this.hashApiKey(apiKey);
     const storedKey = API_KEYS[hashedKey];
 
@@ -60,17 +72,25 @@ export class ApiKeyService {
       };
     }
 
+    if (expectedEnv && storedKey.environment !== expectedEnv) {
+      return {
+        isValid: false,
+        isActive: false,
+        isExpired: false,
+      };
+    }
+
     // Update last used timestamp
     storedKey.metadata.lastUsed = new Date();
     API_KEYS[hashedKey] = storedKey;
 
-    const isExpired = storedKey.metadata.expiresAt 
+    const isExpired = storedKey.metadata.expiresAt
       ? new Date() > storedKey.metadata.expiresAt
       : false;
 
     return {
       isValid: true,
-      isActive: storedKey.metadata.isActive as boolean && !isExpired,
+      isActive: (storedKey.metadata.isActive as boolean) && !isExpired,
       isExpired,
       userId: storedKey.metadata.userId,
       scopes: storedKey.scopes,
@@ -78,16 +98,25 @@ export class ApiKeyService {
     };
   }
 
-  async listApiKeys(userId: string, filter: ApiKeyFilter = {}): Promise<ApiKey[]> {
+  async listApiKeys(
+    userId: string,
+    filter: ApiKeyFilter = {}
+  ): Promise<ApiKey[]> {
     return Object.values(API_KEYS)
-      .filter(key => key.metadata.userId === userId)
-      .filter(key => filter.isActive === undefined || key.metadata.isActive === filter.isActive)
-      .filter(key => !filter.name || key.metadata.name?.includes(filter.name));
+      .filter((key) => key.metadata.userId === userId)
+      .filter(
+        (key) =>
+          filter.isActive === undefined ||
+          key.metadata.isActive === filter.isActive
+      )
+      .filter(
+        (key) => !filter.name || key.metadata.name?.includes(filter.name)
+      );
   }
 
   async revokeApiKey(hashedKey: string, userId: string): Promise<boolean> {
     const key = API_KEYS[hashedKey];
-    
+
     if (!key || key.metadata.userId !== userId) {
       return false;
     }
@@ -95,13 +124,17 @@ export class ApiKeyService {
     key.metadata.isActive = false;
     key.metadata.updatedAt = new Date();
     API_KEYS[hashedKey] = key;
-    
+
     return true;
   }
 
-  async updateApiKey(hashedKey: string, userId: string, updates: Partial<ApiKey>): Promise<ApiKey | null> {
+  async updateApiKey(
+    hashedKey: string,
+    userId: string,
+    updates: Partial<ApiKey>
+  ): Promise<ApiKey | null> {
     const key = API_KEYS[hashedKey];
-    
+
     if (!key || key.metadata.userId !== userId) {
       return null;
     }

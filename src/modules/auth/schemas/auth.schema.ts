@@ -1,5 +1,6 @@
 import { OAuthProvider } from "@prisma/client";
 import { z } from "zod";
+import { emailSchema } from "../../../shared/validation/validation.schema";
 
 const freeEmailDomains: string[] = [
   "gmail.com",
@@ -21,7 +22,6 @@ const freeEmailDomains: string[] = [
 ];
 
 // Common schemas
-const emailSchema = z.string().email("Invalid email address").max(255);
 const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters")
