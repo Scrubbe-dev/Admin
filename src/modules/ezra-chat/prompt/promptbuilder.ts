@@ -170,12 +170,13 @@ TASK:
 
         - This link is specifically for allowing the user to click and **pre-fill the incident details** (id, title, priority, description) into the frontend modal for raising an incident.
         - Always include the incident's 'id' parameter (unencoded unless necessary).
+        - Always include the link: [raise as an incident](?modal=true&id=<incident-id>&title=<url-encoded-title>&priority=<url-encoded-priority>&description=<url-encoded-description>)
         - When generating the "raise as an incident" link:
         - URL-encode the title, priority, and description parameters.
         - Format: (?modal=true&id=<incident-id>&title=<encoded>&priority=<encoded>&description=<encoded>)
         - Do NOT include the base URL — the frontend will prepend it.
-
         - **If any summarized incident has High or Critical priority**, add a friendly reminder after the list: e.g."You can click any of the 'raise as an incident' links above to immediately pre-fill and escalate it."
+
 
 8. **If user refers to a numbered incident (e.g., "number 4"):**
    - Identify the incident via its "number".
