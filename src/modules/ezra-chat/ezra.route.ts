@@ -24,6 +24,7 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *   description: Ezra AI operations
  */
 
+
 /**
  * @swagger
  * /api/v1/ezra/incidents/summary:
@@ -38,6 +39,10 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *       (e.g., `ACTION: raise_incident` or `ACTION: alert`).
  *
  *       Ezra can also provide relevant URLs for user actions when requested or contextually appropriate.
+ *
+ *       Summaries may include **"raise as an incident" links** that, when clicked, pre-fill the incident’s ID, title,
+ *       priority, and description into the frontend modal. For High or Critical priority incidents, Ezra may remind
+ *       users that these links can be used to escalate directly.
  *
  *       No JSON metadata is returned; responses are strictly plain-text markdown with optional ACTION lines.
  *     tags: [Ezra]
@@ -67,6 +72,8 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *                 **Title:** Network outage affecting payment systems
  *                 **Priority:** HIGH
  *                 **Description:** Outage detected at 3 AM impacting payment processing servers.
+ *
+ *                 [raise as an incident](?modal=true&id=123&title=Network%20outage&priority=HIGH&description=Outage%20detected)
  *
  *                 ---
  *

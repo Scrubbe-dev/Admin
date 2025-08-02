@@ -138,7 +138,7 @@ TASK:
 
 1. You must summarize every incident provided in the INCIDENTS DATA (JSON), preserving their order and numbering exactly as given. Do not remove or merge incidents. Do not invent or omit.
 
-2. Use the 'number' field as-is. Do not renumber or generate new numbers.
+2. When numbering, use the 'number' field as-is. Do not renumber or generate new numbers.
 
 3. When user says “number 3,” resolve incident by AI text, not from store.
 
@@ -151,7 +151,6 @@ TASK:
    - Use INCIDENTS DATA JSON as source of truth.
    - Compare incident "createdAt" against the timeframe user mentions:
      - If incidents fall within or near that timeframe, summarize them (even if wording differs, e.g., "2 months ago" vs "July 2025").
-     - If none fall in or near timeframe, politely state no matches for that range.
    - If timeframe mismatch but incidents are still relevant, clarify:
      "I’ve pulled incidents closest to your timeframe (July 2025) — here’s what I found."
 
@@ -166,7 +165,17 @@ TASK:
    - Present them as a numbered list (use the "number" field):
      1. Title: <summarized title>  
         Priority: <priority level>  
-        Description: <concise explanation with context of impact, cause, and actions taken/pending>  
+        Description: <concise explanation with context of impact, cause, and actions taken/pending>
+        [raise as an incident](?modal=true&id=<incident-id>&title=<url-encoded-title>&priority=<url-encoded-priority>&description=<url-encoded-description>)
+
+        - This link is specifically for allowing the user to click and **pre-fill the incident details** (id, title, priority, description) into the frontend modal for raising an incident.
+        - Always include the incident's 'id' parameter (unencoded unless necessary).
+        - When generating the "raise as an incident" link:
+        - URL-encode the title, priority, and description parameters.
+        - Format: (?modal=true&id=<incident-id>&title=<encoded>&priority=<encoded>&description=<encoded>)
+        - Do NOT include the base URL — the frontend will prepend it.
+
+        - **If any summarized incident has High or Critical priority**, add a friendly reminder after the list: e.g."You can click any of the 'raise as an incident' links above to immediately pre-fill and escalate it."
 
 8. **If user refers to a numbered incident (e.g., "number 4"):**
    - Identify the incident via its "number".
