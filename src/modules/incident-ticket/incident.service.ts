@@ -2,11 +2,11 @@ import prisma from "../../prisma-clients/client";
 import { Incident, IncidentTicket } from "@prisma/client";
 import { paginate } from "../auth/utils/pageable/pagination";
 import { IncidentRequest } from "./incident.types";
+import { IncidentUtils } from "./incident.util";
 
 export class IncidentService {
   constructor() {}
 
-  
   async getIncidentTicketByUser(userId: string, page: number, limit: number) {
     try {
       // const pageable = await paginate<IncidentTicket>(
@@ -39,12 +39,25 @@ export class IncidentService {
 
   async submitIncident(request: IncidentRequest, userId: string) {
     try {
-      const incidentTicket = prisma.incidentTicket.create({
+      let ticketId: string;
+      let exists;
+
+      do {
+        ticketId = IncidentUtils.generateTicketId();
+
+        exists = await prisma.incidentTicket.findUnique({
+          where: { ticketId },
+        });
+      } while (exists);
+
+      const incidentTicket = await prisma.incidentTicket.create({
         data: {
+          ticketId,
           reason: request.reason,
           assignedTo: request.assignedTo,
           userName: request.username,
           assignedById: userId,
+          priority: request.priority,
         },
       });
 

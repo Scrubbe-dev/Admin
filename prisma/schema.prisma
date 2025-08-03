@@ -281,10 +281,11 @@ model Incident {
 
 model IncidentTicket {
   id         String           @id @default(uuid())
+  ticketId   String           @unique
   template   IncidentTemplate @default(NONE)
   userName   String
   reason     String
-  priority   Priority?
+  priority   Priority
   assignedTo String
 
   assignedById String

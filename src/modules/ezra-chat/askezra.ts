@@ -64,7 +64,8 @@ export const askEzraStream = async (
   type: PromptType,
   userPrompt: string,
   extra: object = {},
-  userId: string,
+  userId: string
+  // ticketId: string | null,
 ): Promise<Response> => {
   const history = getConversation(userId);
   const systemPrompt = buildPrompt(type, userPrompt, extra);

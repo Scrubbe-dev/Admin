@@ -65,6 +65,10 @@ const incidentController = new IncidentController();
  *                     type: string
  *                     format: email
  *                     example: example@gmail.com
+ *                   ticketId:
+ *                     type: string
+ *                     format: email
+ *                     example: "INC6932612"
  *                   assignedById:
  *                     type: string
  *                     format: uuid
@@ -156,6 +160,9 @@ incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
  *                 reason:
  *                   type: string
  *                   example: "Suspicious login detected on multiple accounts"
+ *                 ticketId:
+ *                   type: string
+ *                   example: "INC6932612"
  *                 priority:
  *                   type: string
  *                   enum: [CRITICAL, HIGH, MEDIUM, LOW, NONE]

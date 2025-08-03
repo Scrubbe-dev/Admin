@@ -1,10 +1,13 @@
 import { Priority, PrismaClient } from "@prisma/client";
-import { ExpressResponse, TimeFrame } from "./ezra.types";
+import {
+  ExpressResponse,
+  SummarizePromptResponse,
+  TimeFrame,
+} from "./ezra.types";
 
 export class EzraUtils {
-  constructor(private prisma: PrismaClient) {}
-
-  fetchIncidentsbyId = async (
+  constructor(private prisma = new PrismaClient()) {}
+  fetchIncidentsById = async (
     userId: string,
     priority: string | null,
     timeframe: TimeFrame,
@@ -48,11 +51,6 @@ export class EzraUtils {
           createdAt: true,
         },
       });
-
-      console.log(
-        "================ Incidents from db ================",
-        incidents
-      );
 
       return incidents;
     } catch (error) {
@@ -111,7 +109,7 @@ export class EzraUtils {
 
     const newEnd = new Date(todayMidnightUTC);
     const newStart = new Date(todayMidnightUTC - duration);
-    
+
     newStart.setUTCHours(
       startDate.getUTCHours(),
       startDate.getUTCMinutes(),
@@ -153,5 +151,17 @@ export class EzraUtils {
 
       res.end();
     })();
+  }
+
+  static hasValidIncidentTicketId(ticketId: string | null): boolean {
+    return (ticketId && ticketId !== "null") || ticketId !== null;
+  }
+
+  static shouldStreamSummary(ezraRes: SummarizePromptResponse): boolean {
+    return (
+      ezraRes.wantsAction &&
+      ezraRes.timeframe.start &&
+      ezraRes.timeframe.end != null
+    );
   }
 }
