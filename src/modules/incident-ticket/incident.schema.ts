@@ -15,7 +15,6 @@ export const submitIncidentSchema = z.object({
     Priority.HIGH,
     Priority.LOW,
     Priority.MEDIUM,
-    "NONE",
   ]),
   assignedTo: emailSchema,
   username: z.string().min(1, "username is required"),

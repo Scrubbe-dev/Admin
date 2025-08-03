@@ -3,7 +3,7 @@ import { Response } from "express";
 
 export type PromptType = "rule" | "interpretPrompt" | "summarizeIncidents";
 
-export interface ExtraData {
+export interface ExtraData extends Object{
   incidents?: IncidentFetched[];
 }
 
@@ -32,6 +32,7 @@ export type SummarizePromptResponse = {
   };
   searchTerms: string[];
   wantsAction: boolean;
+  incidentTicketId: string | null;
 };
 
 export type SummariesResponse = {

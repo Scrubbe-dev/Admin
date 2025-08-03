@@ -26,11 +26,12 @@ export class IncidentController {
 
   async submitIncident(req: Request, res: Response, next: NextFunction) {
     try {
+      const userId = req.user?.sub!;
       const request = await validateRequest<IncidentRequest>(
         submitIncidentSchema,
         req.body
       );
-      const userId = req.user?.sub!;
+      
       const response = await this.incidentService.submitIncident(
         request,
         userId
