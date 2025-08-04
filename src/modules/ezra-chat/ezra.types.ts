@@ -1,15 +1,20 @@
-import { Incident, IncidentStatus, IncidentTicket, Priority } from "@prisma/client";
+import {
+  Incident,
+  IncidentStatus,
+  IncidentTicket,
+  Priority,
+} from "@prisma/client";
 import { Response } from "express";
 
 export type PromptType =
   | "rule"
   | "interpretPrompt"
   | "summarizeIncidents"
+  | "recommendedAction"
   | "determineRiskScore";
 
 export interface ExtraData extends Object {
   incidents?: IncidentFetched[];
-  singleIncident?: IncidentTicket
 }
 
 export type JsonSchemaFormat = {
@@ -74,4 +79,13 @@ export type MappedIncidents = {
 
 export type RiskScore = {
   score: number;
+};
+
+export type RecommendedActionResponse = {
+  action: (
+    | "lock_account"
+    | "notify_analyst"
+    | "quarantine"
+    | "terminate_session"
+  )[];
 };

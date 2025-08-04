@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { IncidentService } from "./incident.service";
 import { validateRequest } from "../auth/utils/validators";
-import { IncidentRequest } from "./incident.types";
-import { submitIncidentSchema } from "./incident.schema";
+import { IncidentRequest, UpdateTicket } from "./incident.types";
+import { submitIncidentSchema, updateTicketSchema } from "./incident.schema";
 
 export class IncidentController {
   constructor(private incidentService = new IncidentService()) {}
@@ -31,8 +31,27 @@ export class IncidentController {
         submitIncidentSchema,
         req.body
       );
-      
+
       const response = await this.incidentService.submitIncident(
+        request,
+        userId
+      );
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateTicket(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.sub!;
+      const request = await validateRequest<UpdateTicket>(
+        updateTicketSchema,
+        req.body
+      );
+
+      const response = await this.incidentService.updateTicket(
         request,
         userId
       );

@@ -149,28 +149,41 @@ incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
  *                 id:
  *                   type: string
  *                   format: uuid
- *                   example: b1a3e383-deb7-49f0-9c42-b1f6488d2e6f
+ *                   example: 51c3e02b-01ca-4a2a-b427-fd6763e126f7
+ *                 ticketId:
+ *                   type: string
+ *                   example: "INC2117208"
  *                 template:
  *                   type: string
  *                   enum: [MALWARE, NONE, PHISHING]
  *                   example: NONE
+ *                 slaStatus:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-08-05T15:59:25.655Z
+ *                 recommendedActions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     enum: [LOCK_ACCOUNT, NOTIFY_ANALYST, QUARANTINE, TERMINATE_SESSION]
+ *                   example: ["LOCK_ACCOUNT", "TERMINATE_SESSION"]
+ *                 riskScore:
+ *                   type: number
+ *                   example: 20
  *                 userName:
  *                   type: string
- *                   example: John Doe
+ *                   example: Jane doe
  *                 reason:
  *                   type: string
- *                   example: "Suspicious login detected on multiple accounts"
- *                 ticketId:
- *                   type: string
- *                   example: "INC6932612"
+ *                   example: "Different ip address logged in at same time"
  *                 priority:
  *                   type: string
  *                   enum: [CRITICAL, HIGH, MEDIUM, LOW, NONE]
- *                   example: HIGH
- *                 assignedTo:
+ *                   example: LOW
+ *                 assignedToEmail:
  *                   type: string
  *                   format: email
- *                   example: example@gmail.com
+ *                   example: example@mail.com
  *                 assignedById:
  *                   type: string
  *                   format: uuid
@@ -178,11 +191,11 @@ incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
  *                 createdAt:
  *                   type: string
  *                   format: date-time
- *                   example: 2025-08-02T16:28:23.146Z
+ *                   example: 2025-08-04T15:59:25.655Z
  *                 updatedAt:
  *                   type: string
  *                   format: date-time
- *                   example: 2025-08-02T16:28:23.146Z
+ *                   example: 2025-08-04T15:59:30.793Z
  *       400:
  *         description: Bad request (validation error)
  *       401:
@@ -192,6 +205,10 @@ incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
  */
 incidentRouter.post("/", authMiddleware.authenticate, (req, res, next) => {
   incidentController.submitIncident(req, res, next);
+});
+
+incidentRouter.put("/", authMiddleware.authenticate, (req, res, next) => {
+  incidentController.updateTicket(req, res, next);
 });
 
 export default incidentRouter;

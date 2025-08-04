@@ -1,8 +1,8 @@
 import prisma from "../../prisma-clients/client";
-import { Incident, IncidentTicket } from "@prisma/client";
-import { paginate } from "../auth/utils/pageable/pagination";
-import { IncidentRequest } from "./incident.types";
+import { IncidentRequest, UpdateTicket } from "./incident.types";
 import { IncidentUtils } from "./incident.util";
+import { IncidentMapper } from "./incident.mapper";
+import { NotFoundError } from "../auth/error";
 
 export class IncidentService {
   constructor() {}
@@ -54,14 +54,79 @@ export class IncidentService {
         data: {
           ticketId,
           reason: request.reason,
-          assignedTo: request.assignedTo,
+          assignedToEmail: request.assignedTo,
           userName: request.username,
           assignedById: userId,
           priority: request.priority,
         },
       });
 
-      return incidentTicket;
+      const riskScore = await IncidentUtils.ezraDetermineRiskScore(
+        incidentTicket
+      );
+
+      const recommendedActions = await IncidentUtils.ezraRecommendedActions(
+        incidentTicket
+      );
+
+      const mappedActions = IncidentMapper.mapRecommendedAction(
+        recommendedActions?.action
+      );
+
+      const slaStatus = IncidentUtils.calculateSLADueDate(
+        incidentTicket.createdAt,
+        incidentTicket.priority
+      );
+
+      const updatedTicket = await prisma.incidentTicket.update({
+        where: {
+          id: incidentTicket.id,
+        },
+        data: {
+          riskScore: riskScore?.score,
+          slaStatus,
+          recommendedActions: mappedActions,
+        },
+      });
+
+      return updatedTicket;
+    } catch (error) {
+      const err = `Failed to submit incident: ${
+        error instanceof Error && error.message
+      }`;
+      console.error(err);
+      throw new Error(err);
+    }
+  }
+
+  async updateTicket(request: UpdateTicket, userId: string) {
+    try {
+      const incidentTicket = await prisma.incidentTicket.findUnique({
+        where: {
+          assignedById: userId,
+          id: request.incidentId,
+        },
+      });
+
+      if (!incidentTicket) {
+        throw new NotFoundError(
+          `Ticket not found with id: ${request.incidentId}`
+        );
+      }
+
+      const updatedTicket = await prisma.incidentTicket.update({
+        where: {
+          id: incidentTicket.id,
+        },
+        data: {
+          template: request.template,
+          reason: request.reason,
+          userName: request.username,
+          assignedToEmail: request.assignedTo,
+        },
+      });
+
+      return updatedTicket;
     } catch (error) {
       const err = `Failed to submit incident: ${
         error instanceof Error && error.message
