@@ -7,6 +7,7 @@ import {
 import {
   ExpressResponse,
   MappedIncidents,
+  RecommendedActionResponse,
   RiskScore,
   SummarizePromptResponse,
   TimeFrame,
@@ -171,23 +172,5 @@ export class EzraUtils {
       ezraRes.timeframe.start &&
       ezraRes.timeframe.end != null
     );
-  }
-
-  static async determineRiskScore(incidentTicket: IncidentTicket) {
-    return await askEzra<RiskScore>(
-      "determineRiskScore",
-      "determine risk score based off this incident",
-      incidentTicket
-    );
-  }
-
-  static mapIncidents(incident: Incident): MappedIncidents {
-    return {
-      createdAt: incident.createdAt,
-      id: incident.id,
-      description: incident.description,
-      title: incident.title,
-      priority: incident.priority,
-    };
   }
 }

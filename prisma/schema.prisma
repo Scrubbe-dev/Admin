@@ -137,8 +137,9 @@ model Invites {
   sentById String
   business Business @relation(fields: [sentById], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  IncidentTicket IncidentTicket[]
 
   @@index([sentById])
 }
@@ -288,12 +289,13 @@ model IncidentTicket {
   template IncidentTemplate @default(NONE)
 
   slaStatus          DateTime?
-  recommendedActions String[]
-  riskScore          Int      @default(10)
+  recommendedActions DetermineAction[]
+  riskScore          Int               @default(20)
   userName           String
   reason             String
   priority           Priority
-  assignedTo         String
+  assignedToEmail    String            @map("assignedTo") // renamed from assignedTo to assignedToEmail
+  assignedTo         Invites           @relation(fields: [assignedToEmail], references: [email])
 
   assignedById String
   assignedBy   User   @relation(fields: [assignedById], references: [id])
@@ -587,4 +589,11 @@ enum IncidentTemplate {
 enum APIkeyEnvironment {
   DEVELOPMENT
   PRODUCTION
+}
+
+enum DetermineAction {
+  LOCK_ACCOUNT
+  NOTIFY_ANALYST
+  QUARANTINE
+  TERMINATE_SESSION
 }

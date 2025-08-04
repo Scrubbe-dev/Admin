@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import {
   determineRiskScore,
   interpretPrompt,
+  recommendedAction,
   rule,
   summarizeIncidents,
 } from "./prompt";
@@ -30,7 +31,10 @@ export const buildPrompt = (
       return summarizeIncidents(data);
 
     case "determineRiskScore":
-      return determineRiskScore(data);
+      return determineRiskScore();
+
+    case "recommendedAction":
+      return recommendedAction();
 
     default:
       throw new Error("Unknown prompt type");

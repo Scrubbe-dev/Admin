@@ -82,7 +82,7 @@ export class BusinessService {
     try {
       const invites = await this.prisma.invites.findMany({
         where: {
-          accepted: true,
+          // accepted: true, // TODO: UNCOMMENT AFTER IMPLEMENTATION
           stillAMember: true,
           business: {
             userId,
