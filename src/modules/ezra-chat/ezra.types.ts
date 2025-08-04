@@ -1,10 +1,15 @@
-import { Incident, IncidentStatus, Priority } from "@prisma/client";
+import { Incident, IncidentStatus, IncidentTicket, Priority } from "@prisma/client";
 import { Response } from "express";
 
-export type PromptType = "rule" | "interpretPrompt" | "summarizeIncidents";
+export type PromptType =
+  | "rule"
+  | "interpretPrompt"
+  | "summarizeIncidents"
+  | "determineRiskScore";
 
-export interface ExtraData extends Object{
+export interface ExtraData extends Object {
   incidents?: IncidentFetched[];
+  singleIncident?: IncidentTicket
 }
 
 export type JsonSchemaFormat = {
@@ -53,8 +58,20 @@ export type IncidentFetched = {
   id: string;
   title: string;
   description: string;
-  status: IncidentStatus;
+  // status: IncidentStatus;
   priority: Priority;
   createdAt: Date;
   number: number;
+};
+
+export type MappedIncidents = {
+  id: string;
+  title: string;
+  description: string;
+  priority: Priority;
+  createdAt: Date;
+};
+
+export type RiskScore = {
+  score: number;
 };

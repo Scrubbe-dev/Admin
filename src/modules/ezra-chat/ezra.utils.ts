@@ -1,9 +1,17 @@
-import { Priority, PrismaClient } from "@prisma/client";
+import {
+  Incident,
+  IncidentTicket,
+  Priority,
+  PrismaClient,
+} from "@prisma/client";
 import {
   ExpressResponse,
+  MappedIncidents,
+  RiskScore,
   SummarizePromptResponse,
   TimeFrame,
 } from "./ezra.types";
+import { askEzra } from "./askezra";
 
 export class EzraUtils {
   constructor(private prisma = new PrismaClient()) {}
@@ -47,7 +55,7 @@ export class EzraUtils {
           title: true,
           description: true,
           priority: true,
-          status: true,
+          // status: true,
           createdAt: true,
         },
       });
@@ -163,5 +171,23 @@ export class EzraUtils {
       ezraRes.timeframe.start &&
       ezraRes.timeframe.end != null
     );
+  }
+
+  static async determineRiskScore(incidentTicket: IncidentTicket) {
+    return await askEzra<RiskScore>(
+      "determineRiskScore",
+      "determine risk score based off this incident",
+      incidentTicket
+    );
+  }
+
+  static mapIncidents(incident: Incident): MappedIncidents {
+    return {
+      createdAt: incident.createdAt,
+      id: incident.id,
+      description: incident.description,
+      title: incident.title,
+      priority: incident.priority,
+    };
   }
 }
