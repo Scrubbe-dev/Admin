@@ -130,6 +130,11 @@ model Invites {
   role              Role
   accessPermissions AccessPermissions[]
 
+  position     String? // position of the member (e.g. analyst, support etc) (not needed right now but might be neccessary)
+  accepted     Boolean  @default(false)
+  stillAMember Boolean  @default(true)
+  acceptedAt   DateTime?
+
   // details of the company that sent the invite
   sentById String
   business Business @relation(fields: [sentById], references: [id])

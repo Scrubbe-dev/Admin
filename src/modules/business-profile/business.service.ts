@@ -1,13 +1,12 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import {
   BusinessSetUpRequest,
-  DashBoardPreference,
   DecodeInviteTokenResult,
-  InviteMembers,
 } from "./business.types";
 import { Request } from "express";
 import { BusinessUtil } from "./business.util";
-import { ConflictError, ForbiddenError } from "../auth/error";
+import { ConflictError } from "../auth/error";
+import { BusinessMapper } from "./business.mapper";
 
 export class BusinessService {
   constructor(
@@ -61,7 +60,7 @@ export class BusinessService {
 
   async validateInvite(token: string): Promise<DecodeInviteTokenResult> {
     try {
-      const decoded = await this.businessUtil.decodeToken(token);
+      const decoded = await this.businessUtil.decodeInviteToken(token);
       if (!decoded) {
         throw new ConflictError("Invalid or expired token");
       }
@@ -76,6 +75,29 @@ export class BusinessService {
       };
     } catch (error) {
       throw new ConflictError(`Error occured during decoding: ${error}`);
+    }
+  }
+
+  async fetchAllValidMembers(userId: string) {
+    try {
+      const invites = await this.prisma.invites.findMany({
+        where: {
+          accepted: true,
+          stillAMember: true,
+          business: {
+            userId,
+          },
+        },
+      });
+
+      const mappedInvites = invites.map((invite) =>
+        BusinessMapper.toNameAndEmail(invite)
+      );
+
+      return mappedInvites;
+    } catch (error) {
+      console.error(`Error while fetching members: ${error}`);
+      throw new Error(`Error while fetching members: ${error}`);
     }
   }
 }

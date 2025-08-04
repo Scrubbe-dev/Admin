@@ -71,3 +71,9 @@ export interface DecodeInviteTokenResult {
   existingUser: boolean;
   inviteData: SignedPayload;
 }
+
+export interface Members {
+  firstname: string
+  lastname: string 
+  email: string
+}

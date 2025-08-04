@@ -86,7 +86,7 @@ export class TokenService {
       
       return verify;
     } catch (err) {
-      throw new UnauthorizedError("Invalid access token");
+      throw new UnauthorizedError("Invalid or expired access token");
     }
   }
 }

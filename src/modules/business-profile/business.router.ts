@@ -197,4 +197,52 @@ businessRouter.post("/decode_invite", (req, res, next) => {
   businessController.validateInvite(req, res, next);
 });
 
+/**
+ * @swagger
+ * /api/v1/business/get_members:
+ *   get:
+ *     summary: Retrieve all members of a business account
+ *     description: >
+ *       Fetches the list of valid members associated with the authenticated business account.
+ *       What determines a valid member?: The member accepted the invite and is still a member.
+ *       The response returns a simplified view of each member, including only their first name, last name, and email address.
+ *
+ *     tags: [Business]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved list of members
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   firstname:
+ *                     type: string
+ *                     example: "John"
+ *                   lastname:
+ *                     type: string
+ *                     example: "Doe"
+ *                   email:
+ *                     type: string
+ *                     example: "johndoe@mail.com"
+ *       401:
+ *         description: Unauthorized (missing or invalid authentication token)
+ *       403:
+ *         description: Forbidden (user is not authorized to access this business data)
+ *       500:
+ *         description: Internal server error
+ */
+businessRouter.get(
+  "/get_members",
+  authMiddleware.authenticate,
+  businessAccountOnly,
+  (req, res, next) => {
+    businessController.fetchAllValidMembers(req, res, next);
+  }
+);
+
 export default businessRouter;

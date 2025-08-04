@@ -39,4 +39,16 @@ export class BusinessController {
       next(error);
     }
   }
+
+  async fetchAllValidMembers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.sub!;
+
+      const response = await this.businessService.fetchAllValidMembers(userId);
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
