@@ -144,19 +144,19 @@ export class BusinessUtil {
       lastName: invite.lastName,
     };
 
-    const token = this.generateToken(payload);
+    const token = this.generateInviteToken(payload);
     const inviteLink = `${baseUrl}?token=${token}`;
 
     return inviteLink;
   };
 
-  generateToken = (payload: SignedPayload): string => {
+  generateInviteToken = (payload: SignedPayload): string => {
     return jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: "7d",
     });
   };
 
-  decodeToken = async (token: string): Promise<SignedPayload> => {
+  decodeInviteToken = async (token: string): Promise<SignedPayload> => {
     return jwt.verify(token, process.env.JWT_SECRET!) as {
       email: string;
       firstName: string;

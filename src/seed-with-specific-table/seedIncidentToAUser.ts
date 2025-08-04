@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 const statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
 const priorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
-const CUSTOMER_ID = "996b1472-131a-407e-969a-478e2b1598d3";
-const ASSIGNEE_ID = "83516959-470c-4c01-bdd5-17eb73f675ec";
+const CUSTOMER_ID = "25005a81-ae98-44f2-ab45-62962636c81f";
+const ASSIGNEE_ID = "0acf0e7e-bb20-49b8-b95b-e7d1bba81a5e";
 
 function randomDateWithinLast3Months() {
   const now = new Date();

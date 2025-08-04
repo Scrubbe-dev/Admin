@@ -21,18 +21,20 @@ export class AuthMiddleware {
   constructor(private tokenService: TokenService) {}
 
   authenticate = async (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new UnauthorizedError("Authentication required");
-    }
-
-    const token = authHeader.split(" ")[1];
     try {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        throw new UnauthorizedError("Authentication required");
+      }
+
+      const token = authHeader.split(" ")[1];
       const payload = await this.tokenService.verifyAccessToken(token);
+
       req.user = payload as any;
       next();
     } catch (err) {
-      next(new UnauthorizedError("Invalid or expired token"));
+      next(err);
     }
   };
 

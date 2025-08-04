@@ -1,8 +1,8 @@
+import { Incident } from "@prisma/client";
 import { ExtraData } from "../ezra.types";
 import dotenv from "dotenv";
 
 dotenv.config();
-
 
 const enforceJson = `
 IMPORTANT:
@@ -125,7 +125,6 @@ ${JSON.stringify(
     totalIncidentsFetched: data.incidents?.length,
     title: incident.title,
     priority: incident.priority,
-    // status: incident.status,
     description: incident.description,
     createdAt: incident.createdAt,
   })) || []
@@ -169,6 +168,7 @@ TASK:
      1. Title: <summarized title>  
         Priority: <priority level>  
         Description: <concise explanation with context of impact, cause, and actions taken/pending>
+        **Always include this link right after each incident summary, without exception:**  
         [raise as an incident](?modal=true&id=<incident-id>&title=<url-encoded-title>&priority=<url-encoded-priority>&description=<url-encoded-description>)
 
         - This link is specifically for allowing the user to click and **pre-fill the incident details** (id, title, priority, description) into the frontend modal for raising an incident.
@@ -204,7 +204,7 @@ TASK:
      "Would you like me to raise an incident for this?"
 
 - **After providing summary or advice:**
-   - If escalation is appropriate, append:
+   - append:
      ACTION: raise_incident
    - If an alert is needed (either system-detected or user-requested), append:
      ACTION: alert
@@ -237,3 +237,32 @@ STYLE:
   - Always support follow-up references like “number 4” by mapping "number" → incident details.
 `;
 }
+
+export const determineRiskScore = (data: ExtraData) => {
+  return `You are Ezra, an AI analyst that evaluates risk severity of incidents.
+Your task is to output ONLY a JSON object with a single field: "score" based off of this INCIDENT JSON below:
+
+INCIDENT JSON:
+${JSON.stringify(data.singleIncident)}
+
+### Guidelines:
+- Risk score should be between 1 (lowest risk) and 100 (highest risk).
+- Consider both priority and description:
+  - Priority mapping (guideline, but description can increase/decrease score):
+    - LOW: 1–30
+    - MEDIUM: 31–60
+    - HIGH: 61–85
+    - CRITICAL: 86–100
+- Use the description to fine-tune: 
+  - If description indicates data loss, outages, safety concerns → push toward higher end.
+  - If description is minor or informational → push toward lower end.
+- Be consistent and justify implicitly by weighting priority more heavily, description for nuance.
+
+Return JSON like:
+{
+  "score": 75
+}
+
+${enforceJson}
+`;
+};

@@ -1,6 +1,11 @@
 import { ExtraData, PromptType } from "../ezra.types";
 import dotenv from "dotenv";
-import { interpretPrompt, rule, summarizeIncidents } from "./prompt";
+import {
+  determineRiskScore,
+  interpretPrompt,
+  rule,
+  summarizeIncidents,
+} from "./prompt";
 
 dotenv.config();
 
@@ -23,6 +28,9 @@ export const buildPrompt = (
 
     case "summarizeIncidents":
       return summarizeIncidents(data);
+
+    case "determineRiskScore":
+      return determineRiskScore(data);
 
     default:
       throw new Error("Unknown prompt type");
