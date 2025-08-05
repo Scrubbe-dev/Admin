@@ -1,5 +1,6 @@
 import express from "express";
 import helmet from "helmet";
+import http from "http";
 import cors from "cors";
 import { env } from "./config/env";
 import systemRouter from "./modules/system/system.routes";
@@ -40,12 +41,25 @@ import ezraRouter from "./modules/ezra-chat/ezra.route";
 import fingerprintRouter from "./modules/fingerprint/fingerprint.route";
 import dataVisualRouter from "./modules/data-visualization/data-visual.route";
 import incidentRouter from "./modules/incident-ticket/incident.route";
+import { Server } from "socket.io";
+import { initSocket } from "./modules/socket/socket";
 dotenvConfig();
+
+// TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 
 const app = express();
 const prisma = new PrismaClient();
 
-// TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+app.set("io", io);
+
+initSocket(io, prisma);
 
 app.set("trust proxy", (ip: string) => {
   if (ip === "127.0.0.1" || ip === "::1") return true;
@@ -179,6 +193,10 @@ app.use(
   }
 );
 
-app.listen(env.PORT, () => {
+// app.listen(env.PORT, () => {
+//   console.log(`Server running on port ${env.PORT}`);
+// });
+
+server.listen(env.PORT, () => {
   console.log(`Server running on port ${env.PORT}`);
 });

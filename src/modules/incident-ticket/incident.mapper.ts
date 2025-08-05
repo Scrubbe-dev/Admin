@@ -1,8 +1,9 @@
-import { DetermineAction, Incident } from "@prisma/client";
+import { DetermineAction, Incident, IncidentComment } from "@prisma/client";
 import {
   MappedIncidents,
   RecommendedActionResponse,
 } from "../ezra-chat/ezra.types";
+import { Comment, MappedComment } from "./incident.types";
 
 export class IncidentMapper {
   static mapIncidents(incident: Incident): MappedIncidents {
@@ -29,5 +30,16 @@ export class IncidentMapper {
     };
 
     return actions?.map((action) => mappedAction[action]) || [];
+  }
+
+  static mapToCommentResponse(comment: Comment): MappedComment {
+    return {
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      firstname: comment.firstname,
+      lastname: comment.lastname,
+      isBusinessOwner: comment.isBusinessOwner,
+    };
   }
 }

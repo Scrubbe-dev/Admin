@@ -26,3 +26,26 @@ export type UpdateTicket = {
 export type SLAThresholds = {
   ttr: number;
 };
+
+export type CommentRequest = {
+  content: string;
+  businessId: string;
+};
+
+export type MappedComment = {
+  id: string;
+  content: string;
+  createdAt: Date;
+  firstname: string | null;
+  lastname: string | null;
+  isBusinessOwner: boolean;
+};
+
+export type Comment = {
+  id: string;
+  content: string;
+  createdAt: Date;
+  firstname: string | null;
+  lastname: string | null;
+  isBusinessOwner: boolean;
+};
