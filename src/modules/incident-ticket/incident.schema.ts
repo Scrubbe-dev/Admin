@@ -37,3 +37,8 @@ export const updateTicketSchema = z.object({
   username: z.string().min(1, "username is required"),
   incidentId: z.string().uuid(),
 });
+
+export const commentSchema = z.object({
+  content: z.string().min(1, "content cannot be empty"),
+  businessId: z.string().uuid(),
+});

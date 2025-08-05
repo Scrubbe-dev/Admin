@@ -12,3 +12,11 @@ export const businessAccountOnly = (
 
   throw new ForbiddenError("Access restricted to business accounts only");
 };
+
+// export const mustBeAMember = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   if (req.user && req.user.)
+// };

@@ -30,24 +30,25 @@ model User {
 
   accountType AccountType?
 
-  oauthprovider        OAuthProvider?
-  registerdWithOauth   Boolean                @default(false)
-  oauthProvider_uuid   String?
-  DetectionRule        DetectionRule[]
-  Incident             Incident[]
-  IncidentComment      IncidentComment[]
-  PlaybookExecution    PlaybookExecution[]
-  refreshToken         RefreshToken[]
-  resetTokens          ResetToken[]
-  VerificationOTP      VerificationOTP?
-  Customer             Customer[]             @relation("CustomerToUser")
-  // BusinessDashboardSettings BusinessDashboard[]
-  developer            Developer?
-  business             Business?
-  ProjectConfiguration ProjectConfiguration[]
-  Graph                Graph[]
-  scrubbe_apikey       ApiKey[]
-  IncidentTicket       IncidentTicket[]
+  oauthprovider           OAuthProvider?
+  registerdWithOauth      Boolean                   @default(false)
+  oauthProvider_uuid      String?
+  DetectionRule           DetectionRule[]
+  Incident                Incident[]
+  IncidentComment         IncidentComment[]
+  PlaybookExecution       PlaybookExecution[]
+  refreshToken            RefreshToken[]
+  resetTokens             ResetToken[]
+  VerificationOTP         VerificationOTP?
+  Customer                Customer[]                @relation("CustomerToUser")
+  developer               Developer?
+  business                Business?
+  ProjectConfiguration    ProjectConfiguration[]
+  Graph                   Graph[]
+  scrubbe_apikey          ApiKey[]
+  IncidentTicket          IncidentTicket[]
+  Message                 Message[]
+  ConversationParticipant ConversationParticipant[]
 
   @@index([apiKey])
 }
@@ -63,7 +64,6 @@ model Developer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // IncidentsAssigned  Incident[] // incidents assigned to a developer
 }
 
 model ApiKey {
@@ -99,8 +99,9 @@ model Business {
   user    User      @relation(fields: [userId], references: [id])
   invites Invites[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  IncidentTicket IncidentTicket[]
 }
 
 // or company dashboard
@@ -128,7 +129,6 @@ model Invites {
   role              Role
   accessPermissions AccessPermissions[]
 
-  position     String? // position of the member (e.g. analyst, support etc) (not needed right now but might be neccessary)
   accepted     Boolean   @default(false)
   stillAMember Boolean   @default(true)
   acceptedAt   DateTime?
@@ -274,13 +274,14 @@ model Incident {
   assigneeId       String?
   assignee         User?               @relation(fields: [assigneeId], references: [id])
   customer         Customer?           @relation(fields: [customerId], references: [id])
-  comments         IncidentComment[]
+  // comments         IncidentComment[]
   playbooks        PlaybookExecution[]
   alerts           Alert[]             @relation("AlertToIncident")
   IncidentTicket   IncidentTicket?     @relation(fields: [incidentTicketId], references: [id])
   incidentTicketId String?
+  conversationId   String?
 
-  @@index([status, priority])
+  @@index([priority, createdAt])
 }
 
 model IncidentTicket {
@@ -288,21 +289,64 @@ model IncidentTicket {
   ticketId String           @unique
   template IncidentTemplate @default(NONE)
 
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id])
+
   slaStatus          DateTime?
   recommendedActions DetermineAction[]
+  status             IncidentStatus    @default(OPEN)
   riskScore          Int               @default(20)
   userName           String
   reason             String
-  priority           Priority
+  priority           Priority          @default(LOW)
   assignedToEmail    String            @map("assignedTo") // renamed from assignedTo to assignedToEmail
   assignedTo         Invites           @relation(fields: [assignedToEmail], references: [email])
 
   assignedById String
   assignedBy   User   @relation(fields: [assignedById], references: [id])
 
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Incident  Incident[]
+  comments IncidentComment[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Incident     Incident[]
+  conversation Conversation?
+}
+
+model Conversation {
+  id               String         @id @default(uuid())
+  incidentTicketId String         @unique
+  incidentTicket   IncidentTicket @relation(fields: [incidentTicketId], references: [id])
+
+  messages     Message[]
+  participants ConversationParticipant[]
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id])
+
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model EzraRule {
@@ -352,17 +396,20 @@ model Customer {
 }
 
 model IncidentComment {
-  id         String   @id @default(uuid())
-  content    String
-  isInternal Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  incidentId String
-  authorId   String
-  author     User     @relation(fields: [authorId], references: [id])
-  incident   Incident @relation(fields: [incidentId], references: [id])
+  id              String   @id @default(uuid())
+  content         String
+  isBusinessOwner Boolean  @default(false)
+  isInternal      Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  @@index([incidentId])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  incidentTicketId String?
+  IncidentTicket   IncidentTicket? @relation(fields: [incidentTicketId], references: [id])
+
+  @@index([incidentTicketId])
   @@index([authorId])
 }
 
@@ -518,6 +565,7 @@ enum AgreementType {
 enum IncidentStatus {
   OPEN
   IN_PROGRESS
+  ON_HOLD
   RESOLVED
   CLOSED
 }
