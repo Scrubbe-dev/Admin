@@ -2,6 +2,7 @@ import express from "express";
 import { AuthMiddleware } from "../auth/middleware/auth.middleware";
 import { TokenService } from "../auth/services/token.service";
 import { IncidentController } from "./incident.controller";
+import { mustBeAMember } from "../business-profile/business.middleware";
 
 const incidentRouter = express.Router();
 
@@ -27,9 +28,7 @@ const incidentController = new IncidentController();
  *   get:
  *     summary: Retrieve incidents assigned to the authenticated user
  *     description: >
- *       This endpoint returns all incident tickets assigned to the authenticated user.
- *
- *       Each incident includes details such as template type, assigned user, reason, priority, and timestamps.
+ *       This endpoint returns all incident tickets associated with the authenticated user. You must be a member of the organization be allowed on this route
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -86,9 +85,14 @@ const incidentController = new IncidentController();
  *       500:
  *         description: Failed to fetch incidents
  */
-incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
-  incidentController.getIncidentsByUser(req, res, next);
-});
+incidentRouter.get(
+  "/",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getIncidentTicketByBusiness(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -96,9 +100,7 @@ incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
  *   post:
  *     summary: Create a new incident ticket
  *     description: >
- *       This endpoint allows creating a new incident ticket with required fields like template, reason, priority, assigned user, and username.
- *
- *       The request body must comply with the schema validation (Zod).
+ *       This endpoint allows creating a new incident ticket with required fields like template, reason, priority, assigned user, and username. You must be a member of the organization be allowed on this route
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -203,9 +205,14 @@ incidentRouter.get("/", authMiddleware.authenticate, (req, res, next) => {
  *       500:
  *         description: Failed to create incident
  */
-incidentRouter.post("/", authMiddleware.authenticate, (req, res, next) => {
-  incidentController.submitIncident(req, res, next);
-});
+incidentRouter.post(
+  "/",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.submitIncident(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -213,7 +220,7 @@ incidentRouter.post("/", authMiddleware.authenticate, (req, res, next) => {
  *   post:
  *     summary: Add a comment to an incident ticket
  *     description: >
- *       This endpoint allows an authenticated business member or owner to add a comment to an existing incident ticket.
+ *       This endpoint allows an authenticated business member or owner to add a comment to an existing incident ticket. You must be a member of the organization be allowed on this route
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -233,17 +240,11 @@ incidentRouter.post("/", authMiddleware.authenticate, (req, res, next) => {
  *             type: object
  *             required:
  *               - content
- *               - businessId
  *             properties:
  *               content:
  *                 type: string
  *                 description: The text content of the comment
  *                 example: "What a coincidence, I flagged him yesterday"
- *               businessId:
- *                 type: string
- *                 format: uuid
- *                 description: The ID of the business the comment is associated with
- *                 example: 43783f5f-621d-4cf3-9e88-ed125ce5e2e6
  *     responses:
  *       201:
  *         description: Comment added successfully
@@ -286,6 +287,7 @@ incidentRouter.post("/", authMiddleware.authenticate, (req, res, next) => {
 incidentRouter.post(
   "/comment/:incidentTicketId",
   authMiddleware.authenticate,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.addComment(req, res, next);
   }
@@ -351,6 +353,7 @@ incidentRouter.post(
 incidentRouter.get(
   "/comment/:incidentTicketId",
   authMiddleware.authenticate,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getComments(req, res, next);
   }
@@ -362,7 +365,7 @@ incidentRouter.get(
  *   put:
  *     summary: Update an incident ticket
  *     description: >
- *       This endpoint allows updating an incident ticket.
+ *       This endpoint allows updating an incident ticket. You must be a member of the organization be allowed on this route
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -472,9 +475,14 @@ incidentRouter.get(
  *       500:
  *         description: Failed to create incident
  */
-incidentRouter.put("/", authMiddleware.authenticate, (req, res, next) => {
-  incidentController.updateTicket(req, res, next);
-});
+incidentRouter.put(
+  "/",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.updateTicket(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -482,7 +490,7 @@ incidentRouter.put("/", authMiddleware.authenticate, (req, res, next) => {
  *   get:
  *     summary: Get analytics for incident tickets
  *     description: >
- *       Returns the number of incident tickets grouped by their status (Open, On-hold, In-progress, Closed).
+ *       Returns the number of incident tickets grouped by their status (Open, On-hold, In-progress, Closed). You must be a member of the organization be allowed on this route
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -517,8 +525,9 @@ incidentRouter.put("/", authMiddleware.authenticate, (req, res, next) => {
  *         description: Failed to get analytics
  */
 incidentRouter.get(
-  "/analytics/:businessId",
+  "/analytics",
   authMiddleware.authenticate,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getAnalytics(req, res, next);
   }

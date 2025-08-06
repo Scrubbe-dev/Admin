@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Invites" ALTER COLUMN "firstName" DROP NOT NULL,
+ALTER COLUMN "lastName" DROP NOT NULL;

@@ -9,8 +9,8 @@ import {
 import { Priority, Role } from "@prisma/client";
 
 const inviteMembersSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
   inviteEmail: emailSchema,
   role: z.nativeEnum(Role, {
     invalid_type_error: "Invalid role",

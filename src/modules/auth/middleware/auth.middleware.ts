@@ -11,6 +11,7 @@ declare global {
         sub: string;
         email: string;
         accountType?: AccountType;
+        businessId?: string;
         scopes?: string[];
       };
     }
@@ -32,6 +33,8 @@ export class AuthMiddleware {
       const payload = await this.tokenService.verifyAccessToken(token);
 
       req.user = payload as any;
+
+      console.log("=========== REQ.USER ===========", req.user);
       next();
     } catch (err) {
       next(err);

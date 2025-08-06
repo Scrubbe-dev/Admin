@@ -29,7 +29,6 @@ export type SLAThresholds = {
 
 export type CommentRequest = {
   content: string;
-  businessId: string;
 };
 
 export type MappedComment = {

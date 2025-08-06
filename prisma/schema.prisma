@@ -9,61 +9,57 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(uuid())
-  email          String    @unique
-  passwordHash   String?
-  firstName      String?
-  lastName       String?
-  profileImage   String?
-  isVerified     Boolean   @default(false)
-  isActive       Boolean   @default(true)
-  lastLogin      DateTime?
-  apiKeyDuration DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  apiKey         String?   @default(cuid()) // this can be removed as it serves no purpose for now
-  scopes         String[]  @default(["api-key:create"]) // should be changed to 'read' only after demo @map("scope")
-  role           Role      @default(USER)
-
-  passwordChangedAt DateTime?
-  username          String?
-
-  accountType AccountType?
-
+  id                      String                    @id @default(uuid())
+  email                   String                    @unique
+  passwordHash            String?
+  firstName               String?
+  lastName                String?
+  profileImage            String?
+  isVerified              Boolean                   @default(false)
+  isActive                Boolean                   @default(true)
+  lastLogin               DateTime?
+  apiKeyDuration          DateTime                  @default(now())
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  apiKey                  String?                   @default(cuid())
+  role                    Role                      @default(USER)
+  passwordChangedAt       DateTime?
+  username                String?
+  accountType             AccountType?
   oauthprovider           OAuthProvider?
   registerdWithOauth      Boolean                   @default(false)
   oauthProvider_uuid      String?
+  scopes                  String[]                  @default(["api-key:create"])
+  scrubbe_apikey          ApiKey[]
+  business                Business?
+  ConversationParticipant ConversationParticipant[]
   DetectionRule           DetectionRule[]
+  developer               Developer?
+  Graph                   Graph[]
   Incident                Incident[]
   IncidentComment         IncidentComment[]
+  IncidentTicket          IncidentTicket[]
+  Invites                 Invites[]
+  Message                 Message[]
   PlaybookExecution       PlaybookExecution[]
+  ProjectConfiguration    ProjectConfiguration[]
   refreshToken            RefreshToken[]
   resetTokens             ResetToken[]
   VerificationOTP         VerificationOTP?
   Customer                Customer[]                @relation("CustomerToUser")
-  developer               Developer?
-  business                Business?
-  ProjectConfiguration    ProjectConfiguration[]
-  Graph                   Graph[]
-  scrubbe_apikey          ApiKey[]
-  IncidentTicket          IncidentTicket[]
-  Message                 Message[]
-  ConversationParticipant ConversationParticipant[]
 
   @@index([apiKey])
 }
 
 model Developer {
-  id             String  @id @default(uuid())
+  id             String   @id @default(uuid())
   experience     String?
   githubUsername String?
   jobTitle       String?
-
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId         String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id])
 }
 
 model ApiKey {
@@ -73,73 +69,65 @@ model ApiKey {
   environment APIkeyEnvironment
   name        String
   userId      String
-  user        User              @relation(fields: [userId], references: [id])
   scopes      String[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   expiresAt   DateTime?
   isActive    Boolean           @default(true)
   lastUsed    DateTime?
+  user        User              @relation(fields: [userId], references: [id])
 }
 
 model Business {
-  id            String  @id @default(uuid())
-  name          String?
-  industry      String? // e.g. finance, IT etc
-  primaryRegion String?
-  logo          String?
-  address       String?
-  companySize   String
-  purpose       String?
-
-  dashBoardId String?            @unique
-  dashboard   BusinessDashboard? @relation("BusinessToDashboard")
-
-  userId  String    @unique
-  user    User      @relation(fields: [userId], references: [id])
-  invites Invites[]
-
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id             String             @id @default(uuid())
+  name           String?
+  industry       String?
+  primaryRegion  String?
+  logo           String?
+  address        String?
+  companySize    String
+  purpose        String?
+  dashBoardId    String?            @unique
+  userId         String             @unique
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  user           User               @relation(fields: [userId], references: [id])
+  dashboard      BusinessDashboard? @relation("BusinessToDashboard")
   IncidentTicket IncidentTicket[]
+  invites        Invites[]
 }
 
-// or company dashboard
 model BusinessDashboard {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  businessId String   @unique
-  business   Business @relation("BusinessToDashboard", fields: [businessId], references: [id])
-
+  id                   String                         @id @default(uuid())
+  createdAt            DateTime                       @default(now())
+  updatedAt            DateTime                       @updatedAt
+  businessId           String                         @unique
   colorAccent          String                         @default("#4A90E2")
   defaultDashboard     DashboardType                  @default(SCRUBBE_DASHBOARD_SOUR)
   prefferedIntegration BusinessPrefferedIntegration[] @default([JIRA])
   notificationChannels BusinessNotificationChannels[] @default([EMAIL])
   defaultPriority      Priority[]                     @default([MEDIUM])
+  business             Business                       @relation("BusinessToDashboard", fields: [businessId], references: [id])
 }
 
 model Invites {
-  id String @id @default(uuid())
-
-  firstName         String
-  lastName          String
+  id                String              @id @default(uuid())
+  firstName         String?
+  lastName          String?
   email             String              @unique
   role              Role
   accessPermissions AccessPermissions[]
-
-  accepted     Boolean   @default(false)
-  stillAMember Boolean   @default(true)
-  acceptedAt   DateTime?
-
-  // details of the company that sent the invite
-  sentById String
-  business Business @relation(fields: [sentById], references: [id])
-
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  IncidentTicket IncidentTicket[]
+  sentById          String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  accepted          Boolean             @default(false)
+  acceptedAt        DateTime?
+  stillAMember      Boolean             @default(true)
+  status            InviteStatus        @default(PENDING)
+  userId            String?
+  IncidentTicket    IncidentTicket[]
+  business          Business            @relation(fields: [sentById], references: [id])
+  user              User?               @relation(fields: [userId], references: [id])
 
   @@index([sentById])
 }
@@ -175,23 +163,14 @@ model ResetToken {
 
 model Graph {
   id        String    @id @default(uuid())
-  user      User      @relation(fields: [userId], references: [id])
   userId    String
   type      GraphType
   data      Json
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
 
-  @@unique([userId, type]) // one graph per type per user
-}
-
-enum GraphType {
-  MULTIPLE_FAILED_LOGINS
-  UNUSUAL_LOCATIONS
-  HIGH_VELOCITY_PASSWORD_GUESS
-  IP_ADDRESSES_TARGETING_MULTIPLE_ACCOUNTS
-  GEOGRAPHICALLY_IMPOSSIBLE_LOGINS
-  TRAVEL_VELOCITY_ANALYSIS
+  @@unique([userId, type])
 }
 
 model WaitingUser {
@@ -266,96 +245,85 @@ model Incident {
   id               String              @id @default(uuid())
   title            String
   description      String
-  status           IncidentStatus      @default(OPEN)
   priority         Priority            @default(MEDIUM)
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   customerId       String?
   assigneeId       String?
+  incidentTicketId String?
+  status           IncidentStatus      @default(OPEN)
+  conversationId   String?
   assignee         User?               @relation(fields: [assigneeId], references: [id])
   customer         Customer?           @relation(fields: [customerId], references: [id])
-  // comments         IncidentComment[]
+  IncidentTicket   IncidentTicket?     @relation(fields: [incidentTicketId], references: [id])
   playbooks        PlaybookExecution[]
   alerts           Alert[]             @relation("AlertToIncident")
-  IncidentTicket   IncidentTicket?     @relation(fields: [incidentTicketId], references: [id])
-  incidentTicketId String?
-  conversationId   String?
 
   @@index([priority, createdAt])
 }
 
 model IncidentTicket {
-  id       String           @id @default(uuid())
-  ticketId String           @unique
-  template IncidentTemplate @default(NONE)
-
-  businessId String?
-  business   Business? @relation(fields: [businessId], references: [id])
-
+  id                 String            @id @default(uuid())
+  template           IncidentTemplate  @default(NONE)
+  userName           String
+  reason             String
+  assignedToEmail    String            @map("assignedTo")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  assignedById       String
+  ticketId           String            @unique
+  riskScore          Int               @default(20)
   slaStatus          DateTime?
   recommendedActions DetermineAction[]
   status             IncidentStatus    @default(OPEN)
-  riskScore          Int               @default(20)
-  userName           String
-  reason             String
+  businessId         String?
   priority           Priority          @default(LOW)
-  assignedToEmail    String            @map("assignedTo") // renamed from assignedTo to assignedToEmail
+  conversation       Conversation?
+  Incident           Incident[]
+  comments           IncidentComment[]
+  assignedBy         User              @relation(fields: [assignedById], references: [id])
   assignedTo         Invites           @relation(fields: [assignedToEmail], references: [email])
-
-  assignedById String
-  assignedBy   User   @relation(fields: [assignedById], references: [id])
-
-  comments IncidentComment[]
-
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  Incident     Incident[]
-  conversation Conversation?
+  business           Business?         @relation(fields: [businessId], references: [id])
 }
 
 model Conversation {
-  id               String         @id @default(uuid())
-  incidentTicketId String         @unique
-  incidentTicket   IncidentTicket @relation(fields: [incidentTicketId], references: [id])
-
-  messages     Message[]
-  participants ConversationParticipant[]
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
+  id               String                    @id @default(uuid())
+  incidentTicketId String                    @unique
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  incidentTicket   IncidentTicket            @relation(fields: [incidentTicketId], references: [id])
+  participants     ConversationParticipant[]
+  messages         Message[]
 }
 
 model Message {
   id             String       @id @default(uuid())
   conversationId String
+  senderId       String
+  content        String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   conversation   Conversation @relation(fields: [conversationId], references: [id])
-
-  senderId String
-  sender   User   @relation(fields: [senderId], references: [id])
-
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sender         User         @relation(fields: [senderId], references: [id])
 }
 
 model ConversationParticipant {
   id             String       @id @default(uuid())
   conversationId String
+  userId         String
+  joinedAt       DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   conversation   Conversation @relation(fields: [conversationId], references: [id])
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  joinedAt  DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user           User         @relation(fields: [userId], references: [id])
 }
 
 model EzraRule {
   id          String   @id @default(cuid())
-  description String // User natural language
+  description String
   metric      String
   threshold   Int
   timeWindow  String
-  actions     String // comma-separated actions
+  actions     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -366,12 +334,12 @@ model ProjectConfiguration {
   enviroment  String
   domain      String?
   description String?
-  modules     String[]
-  package     PackageModule
   lastseen    DateTime      @default(now())
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   ownerId     String
+  modules     String[]
+  package     PackageModule
   owner       User          @relation(fields: [ownerId], references: [id])
 
   @@unique([ownerId, package])
@@ -396,24 +364,21 @@ model Customer {
 }
 
 model IncidentComment {
-  id              String   @id @default(uuid())
-  content         String
-  isBusinessOwner Boolean  @default(false)
-  isInternal      Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id])
-
+  id               String          @id @default(uuid())
+  content          String
+  isInternal       Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  authorId         String
   incidentTicketId String?
+  isBusinessOwner  Boolean         @default(false)
+  author           User            @relation(fields: [authorId], references: [id])
   IncidentTicket   IncidentTicket? @relation(fields: [incidentTicketId], references: [id])
 
   @@index([incidentTicketId])
   @@index([authorId])
 }
 
-// is this what ezra is supposed to query
 model PlaybookExecution {
   id            String         @id @default(uuid())
   name          String
@@ -482,6 +447,15 @@ model DetectionRule {
   @@index([createdById])
   @@index([isActive])
   @@index([lastExecuted])
+}
+
+enum GraphType {
+  MULTIPLE_FAILED_LOGINS
+  UNUSUAL_LOCATIONS
+  HIGH_VELOCITY_PASSWORD_GUESS
+  IP_ADDRESSES_TARGETING_MULTIPLE_ACCOUNTS
+  GEOGRAPHICALLY_IMPOSSIBLE_LOGINS
+  TRAVEL_VELOCITY_ANALYSIS
 }
 
 enum ResetTokenType {
@@ -565,9 +539,9 @@ enum AgreementType {
 enum IncidentStatus {
   OPEN
   IN_PROGRESS
-  ON_HOLD
   RESOLVED
   CLOSED
+  ON_HOLD
 }
 
 enum Priority {
@@ -644,4 +618,10 @@ enum DetermineAction {
   NOTIFY_ANALYST
   QUARANTINE
   TERMINATE_SESSION
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }

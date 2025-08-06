@@ -14,7 +14,11 @@ import { IncidentStatus } from "@prisma/client";
 export class IncidentService {
   constructor() {}
 
-  async getIncidentTicketByUser(userId: string, page: number, limit: number) {
+  async getIncidentTicketByBusiness(
+    businessId: string,
+    page: number,
+    limit: number
+  ) {
     try {
       // const pageable = await paginate<IncidentTicket>(
       //   "incidentTicket",
@@ -30,7 +34,7 @@ export class IncidentService {
 
       const inicidentTickets = prisma.incidentTicket.findMany({
         where: {
-          assignedById: userId,
+          businessId,
         },
       });
 
@@ -44,7 +48,11 @@ export class IncidentService {
     }
   }
 
-  async submitIncident(request: IncidentRequest, userId: string) {
+  async submitIncident(
+    request: IncidentRequest,
+    userId: string,
+    businessId: string
+  ) {
     try {
       let ticketId: string;
       let exists;
@@ -65,11 +73,12 @@ export class IncidentService {
           userName: request.username,
           assignedById: userId,
           priority: request.priority,
+          businessId,
           conversation: {
             create: {
               participants: {
                 create: [
-                  { user: { connect: { id: userId } } }, // assignedBy as participant
+                  { user: { connect: { id: userId } } }, // assignedBy as first participant, more would be added through accepted invites
                 ],
               },
             },
@@ -115,11 +124,10 @@ export class IncidentService {
     }
   }
 
-  async updateTicket(request: UpdateTicket, userId: string) {
+  async updateTicket(request: UpdateTicket) {
     try {
       const incidentTicket = await prisma.incidentTicket.findUnique({
         where: {
-          assignedById: userId,
           id: request.incidentId,
         },
       });
@@ -156,18 +164,17 @@ export class IncidentService {
     request: CommentRequest,
     userId: string,
     email: string,
-    incidentTicketId: string
+    incidentTicketId: string,
+    businessId: string
   ) {
     try {
       const business = await prisma.business.findUnique({
-        where: { id: request.businessId },
+        where: { id: businessId },
         include: { invites: true, user: true },
       });
 
       if (!business) {
-        throw new NotFoundError(
-          `Business not found with id: ${request.businessId}`
-        );
+        throw new NotFoundError(`Business not found with id: ${businessId}`);
       }
 
       // Check membership either owner or active member

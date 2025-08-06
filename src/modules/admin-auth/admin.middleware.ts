@@ -11,6 +11,7 @@ declare global {
         sub: string;
         email: string;
         accountType?: AccountType;
+        businessId?: string;
         scopes?: string[]
       };
     }
