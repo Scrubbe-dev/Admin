@@ -10,11 +10,13 @@ export class AuthMapper {
     token: Tokens
   ): MappedUser {
     return {
-      id: user.id,
-      email: user.email,
-      businessId,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      user: {
+        id: user.id,
+        email: user.email,
+        businessId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
       tokens: {
         refreshToken: token.refreshToken,
         accessToken: token.accessToken,
