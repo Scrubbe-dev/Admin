@@ -7,6 +7,7 @@ import { Request } from "express";
 import { BusinessUtil } from "./business.util";
 import { ConflictError } from "../auth/error";
 import { BusinessMapper } from "./business.mapper";
+import { InviteUtil } from "../invite/invite.util";
 
 export class BusinessService {
   constructor(

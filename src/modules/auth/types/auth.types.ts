@@ -17,12 +17,14 @@ export type User = {
 };
 
 export interface MappedUser {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  businessId?: string;
-  tokens: Tokens
+  user: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    businessId?: string;
+  };
+  tokens: Tokens;
 }
 
 export type VerifyEmailRequest = {
