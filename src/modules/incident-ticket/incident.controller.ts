@@ -14,14 +14,19 @@ import {
 
 export class IncidentController {
   constructor(private incidentService = new IncidentService()) {}
-  async getIncidentsByUser(req: Request, res: Response, next: NextFunction) {
+  async getIncidentTicketByBusiness(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const userId = req.user?.sub!;
+      const businessId = req.user?.businessId!;
+
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
-      const response = await this.incidentService.getIncidentTicketByUser(
-        userId,
+      const response = await this.incidentService.getIncidentTicketByBusiness(
+        businessId,
         page,
         limit
       );
@@ -35,6 +40,7 @@ export class IncidentController {
   async submitIncident(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
+      const businessId = req.user?.businessId!;
       const request = await validateRequest<IncidentRequest>(
         submitIncidentSchema,
         req.body
@@ -42,7 +48,8 @@ export class IncidentController {
 
       const response = await this.incidentService.submitIncident(
         request,
-        userId
+        userId,
+        businessId
       );
 
       res.json(response);
@@ -59,7 +66,7 @@ export class IncidentController {
         req.body
       );
 
-      const response = await this.incidentService.updateTicket(request, userId);
+      const response = await this.incidentService.updateTicket(request);
 
       res.json(response);
     } catch (error) {
@@ -71,6 +78,8 @@ export class IncidentController {
     try {
       const userId = req.user?.sub!;
       const email = req.user?.email!;
+      const businessId = req.user?.businessId!;
+
       const incidentTicketId = req.params.incidentTicketId;
       const request = await validateRequest<CommentRequest>(
         commentSchema,
@@ -81,7 +90,8 @@ export class IncidentController {
         request,
         userId,
         email,
-        incidentTicketId
+        incidentTicketId,
+        businessId
       );
 
       res.json(response);
@@ -104,7 +114,7 @@ export class IncidentController {
 
   async getAnalytics(req: Request, res: Response, next: NextFunction) {
     try {
-      const businessId = req.params.businessId;
+      const businessId = req.user?.businessId!;
 
       const response = await this.incidentService.getTicketAnalytics(
         businessId

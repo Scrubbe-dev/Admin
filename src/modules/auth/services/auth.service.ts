@@ -7,7 +7,6 @@ import {
 } from "@prisma/client";
 import {
   LoginInput,
-  AuthResponse,
   Tokens,
   VerifyEmailRequest,
   ResendOtpRequest,
@@ -16,16 +15,17 @@ import {
   OAuthRequest,
   OAuthBusinesRequest,
   OAuthLoginRequest,
+  MappedUser,
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
 import { EmailService } from "./email.service";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
+import { InviteUtil } from "../../invite/invite.util";
+import { AuthMapper } from "../mapper/auth.mapper";
 
 // TODO - run changes to production db with this command - npx prisma migrate deploy
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
-
-//  TODO - CREATE A MAPPER CLASS TO REDUCE AS MUCH RESPONSE AS POSSIBLE FOR REGISTERED, LOGGED IN USERS
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
@@ -34,7 +34,7 @@ export class AuthService {
     private emailService: EmailService
   ) {}
 
-  async registerDev(input: RegisterDevRequest): Promise<AuthResponse | void> {
+  async registerDev(input: RegisterDevRequest): Promise<MappedUser | void> {
     try {
       const exists = await this.prisma.user.findUnique({
         where: { email: input.email },
@@ -65,14 +65,19 @@ export class AuthService {
         },
       });
 
-      const tokens = await this.tokenService.generateTokens(user as any);
+      await InviteUtil.acceptInvite(user.email, user.id);
+
+      const businessId = await InviteUtil.getInvitedBusinessId(user.email);
+
+      const tokens = await this.tokenService.generateTokens(
+        user as any,
+        businessId
+      );
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
       await this.emailService.sendVerificationEmail(user.email, code);
-      return {
-        user: this.excludePassword(user) as any,
-        tokens,
-      };
+
+      return AuthMapper.toUserResponse(user, businessId, tokens);
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }
@@ -80,7 +85,7 @@ export class AuthService {
 
   async registerBusiness(
     input: RegisterBusinessRequest
-  ): Promise<AuthResponse | void> {
+  ): Promise<AuthMapper | void> {
     try {
       const exists = await this.prisma.user.findUnique({
         where: { email: input.email },
@@ -110,17 +115,20 @@ export class AuthService {
             },
           },
         },
+        include: {
+          business: true,
+        },
       });
 
-      const tokens = await this.tokenService.generateTokens(user as any);
+      const tokens = await this.tokenService.generateTokens(
+        user as any,
+        user.business?.id
+      );
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
       await this.emailService.sendVerificationEmail(user.email, code);
 
-      return {
-        user: this.excludePassword(user) as any,
-        tokens,
-      };
+      return AuthMapper.toUserResponse(user, user.business?.id, tokens);
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }
@@ -159,12 +167,21 @@ export class AuthService {
         },
       });
 
-      const tokens = await this.tokenService.generateTokens(newUser as any);
+      const acceptedInvite = await InviteUtil.acceptInvite(
+        newUser.email,
+        newUser.id
+      );
 
-      return {
-        user: this.excludePassword(newUser),
-        tokens,
-      };
+      const tokens = await this.tokenService.generateTokens(
+        newUser as any,
+        acceptedInvite.businessId
+      );
+
+      return AuthMapper.toUserResponse(
+        newUser,
+        acceptedInvite.businessId,
+        tokens
+      );
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }
@@ -209,14 +226,15 @@ export class AuthService {
             },
           },
         },
+        include: { business: true },
       });
 
-      const tokens = await this.tokenService.generateTokens(newUser as any);
+      const tokens = await this.tokenService.generateTokens(
+        newUser as any,
+        newUser.business?.id
+      );
 
-      return {
-        user: this.excludePassword(newUser),
-        tokens,
-      };
+      return AuthMapper.toUserResponse(newUser, newUser.business?.id, tokens);
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }
@@ -254,7 +272,6 @@ export class AuthService {
         where: { id: otp.userId },
         data: { isVerified: true },
       });
-
       return {
         message: "OTP verified successfully!",
       };
@@ -330,9 +347,12 @@ export class AuthService {
     await this.emailService.sendVerificationEmail(otp.sentTo, code);
   }
 
-  async login(input: LoginInput): Promise<AuthResponse> {
+  async login(input: LoginInput): Promise<MappedUser> {
     const user = await this.prisma.user.findUnique({
       where: { email: input.email },
+      include: {
+        business: true,
+      },
     });
 
     // if (!user || !user.isActive) {
@@ -352,31 +372,44 @@ export class AuthService {
       throw new UnauthorizedError("Invalid credentials");
     }
 
+    await InviteUtil.acceptInvite(user.email, user.id);
+    const businessId = await InviteUtil.getInvitedBusinessId(user.email);
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: { lastLogin: new Date() },
     });
 
-    const tokens = await this.tokenService.generateTokens(user as any);
+    const tokens = await this.tokenService.generateTokens(
+      user as any,
+      businessId ?? user.business?.id
+    );
 
-    return {
-      user: this.excludePassword(user) as any,
-      tokens,
-    };
+    return AuthMapper.toUserResponse(
+      user,
+      businessId ?? user.business?.id,
+      tokens
+    );
   }
 
-  async oAuthLogin(input: OAuthLoginRequest): Promise<AuthResponse> {
+  async oAuthLogin(input: OAuthLoginRequest): Promise<MappedUser> {
     const user = await this.prisma.user.findFirst({
       where: {
         email: input.email,
         oauthprovider: input.oAuthProvider,
         // oauthProvider_uuid: input.provider_uuid, // TODO: replace with a more consistent identifier
       },
+      include: {
+        business: true,
+      },
     });
 
     if (!user) {
       throw new NotFoundError("User does not exists, Please sign up first");
     }
+
+    await InviteUtil.acceptInvite(user.email, user.id);
+    const businessId = await InviteUtil.getInvitedBusinessId(user.email);
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -385,12 +418,16 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.tokenService.generateTokens(user as any);
+    const tokens = await this.tokenService.generateTokens(
+      user as any,
+      businessId ?? user.business?.id
+    );
 
-    return {
-      user: this.excludePassword(user) as any,
-      tokens,
-    };
+    return AuthMapper.toUserResponse(
+      user,
+      businessId ?? user.business?.id,
+      tokens
+    );
   }
 
   async refreshTokens(refreshToken: string): Promise<Tokens> {

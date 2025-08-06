@@ -16,6 +16,15 @@ export type User = {
   roles: Role[];
 };
 
+export interface MappedUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  businessId?: string;
+  tokens: Tokens
+}
+
 export type VerifyEmailRequest = {
   userId: string;
   code: string;
@@ -41,6 +50,7 @@ export type JwtPayload = {
   sub: string; // User ID
   email: string;
   accountType: string;
+  businessId?: string;
   scopes: string[];
   roles: Role[];
   iat: number; // Issued at

@@ -73,7 +73,7 @@ export interface DecodeInviteTokenResult {
 }
 
 export interface Members {
-  firstname: string
-  lastname: string 
-  email: string
+  firstname: string | null;
+  lastname: string | null;
+  email: string | null;
 }

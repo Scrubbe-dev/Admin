@@ -40,5 +40,4 @@ export const updateTicketSchema = z.object({
 
 export const commentSchema = z.object({
   content: z.string().min(1, "content cannot be empty"),
-  businessId: z.string().uuid(),
 });

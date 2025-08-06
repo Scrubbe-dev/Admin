@@ -12,15 +12,19 @@ export class TokenService {
     private refreshTokenExpiresInDays: number
   ) {}
 
-  async generateTokens(user: User): Promise<Tokens> {
-    const accessToken = await this.generateAccessToken(user);
+  async generateTokens(user: User, businessId?: string): Promise<Tokens> {
+    const accessToken = await this.generateAccessToken(user, businessId);
     const refreshToken = await this.generateRefreshToken(user);
 
     return { accessToken, refreshToken };
   }
 
-  private async generateAccessToken(user: User): Promise<string> {
+  private async generateAccessToken(
+    user: User,
+    businessId?: string
+  ): Promise<string> {
     const payload: JwtPayload = {
+      businessId,
       sub: user.id,
       email: user.email,
       accountType: user.accountType,
@@ -83,7 +87,7 @@ export class TokenService {
   async verifyAccessToken(token: string): Promise<JwtPayload> {
     try {
       const verify = jwt.verify(token, this.jwtSecret) as JwtPayload;
-      
+
       return verify;
     } catch (err) {
       throw new UnauthorizedError("Invalid or expired access token");
