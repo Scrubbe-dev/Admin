@@ -11,6 +11,9 @@ import {
   submitIncidentSchema,
   updateTicketSchema,
 } from "./incident.schema";
+import { getIO } from "../socket/init-socket";
+
+// const io = getIO();
 
 export class IncidentController {
   constructor(private incidentService = new IncidentService()) {}
@@ -49,7 +52,8 @@ export class IncidentController {
       const response = await this.incidentService.submitIncident(
         request,
         userId,
-        businessId
+        businessId,
+        // io
       );
 
       res.json(response);
@@ -119,6 +123,18 @@ export class IncidentController {
       const response = await this.incidentService.getTicketAnalytics(
         businessId
       );
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getMessages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const response = await this.incidentService.getMessages(incidentTicketId);
 
       res.json(response);
     } catch (error) {

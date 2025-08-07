@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { emailSchema } from "../../shared/validation/validation.schema";
 import { IncidentTemplate } from "./incident.types";
-import { Priority } from "@prisma/client";
+import { IncidentStatus, Priority } from "@prisma/client";
 
 export const submitIncidentSchema = z.object({
   template: z.enum([
@@ -36,6 +36,13 @@ export const updateTicketSchema = z.object({
   assignedTo: emailSchema,
   username: z.string().min(1, "username is required"),
   incidentId: z.string().uuid(),
+  status: z.enum([
+    IncidentStatus.CLOSED,
+    IncidentStatus.IN_PROGRESS,
+    IncidentStatus.ON_HOLD,
+    IncidentStatus.OPEN,
+    IncidentStatus.RESOLVED,
+  ]),
 });
 
 export const commentSchema = z.object({

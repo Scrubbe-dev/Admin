@@ -1,8 +1,8 @@
 export interface JoinPayload {
-  conversationId: string; 
+  incidentTicketId: string;
 }
 
 export interface SendMessagePayload {
-  conversationId: string;
+  incidentTicketId: string;
   content: string;
 }

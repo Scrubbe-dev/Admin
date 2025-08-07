@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { PrismaClient } from "@prisma/client";
+import { ConversationParticipant, PrismaClient } from "@prisma/client";
 import { socketAuth } from "./socketAuth";
 import { JoinPayload, SendMessagePayload } from "./socket.type";
 
@@ -10,9 +10,15 @@ export const initSocket = (io: Server, prisma: PrismaClient) => {
     const userId = socket.data.user.id;
     console.log(`User connected: ${userId} (${socket.id})`);
 
-    socket.on("joinConversation", async ({ conversationId }: JoinPayload) => {
-      const participant = await prisma.conversationParticipant.findFirst({
-        where: { conversationId, userId },
+    let participant: ConversationParticipant | null;
+    socket.on("joinConversation", async ({ incidentTicketId }: JoinPayload) => {
+      participant = await prisma.conversationParticipant.findFirst({
+        where: {
+          conversation: {
+            incidentTicketId,
+          },
+          userId,
+        },
       });
 
       if (!participant) {
@@ -22,20 +28,46 @@ export const initSocket = (io: Server, prisma: PrismaClient) => {
         return;
       }
 
-      socket.join(conversationId);
-      console.log(`User ${userId} joined conversation ${conversationId}`);
+      socket.join(incidentTicketId);
+      console.log(
+        `User with email ${userId} joined conversation ${incidentTicketId}`
+      );
     });
 
     socket.on(
       "sendMessage",
-      async ({ conversationId, content }: SendMessagePayload) => {
+      async ({ incidentTicketId, content }: SendMessagePayload) => {
         try {
-          const message = await prisma.message.create({
-            data: { conversationId, senderId: userId, content },
-            include: { sender: true },
+          if (!participant) {
+            socket.emit("error", {
+              message:
+                "Not authorized to join this conversation or send a message",
+            });
+            return;
+          }
+
+          const conversation = await prisma.conversation.findFirst({
+            where: { incidentTicketId },
           });
 
-          io.to(conversationId).emit("newMessage", message);
+          if (!conversation) {
+            socket.emit("error", {
+              message: `Conversation not found with ticket id: ${incidentTicketId}`,
+            });
+            return;
+          }
+
+          const message = await prisma.message.create({
+            data: {
+              conversationId: conversation.id,
+              senderId: userId,
+              content,
+            },
+            include: {
+              sender: true,
+            },
+          });
+          io.to(incidentTicketId).emit("newMessage", message);
         } catch (error) {
           console.error(error);
           socket.emit("error", { message: "Failed to send message" });

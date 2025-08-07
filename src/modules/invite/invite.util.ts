@@ -1,3 +1,4 @@
+import { User } from "@prisma/client";
 import prisma from "../../prisma-clients/client";
 
 interface AcceptNewInvite {
@@ -9,7 +10,7 @@ export class InviteUtil {
   constructor() {}
   static async acceptInvite(
     email: string,
-    userId: string
+    user: User
   ): Promise<AcceptNewInvite> {
     let acceptedNewInvite = false;
 
@@ -33,7 +34,9 @@ export class InviteUtil {
           data: {
             status: "ACCEPTED",
             stillAMember: true,
-            userId: userId,
+            userId: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
             accepted: true,
             acceptedAt: new Date(),
           },

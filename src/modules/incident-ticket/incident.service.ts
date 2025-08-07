@@ -8,8 +8,7 @@ import { IncidentUtils } from "./incident.util";
 import { IncidentMapper } from "./incident.mapper";
 import { ForbiddenError, NotFoundError } from "../auth/error";
 import { IncidentStatus } from "@prisma/client";
-
-// TODO: HAVE A MUST BE A BUSINESS MIDDLEWARE BEFORE SUBMITTING TICKET
+import { Server } from "socket.io";
 
 export class IncidentService {
   constructor() {}
@@ -51,7 +50,8 @@ export class IncidentService {
   async submitIncident(
     request: IncidentRequest,
     userId: string,
-    businessId: string
+    businessId: string,
+    // io: Server
   ) {
     try {
       let ticketId: string;
@@ -114,6 +114,22 @@ export class IncidentService {
         },
       });
 
+      // await prisma.incidentTicketNotification.create({
+      //   data: {
+      //     businessId,
+      //     ticketId: incidentTicket.id,
+      //     message: incidentTicket.reason,
+      //   },
+      // });
+
+      // io.to(businessId).emit("incidentNotification", {
+      //   ticketId: incidentTicket.id,
+      //   businessId,
+      //   reason: incidentTicket.reason,
+      //   createdAt: incidentTicket.createdAt,
+      //   message: `New incident submitted: ${incidentTicket.reason}`,
+      // });
+
       return updatedTicket;
     } catch (error) {
       const err = `Failed to submit incident: ${
@@ -144,9 +160,11 @@ export class IncidentService {
         },
         data: {
           template: request.template,
+          priority: request.priority,
           reason: request.reason,
           userName: request.username,
           assignedToEmail: request.assignedTo,
+          status: request.status,
         },
       });
 
@@ -296,6 +314,30 @@ export class IncidentService {
     } catch (error) {
       throw new Error(
         `Failed to get analytics: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  async getMessages(incidentTicketId: string) {
+    try {
+      const messages = await prisma.message.findMany({
+        where: {
+          conversation: {
+            incidentTicketId,
+          },
+        },
+        include: { sender: true },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      return messages.map(IncidentMapper.messageMapper);
+    } catch (error) {
+      throw new Error(
+        `Failed to get message history: ${
           error instanceof Error ? error.message : String(error)
         }`
       );

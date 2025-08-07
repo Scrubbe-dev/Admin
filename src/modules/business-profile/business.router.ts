@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import { AuthMiddleware } from "../auth/middleware/auth.middleware";
 import { TokenService } from "../auth/services/token.service";
 import dotenv from "dotenv";
-import { businessAccountOnly } from "./business.middleware";
+import { businessAccountOnly, mustBeAMember } from "./business.middleware";
 dotenv.config();
 
 const businessRouter = express.Router();
@@ -239,9 +239,76 @@ businessRouter.post("/decode_invite", (req, res, next) => {
 businessRouter.get(
   "/get_members",
   authMiddleware.authenticate,
-  businessAccountOnly,
+  mustBeAMember,
   (req, res, next) => {
     businessController.fetchAllValidMembers(req, res, next);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/business/send_invite:
+ *   post:
+ *     summary: Send an invitation to join a business account
+ *     description: >
+ *       Sends an invite email to a specified user with a defined role and access permissions. Only authenticated business accounts can access this route.
+ *     tags: [Business]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 example: "Jane"
+ *               lastName:
+ *                 type: string
+ *                 example: "Doe"
+ *               inviteEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: "jane.doe@example.com"
+ *               role:
+ *                 type: string
+ *                 enum: [ADMIN]
+ *                 example: "ADMIN"
+ *               accessPermissions:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [MANAGE_USERS]
+ *                 example: ["MANAGE_USERS"]
+ *     responses:
+ *       200:
+ *         description: Invitation sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Invite sent to jane.doe@example.com"
+ *       400:
+ *         description: Invalid request body or validation error
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       403:
+ *         description: Forbidden – only business accounts can access this route
+ *       500:
+ *         description: Failed to send invitation
+ */
+businessRouter.post(
+  "/send_invite",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  businessAccountOnly,
+  (req, res, next) => {
+    businessController.sendInvite(req, res, next);
   }
 );
 

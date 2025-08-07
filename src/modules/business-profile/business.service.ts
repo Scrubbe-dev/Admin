@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import {
   BusinessSetUpRequest,
   DecodeInviteTokenResult,
+  InviteMembers,
 } from "./business.types";
 import { Request } from "express";
 import { BusinessUtil } from "./business.util";
@@ -19,7 +20,6 @@ export class BusinessService {
     input: BusinessSetUpRequest,
     req: Request
   ): Promise<{ message: string }> {
-    // TODO - REPLACE THESE CONDITIONS WITH MIDDLEWARE PROPERLY
     const { newInvites, skippedInvites } = await this.prisma.$transaction(
       async (tx) => {
         const business = await this.businessUtil.updateBusinessAdmin(
@@ -83,7 +83,7 @@ export class BusinessService {
     try {
       const invites = await this.prisma.invites.findMany({
         where: {
-          // accepted: true, // TODO: UNCOMMENT AFTER IMPLEMENTATION
+          accepted: true,
           stillAMember: true,
           business: {
             userId,
@@ -99,6 +99,38 @@ export class BusinessService {
     } catch (error) {
       console.error(`Error while fetching members: ${error}`);
       throw new Error(`Error while fetching members: ${error}`);
+    }
+  }
+
+  async sendInvite(businessId: string, request: InviteMembers) {
+    try {
+      const invites = await this.prisma.invites.findUnique({
+        where: {
+          email: request.inviteEmail,
+        },
+      });
+
+      if (invites) throw new ConflictError("User have already been invited");
+
+      await this.prisma.invites.create({
+        data: {
+          firstName: request.firstName,
+          lastName: request.lastName,
+          email: request.inviteEmail,
+          role: request.role,
+          accessPermissions: request.accessPermissions,
+          sentById: businessId,
+        },
+      });
+
+      await this.businessUtil.sendInviteEmail(request);
+
+      return {
+        message: `Invite sent to ${request.inviteEmail} sucessfully!`,
+      };
+    } catch (error) {
+      console.error(`Error inviting member: ${error}`);
+      throw new Error(`${error instanceof Error && error.message}`);
     }
   }
 }

@@ -1,4 +1,10 @@
-import { DetermineAction, Incident, IncidentComment } from "@prisma/client";
+import {
+  DetermineAction,
+  Incident,
+  IncidentComment,
+  Message,
+  User,
+} from "@prisma/client";
 import {
   MappedIncidents,
   RecommendedActionResponse,
@@ -40,6 +46,21 @@ export class IncidentMapper {
       firstname: comment.firstname,
       lastname: comment.lastname,
       isBusinessOwner: comment.isBusinessOwner,
+    };
+  }
+
+  static messageMapper(message: Message & { sender: User }) {
+    return {
+      id: message.id,
+      conversationId: message.conversationId,
+      content: message.content,
+      createdAt: message.createdAt,
+      sender: {
+        id: message.sender.id,
+        firstname: message.sender.firstName,
+        lastname: message.sender.lastName,
+        email: message.sender.email,
+      },
     };
   }
 }

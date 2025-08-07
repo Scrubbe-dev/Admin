@@ -36,12 +36,10 @@ export const mustBeAMember = async (
       );
     }
 
-    // if user is the business owner
     if (business.userId === req.user.id) {
       return next();
     }
 
-    // Otherwise check if user has an accepted invite
     const invite = await prisma.invites.findFirst({
       where: {
         email: req.user.email,
