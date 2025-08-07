@@ -79,22 +79,23 @@ model ApiKey {
 }
 
 model Business {
-  id             String             @id @default(uuid())
-  name           String?
-  industry       String?
-  primaryRegion  String?
-  logo           String?
-  address        String?
-  companySize    String
-  purpose        String?
-  dashBoardId    String?            @unique
-  userId         String             @unique
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  user           User               @relation(fields: [userId], references: [id])
-  dashboard      BusinessDashboard? @relation("BusinessToDashboard")
-  IncidentTicket IncidentTicket[]
-  invites        Invites[]
+  id                         String                       @id @default(uuid())
+  name                       String?
+  industry                   String?
+  primaryRegion              String?
+  logo                       String?
+  address                    String?
+  companySize                String
+  purpose                    String?
+  dashBoardId                String?                      @unique
+  userId                     String                       @unique
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  user                       User                         @relation(fields: [userId], references: [id])
+  dashboard                  BusinessDashboard?           @relation("BusinessToDashboard")
+  IncidentTicket             IncidentTicket[]
+  invites                    Invites[]
+  IncidentTicketNotification IncidentTicketNotification[]
 }
 
 model BusinessDashboard {
@@ -263,27 +264,41 @@ model Incident {
 }
 
 model IncidentTicket {
-  id                 String            @id @default(uuid())
-  template           IncidentTemplate  @default(NONE)
-  userName           String
-  reason             String
-  assignedToEmail    String            @map("assignedTo")
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  assignedById       String
-  ticketId           String            @unique
-  riskScore          Int               @default(20)
-  slaStatus          DateTime?
-  recommendedActions DetermineAction[]
-  status             IncidentStatus    @default(OPEN)
-  businessId         String?
-  priority           Priority          @default(LOW)
-  conversation       Conversation?
-  Incident           Incident[]
-  comments           IncidentComment[]
-  assignedBy         User              @relation(fields: [assignedById], references: [id])
-  assignedTo         Invites           @relation(fields: [assignedToEmail], references: [email])
-  business           Business?         @relation(fields: [businessId], references: [id])
+  id                         String                       @id @default(uuid())
+  template                   IncidentTemplate             @default(NONE)
+  userName                   String
+  reason                     String
+  assignedToEmail            String                       @map("assignedTo")
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  assignedById               String
+  ticketId                   String                       @unique
+  riskScore                  Int                          @default(20)
+  slaStatus                  DateTime?
+  recommendedActions         DetermineAction[]
+  status                     IncidentStatus               @default(OPEN)
+  businessId                 String?
+  priority                   Priority                     @default(LOW)
+  conversation               Conversation?
+  Incident                   Incident[]
+  comments                   IncidentComment[]
+  assignedBy                 User                         @relation(fields: [assignedById], references: [id])
+  assignedTo                 Invites                      @relation(fields: [assignedToEmail], references: [email])
+  business                   Business?                    @relation(fields: [businessId], references: [id])
+  incidentTicketNotification IncidentTicketNotification[]
+}
+
+model IncidentTicketNotification {
+  id         String   @id @default(uuid())
+  business   Business @relation(fields: [businessId], references: [id])
+  businessId String
+
+  ticket   IncidentTicket @relation(fields: [ticketId], references: [id])
+  ticketId String
+
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Conversation {

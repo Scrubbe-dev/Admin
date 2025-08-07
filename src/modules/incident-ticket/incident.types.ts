@@ -1,4 +1,4 @@
-import { Priority } from "@prisma/client";
+import { IncidentStatus, Priority } from "@prisma/client";
 
 export enum IncidentTemplate {
   NONE = "NONE",
@@ -21,6 +21,7 @@ export type UpdateTicket = {
   username: string;
   assignedTo: string;
   incidentId: string;
+  status: IncidentStatus;
 };
 
 export type SLAThresholds = {

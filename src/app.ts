@@ -52,6 +52,7 @@ const prisma = new PrismaClient();
 
 const server = http.createServer(app);
 const io = new Server(server, {
+  path: "/api/v1/incident-ticket/conversation",
   cors: {
     origin: "*",
   },

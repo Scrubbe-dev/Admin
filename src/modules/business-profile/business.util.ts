@@ -126,13 +126,21 @@ export class BusinessUtil {
   }
 
   sendInviteEmail = async (invite: InviteMembers) => {
-    console.log(`Sending invite email to: ${invite.inviteEmail}`);
+    try {
+      console.log(`Sending invite email to: ${invite.inviteEmail}`);
 
-    const inviteLink = await this.generateInviteLink(invite);
+      const inviteLink = await this.generateInviteLink(invite);
 
-    const emailService = new EmailService();
+      const emailService = new EmailService();
 
-    await emailService.sendInviteEmail(invite, inviteLink);
+      await emailService.sendInviteEmail(invite, inviteLink);
+    } catch (error) {
+      throw new Error(
+        `Error occured while sending email: ${
+          error instanceof Error && error.message
+        }`
+      );
+    }
   };
 
   generateInviteLink = async (invite: InviteMembers) => {

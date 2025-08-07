@@ -15,6 +15,8 @@ const tokenService = new TokenService(
 const authMiddleware = new AuthMiddleware(tokenService);
 const incidentController = new IncidentController();
 
+incidentRouter.use(authMiddleware.authenticate, mustBeAMember);
+
 /**
  * @swagger
  * tags:
@@ -85,14 +87,9 @@ const incidentController = new IncidentController();
  *       500:
  *         description: Failed to fetch incidents
  */
-incidentRouter.get(
-  "/",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  (req, res, next) => {
-    incidentController.getIncidentTicketByBusiness(req, res, next);
-  }
-);
+incidentRouter.get("/", (req, res, next) => {
+  incidentController.getIncidentTicketByBusiness(req, res, next);
+});
 
 /**
  * @swagger
@@ -205,14 +202,9 @@ incidentRouter.get(
  *       500:
  *         description: Failed to create incident
  */
-incidentRouter.post(
-  "/",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  (req, res, next) => {
-    incidentController.submitIncident(req, res, next);
-  }
-);
+incidentRouter.post("/", (req, res, next) => {
+  incidentController.submitIncident(req, res, next);
+});
 
 /**
  * @swagger
@@ -284,14 +276,9 @@ incidentRouter.post(
  *       500:
  *         description: Failed to submit comment
  */
-incidentRouter.post(
-  "/comment/:incidentTicketId",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  (req, res, next) => {
-    incidentController.addComment(req, res, next);
-  }
-);
+incidentRouter.post("/comment/:incidentTicketId", (req, res, next) => {
+  incidentController.addComment(req, res, next);
+});
 
 /**
  * @swagger
@@ -350,14 +337,9 @@ incidentRouter.post(
  *       500:
  *         description: Failed to fetch comments
  */
-incidentRouter.get(
-  "/comment/:incidentTicketId",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  (req, res, next) => {
-    incidentController.getComments(req, res, next);
-  }
-);
+incidentRouter.get("/comment/:incidentTicketId", (req, res, next) => {
+  incidentController.getComments(req, res, next);
+});
 
 /**
  * @swagger
@@ -475,14 +457,9 @@ incidentRouter.get(
  *       500:
  *         description: Failed to create incident
  */
-incidentRouter.put(
-  "/",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  (req, res, next) => {
-    incidentController.updateTicket(req, res, next);
-  }
-);
+incidentRouter.put("/", (req, res, next) => {
+  incidentController.updateTicket(req, res, next);
+});
 
 /**
  * @swagger
@@ -524,13 +501,78 @@ incidentRouter.put(
  *       500:
  *         description: Failed to get analytics
  */
-incidentRouter.get(
-  "/analytics",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  (req, res, next) => {
-    incidentController.getAnalytics(req, res, next);
-  }
-);
+incidentRouter.get("/analytics", (req, res, next) => {
+  incidentController.getAnalytics(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/incident-ticket/message/{incidentTicketId}:
+ *   get:
+ *     summary: Get messages for an incident ticket
+ *     description: >
+ *       Retrieves all messages associated with a conversation tied to the specified incident ticket. You must be a member of the organization to access this route.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket whose messages you want to retrieve
+ *     responses:
+ *       200:
+ *         description: List of messages for the specified incident ticket
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                     example: "b72c54e0-6dcb-4cfc-871d-8a2d458234fa"
+ *                   conversationId:
+ *                     type: string
+ *                     format: uuid
+ *                     example: "f39a4b10-b012-4b49-a7c5-872abe409721"
+ *                   content:
+ *                     type: string
+ *                     example: "Hey, any update on the issue?"
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-08-07T12:34:56.789Z"
+ *                   sender:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                         example: "a1eec940-98c5-4236-a35d-13ef82ef0f15"
+ *                       firstname:
+ *                         type: string
+ *                         example: "John"
+ *                       lastname:
+ *                         type: string
+ *                         example: "Doe"
+ *                       email:
+ *                         type: string
+ *                         example: "john.doe@example.com"
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       403:
+ *         description: Forbidden – user must be a member of the organization
+ *       500:
+ *         description: Failed to retrieve messages
+ */
+incidentRouter.get("/message/:incidentTicketId", (req, res, next) => {
+  incidentController.getMessages(req, res, next);
+});
 
 export default incidentRouter;

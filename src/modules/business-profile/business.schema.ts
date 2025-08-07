@@ -8,9 +8,9 @@ import {
 } from "./business.types";
 import { Priority, Role } from "@prisma/client";
 
-const inviteMembersSchema = z.object({
-  firstName: z.string().min(1, "First name is required").optional(),
-  lastName: z.string().min(1, "Last name is required").optional(),
+export const inviteMembersSchema = z.object({
+  firstName: z.string().min(1, "First name is not valid").optional(),
+  lastName: z.string().min(1, "Last name is not valid").optional(),
   inviteEmail: emailSchema,
   role: z.nativeEnum(Role, {
     invalid_type_error: "Invalid role",
@@ -30,10 +30,12 @@ export const dashboardPreferenceSchema = z.object({
     required_error: "Default dashboard is required",
     invalid_type_error: "Invalid dashboard type",
   }),
-  preferredIntegration: z.array(z.nativeEnum(PrefferedIntegration, {
-    required_error: "Preferred integration is required",
-    invalid_type_error: "Invalid integration type",
-  })),
+  preferredIntegration: z.array(
+    z.nativeEnum(PrefferedIntegration, {
+      required_error: "Preferred integration is required",
+      invalid_type_error: "Invalid integration type",
+    })
+  ),
   notificationChannels: z
     .array(
       z.nativeEnum(NotificationChannels, {
@@ -61,7 +63,10 @@ export const businessSetUpSchema = z.object({
   adminJobTitle: z.string().min(1, "Job title is required"),
 
   // Invite team members (optional array)
-  inviteMembers: z.array(inviteMembersSchema).max(2, "Maximum of 2 invites are allowed").optional(),
+  inviteMembers: z
+    .array(inviteMembersSchema)
+    .max(2, "Maximum of 2 invites are allowed")
+    .optional(),
 
   dashboardPreference: dashboardPreferenceSchema.optional(),
 });

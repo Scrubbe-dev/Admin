@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { BusinessService } from "./business.service";
-import { BusinessSetUpRequest } from "./business.types";
+import { BusinessSetUpRequest, InviteMembers } from "./business.types";
 import { validateRequest } from "../auth/utils/validators";
-import { businessSetUpSchema } from "./business.schema";
+import { businessSetUpSchema, inviteMembersSchema } from "./business.schema";
 
 export class BusinessController {
   private businessService: BusinessService;
@@ -45,6 +45,25 @@ export class BusinessController {
       const userId = req.user?.sub!;
 
       const response = await this.businessService.fetchAllValidMembers(userId);
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async sendInvite(req: Request, res: Response, next: NextFunction) {
+    try {
+      const businessId = req.user?.businessId!;
+      const request = await validateRequest<InviteMembers>(
+        inviteMembersSchema,
+        req.body
+      );
+
+      const response = await this.businessService.sendInvite(
+        businessId,
+        request
+      );
 
       res.json(response);
     } catch (error) {
