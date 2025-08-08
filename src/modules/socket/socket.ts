@@ -17,6 +17,12 @@ export const initSocket = (io: Server, prisma: PrismaClient) => {
     const userId = socket.data.user.id;
     console.log(`User connected: ${userId} (${socket.id})`);
 
+    socket.on("joinBusinessRoom", ({ businessId }) => {
+      if (!businessId) return;
+      socket.join(businessId);
+      console.log(`Socket ${socket.id} joined business room ${businessId}`);
+    });
+
     let participant: ConversationParticipant | null;
     socket.on("joinConversation", async ({ incidentTicketId }: JoinPayload) => {
       participant = await prisma.conversationParticipant.findFirst({
