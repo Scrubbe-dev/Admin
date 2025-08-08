@@ -1,7 +1,7 @@
-import { AccountType } from './../auth/types/auth.types';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ApiError } from './admin.utils';
+import { AccountType } from '@prisma/client';
 
 declare global {
   namespace Express {

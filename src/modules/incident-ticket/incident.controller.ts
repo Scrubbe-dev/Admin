@@ -52,11 +52,39 @@ export class IncidentController {
       const response = await this.incidentService.submitIncident(
         request,
         userId,
-        businessId,
+        businessId
         // io
       );
 
       res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async acknowledgeIncident(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const respone = await this.incidentService.acknowledgeIncident(
+        incidentTicketId
+      );
+
+      res.json(respone);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resolveIncident(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const respone = await this.incidentService.resolveIncident(
+        incidentTicketId
+      );
+
+      res.json(respone);
     } catch (error) {
       next(error);
     }

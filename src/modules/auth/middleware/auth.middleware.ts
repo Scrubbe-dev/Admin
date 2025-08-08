@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { TokenService } from "../services/token.service";
 import { UnauthorizedError, ForbiddenError } from "../error";
-import { AccountType, Role, User } from "../types/auth.types";
+import { Role, User } from "../types/auth.types";
+import { AccountType } from "@prisma/client";
 
 declare global {
   namespace Express {

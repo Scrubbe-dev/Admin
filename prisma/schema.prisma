@@ -264,28 +264,54 @@ model Incident {
 }
 
 model IncidentTicket {
-  id                         String                       @id @default(uuid())
-  template                   IncidentTemplate             @default(NONE)
-  userName                   String
-  reason                     String
-  assignedToEmail            String                       @map("assignedTo")
-  createdAt                  DateTime                     @default(now())
-  updatedAt                  DateTime                     @updatedAt
-  assignedById               String
-  ticketId                   String                       @unique
-  riskScore                  Int                          @default(20)
-  slaStatus                  DateTime?
-  recommendedActions         DetermineAction[]
-  status                     IncidentStatus               @default(OPEN)
-  businessId                 String?
-  priority                   Priority                     @default(LOW)
-  conversation               Conversation?
+  id              String           @id @default(uuid())
+  template        IncidentTemplate @default(NONE)
+  userName        String
+  reason          String
+  assignedToEmail String           @map("assignedTo")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  ticketId        String           @unique
+  status          IncidentStatus   @default(OPEN)
+
+  assignedById String
+
+  // SLA targets
+  slaTargetAck        DateTime?
+  slaTargetResolve    DateTime?
+  firstAcknowledgedAt DateTime?
+  resolvedAt          DateTime?
+  closedAt            DateTime?
+  sLABreachAuditLog   SLABreachAuditLog[]
+
+  recommendedActions DetermineAction[]
+  riskScore          Int               @default(20)
+  businessId         String?
+  priority           Priority          @default(LOW)
+
+  conversation Conversation?
+  comments     IncidentComment[]
+
   Incident                   Incident[]
-  comments                   IncidentComment[]
   assignedBy                 User                         @relation(fields: [assignedById], references: [id])
   assignedTo                 Invites                      @relation(fields: [assignedToEmail], references: [email])
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
+}
+
+model SLABreachAuditLog {
+  id                    String         @id @default(uuid())
+  slaType               SLABreachType
+  breachedAt            DateTime
+  breachDurationMinutes Int
+  incidentId            String
+  incident              IncidentTicket @relation(fields: [incidentId], references: [id])
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  @@index([incidentId])
+  @@index([slaType])
+  @@index([createdAt])
 }
 
 model IncidentTicketNotification {
@@ -639,4 +665,15 @@ enum InviteStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum SLABreachType {
+  ACK
+  RESOLVE
+}
+
+enum SLAStatus {
+  PENDING
+  MET
+  BREACHED
 }

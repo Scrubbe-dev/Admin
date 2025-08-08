@@ -1,4 +1,5 @@
 import { OAuthProvider } from "@prisma/client";
+import { AccountType } from "@prisma/client";
 
 export type User = {
   id: string;
@@ -23,6 +24,7 @@ export interface MappedUser {
     firstName: string | null;
     lastName: string | null;
     businessId?: string;
+    accountType: AccountType | null;
   };
   tokens: Tokens;
 }
@@ -36,10 +38,10 @@ export type ResendOtpRequest = {
   userId: string;
 };
 
-export enum AccountType {
-  DEVELOPER = "DEVELOPER",
-  BUSINESS = "BUSINESS",
-}
+// export enum AccountType {
+//   DEVELOPER = "DEVELOPER",
+//   BUSINESS = "BUSINESS",
+// }
 
 export type Role = "USER" | "ADMIN" | "SUPER_ADMIN";
 
