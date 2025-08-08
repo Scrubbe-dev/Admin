@@ -30,7 +30,7 @@ export const initSocket = (io: Server, prisma: PrismaClient) => {
 
       socket.join(incidentTicketId);
       console.log(
-        `User with email ${userId} joined conversation ${incidentTicketId}`
+        `User with id ${userId} joined conversation ${participant.conversationId}`
       );
     });
 

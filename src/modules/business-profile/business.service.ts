@@ -1,4 +1,5 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import prisma from "../../prisma-clients/client";
+import { Invites, Prisma, PrismaClient, User } from "@prisma/client";
 import {
   BusinessSetUpRequest,
   DecodeInviteTokenResult,
@@ -20,7 +21,7 @@ export class BusinessService {
     input: BusinessSetUpRequest,
     req: Request
   ): Promise<{ message: string }> {
-    const { newInvites, skippedInvites } = await this.prisma.$transaction(
+    const { newInvites, skippedInvites } = await prisma.$transaction(
       async (tx) => {
         const business = await this.businessUtil.updateBusinessAdmin(
           tx,
@@ -66,22 +67,26 @@ export class BusinessService {
         throw new ConflictError("Invalid or expired token");
       }
 
-      const existingUser = await this.prisma.user.findUnique({
+      const existingUser = await prisma.user.findUnique({
         where: { email: decoded.email },
       });
+
+      if (existingUser) {
+        await InviteUtil.acceptInvite(decoded.email, existingUser);
+      }
 
       return {
         existingUser: existingUser ? true : false,
         inviteData: decoded,
       };
     } catch (error) {
-      throw new ConflictError(`Error occured during decoding: ${error}`);
+      throw new ConflictError(`${error instanceof Error && error.message}`);
     }
   }
 
   async fetchAllValidMembers(userId: string) {
     try {
-      const invites = await this.prisma.invites.findMany({
+      const invites = await prisma.invites.findMany({
         where: {
           accepted: true,
           stillAMember: true,
@@ -104,7 +109,7 @@ export class BusinessService {
 
   async sendInvite(businessId: string, request: InviteMembers) {
     try {
-      const invites = await this.prisma.invites.findUnique({
+      const invites = await prisma.invites.findUnique({
         where: {
           email: request.inviteEmail,
         },
@@ -112,7 +117,7 @@ export class BusinessService {
 
       if (invites) throw new ConflictError("User have already been invited");
 
-      await this.prisma.invites.create({
+      await prisma.invites.create({
         data: {
           firstName: request.firstName,
           lastName: request.lastName,
