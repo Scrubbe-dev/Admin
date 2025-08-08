@@ -1,5 +1,6 @@
-import { User } from "@prisma/client";
+import { Business, Invites, User } from "@prisma/client";
 import prisma from "../../prisma-clients/client";
+import { ConflictError } from "../auth/error";
 
 interface AcceptNewInvite {
   acceptedNewInvite: boolean;
@@ -15,7 +16,7 @@ export class InviteUtil {
     let acceptedNewInvite = false;
 
     try {
-      const invites = await prisma.invites.findFirst({
+      const invite = await prisma.invites.findFirst({
         where: {
           email,
         },
@@ -24,7 +25,10 @@ export class InviteUtil {
         },
       });
 
-      if (invites && invites.status === "PENDING") {
+      if (invite && invite.status === "ACCEPTED")
+        throw new ConflictError("Invite have already been accepted");
+
+      if (invite && invite.status === "PENDING") {
         acceptedNewInvite = true;
 
         await prisma.invites.update({
@@ -41,9 +45,11 @@ export class InviteUtil {
             acceptedAt: new Date(),
           },
         });
+
+        await this.addNewInviteAsParticipant(user, invite);
       }
 
-      return { acceptedNewInvite, businessId: invites?.business.id };
+      return { acceptedNewInvite, businessId: invite?.business.id };
     } catch (error) {
       console.error(`Failed to accept invite: ${error}`);
       throw new Error(`${error instanceof Error && error.message}`);
@@ -70,6 +76,54 @@ export class InviteUtil {
         error
       );
       throw new Error(`${error instanceof Error && error.message}`);
+    }
+  }
+
+  static async addNewInviteAsParticipant(existingUser: User, invite: Invites) {
+    try {
+      const openTickets = await prisma.incidentTicket.findMany({
+        where: {
+          businessId: invite.sentById,
+          status: {
+            not: "CLOSED",
+          },
+          conversation: {
+            isNot: null,
+          },
+        },
+        include: {
+          conversation: true,
+        },
+      });
+
+      for (const ticket of openTickets) {
+        const conversationId = ticket.conversation?.id;
+        if (!conversationId) continue;
+
+        const alreadyParticipant =
+          await prisma.conversationParticipant.findFirst({
+            where: {
+              conversationId,
+              userId: existingUser.id,
+            },
+          });
+
+        if (!alreadyParticipant) {
+          await prisma.conversationParticipant.create({
+            data: {
+              conversation: { connect: { id: conversationId } },
+              user: { connect: { id: existingUser.id } },
+            },
+          });
+        }
+      }
+    } catch (error) {
+      throw new Error(
+        `${
+          (error instanceof Error && error.message) ||
+          "Error occured while adding new member as conversation participant"
+        }`
+      );
     }
   }
 }
