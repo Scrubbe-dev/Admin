@@ -53,10 +53,15 @@ TASK:
 Examples:
 - "Summarize high-risk login incidents this week". wantsAction: true
 - "Hey Ezra, how are you doing today?" → wantsAction: false
-    
-2. Determine priority (High/Medium/Low/Critical) if mentioned in any form (e.g., "low incidents", "critical issues"), even if "priority" is not explicitly stated; otherwise null.
 
-3. Determine timeframe:
+2. Determine "wantsChart":
+   - true = user asks for a chart or visualization of any kind (e.g., "bar chart", "show me a graph", "visualize trends").
+   - false = no mention of charts, visualizations, graphs, trends, or similar.
+   - Default to false if ambiguous.
+
+3. Determine priority (High/Medium/Low/Critical) if mentioned in any form (e.g., "low incidents", "critical issues"), even if "priority" is not explicitly stated; otherwise null.
+
+4. Determine timeframe:
   * Interpret any relative or vague date range (e.g., "yesterday", "3 days ago", "2 weeks ago", "last month", "ever").
   * For phrases like "ever" or "all time", set start far in the past (e.g., 1970-01-01T00:00:00Z) and end as today’s midnight UTC.
   * For **exact day mentions** ("yesterday", "1 day ago"), return that day’s midnight-to-midnight range.
@@ -64,8 +69,8 @@ Examples:
     Example: "7 days ago" → { start: 14 days ago 00:00Z, end: 7 days ago 00:00Z }
   * For explicit ranges like "last month" or "past 2 weeks", calculate full range appropriately.
   * If no timeframe is mentioned, default to last 7 days (start = 7 days ago midnight, end = today midnight).
-   
-4. Extract searchTerms:
+  * 
+5. Extract searchTerms:
   * Identify only meaningful entities or topics (e.g., "login", "fingerprint anomalies", "location mismatches").
   * EXCLUDE:
       - Any priority words (high, medium, low, critical) if already extracted into priority.
@@ -76,14 +81,14 @@ Examples:
   * Preserve multi-word concepts only if they represent a single specific entity (e.g., "fingerprint anomalies").
   * If no meaningful keywords remain after filtering, return [].
   * for example, a prompt like this "Ezra summarize high priority incidents ever" have no meaningful word to extract from so return [] if so.
- 
-5. Determine **incidentTicketId**:
+
+6. Determine **incidentTicketId**:
   * Look for any mention in the user request that matches the exact format: 'INC' followed by **7 digits** (e.g., 'INC1234567'), case-sensitive.
   * This may appear anywhere in the text, including phrases like "emphasize this incident ticket INC1233445" or "explain from INC1233445".
   * If found, set "incidentTicketId" to that exact value.
   * If multiple valid IDs are mentioned, select the first one.
   * If no valid ID is found, set "incidentTicketId" to null.
-   
+
 - Always output ISO 8601 UTC format: YYYY-MM-DDTHH:mm:ssZ
 - Always align start to 00:00:00 UTC of the starting day, and end to 00:00:00 UTC of the day after the period ends.
 
@@ -97,12 +102,13 @@ Examples:
 OUTPUT SCHEMA:
 {
   "wantsAction": boolean,
+  "wantsChart": boolean,
   "priority": "string | null",
   "timeframe": {
     "start": "YYYY-MM-DDTHH:mm:ssZ",
     "end": "YYYY-MM-DDTHH:mm:ssZ"
   },
-  "searchTerms": ["string", "string"]
+  "searchTerms": ["string", "string"],
   "incidentTicketId": "INC1234567 | null"
 }
 
@@ -205,8 +211,12 @@ TASK:
 - **After providing summary or advice:**
    - append:
      ACTION: raise_incident
+     ALERT: raise_alert
+     ESCALATE: escalate_incident
    - If an alert is needed (either system-detected or user-requested), append:
      ACTION: alert
+     ALERT: raise_alert
+     ESCALATE: escalate_incident
    - Otherwise, omit ACTION.
 
 - **Handle incidentTicket references:**
@@ -289,3 +299,50 @@ export const recommendedAction = () => {
 ${enforceJson}
 `;
 };
+
+export function visualGraph(userPrompt: string) {
+  return `
+You are Ezra, an AI security analyst that converts user prompts into structured JSON for chart visualization.
+
+
+prompt: ${userPrompt}
+
+TASK:
+- Interpret the user's request for a chart or visual insight.
+- If the request is clear and specific, return a fully populated "chart" object with extracted parameters.
+- If it's unclear or ambiguous (e.g., missing chart type, metric, or time range), set "chart" to null but still suggest **natural-language follow-up questions** to clarify the user's intent.
+
+OUTPUT FORMAT:
+{
+  "chart": {
+    "type": "bar" | "line" | "donut" | "timeline",
+    "title": "string",
+    "xLabel": "string",
+    "yLabel": "string",
+    "data": [
+      { "label": "string", "value": number }
+    ],
+    "timeframe": {
+      "start": "YYYY-MM-DDTHH:mm:ssZ",
+      "end": "YYYY-MM-DDTHH:mm:ssZ"
+    },
+    "filters": ["string", "string"],
+    "priority": "Low" | "Medium" | "High" | "Critical" | null
+  } | null,
+  "followUps": "string" // natural language clarification question(s)
+}
+
+GUIDELINES:
+- If the user’s prompt is ambiguous, set "chart" to null and ask a relevant follow-up (e.g., "What kind of chart would you like? Bar, line, donut...?").
+- If clear, generate the complete "chart" object and still include a polite follow-up like "Would you like to break this down by region or device type?" or "Want this grouped by user role too?"
+- For chart selection:
+  - Use **bar/line** for metrics over time or grouped categories.
+  - Use **donut** for proportion/breakdown (e.g., by country, status).
+  - Use **timeline** for timestamped incidents.
+- Always default timeframe to past 7 days if unclear.
+- Always output ISO UTC time format for dates.
+- Always return "filters" as an array of meaningful keywords extracted from the user’s intent (e.g., "login", "fraud").
+
+${enforceJson}
+`;
+}

@@ -1,8 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 // import prisma from "../../prisma-clients/client";
 import { EzraUtils } from "./ezra.utils";
-import { askEzraStream } from "./askezra";
-import { IncidentFetched, SummarizePromptResponse } from "./ezra.types";
+import { askEzra, askEzraStream } from "./askezra";
+import {
+  IncidentFetched,
+  SummarizePromptResponse,
+  VisualGraphResponse,
+} from "./ezra.types";
 import {
   getIncidentsConversation,
   setIncidentConversations,
@@ -80,5 +84,19 @@ export class EzraService {
     );
 
     return streamSummary;
+  }
+
+  async visualGraph(ezraResponse: SummarizePromptResponse, prompt: string) {
+    try {
+      const graph = await askEzra<VisualGraphResponse>(
+        "visualGraph",
+        prompt,
+        ezraResponse
+      );
+
+      return graph;
+    } catch (error) {
+      throw new Error("Failed to fetch graphs");
+    }
   }
 }

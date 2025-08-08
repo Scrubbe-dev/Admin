@@ -11,6 +11,7 @@ export type PromptType =
   | "interpretPrompt"
   | "summarizeIncidents"
   | "recommendedAction"
+  | "visualGraph"
   | "determineRiskScore";
 
 export interface ExtraData extends Object {
@@ -36,6 +37,7 @@ export interface TimeFrame {
 
 export type SummarizePromptResponse = {
   priority: string | null;
+  wantsChart: boolean;
   timeframe: {
     start: Date;
     end: Date;
@@ -89,3 +91,20 @@ export type RecommendedActionResponse = {
     | "terminate_session"
   )[];
 };
+
+export interface VisualGraphResponse {
+  chart: {
+    type: "bar" | "line" | "donut" | "timeline";
+    title: string;
+    xLabel: string;
+    yLabel: string;
+    data: [{ label: string; value: number }];
+    timeframe: {
+      start: Date;
+      end: Date;
+    };
+    filters: [string, string];
+    priority: "Low" | "Medium" | "High" | "Critical" | null;
+  } | null;
+  followUps: string;
+}
