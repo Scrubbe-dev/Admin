@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, response, Response } from "express";
 import { EzraService } from "./ezra.service";
 import { askEzra } from "./askezra";
 import { SummarizePromptResponse } from "./ezra.types";
@@ -34,16 +34,42 @@ export class EzraController {
         ezraResponse.priority,
         ezraResponse.timeframe,
         ezraResponse.searchTerms,
-        ezraResponse.wantsAction,
+        ezraResponse.wantsAction
       );
 
       const streamResponse = await this.ezraService.summarizeIncidents(
         ezraResponse,
         userId,
-        prompt,
+        prompt
       );
 
       return EzraUtils.pipeStream(streamResponse, res);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async visualGraph(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { prompt } = req.body;
+      const userId = req.user?.sub!;
+
+      const ezraResponse = await askEzra<SummarizePromptResponse>(
+        "interpretPrompt",
+        prompt
+      );
+
+      console.log(
+        "============ priority, timeframe, searchTerm, confirmSuggestion ============",
+        ezraResponse.priority,
+        ezraResponse.timeframe,
+        ezraResponse.searchTerms,
+        ezraResponse.wantsAction
+      );
+
+      const response = await this.ezraService.visualGraph(ezraResponse, prompt);
+
+      res.json(response);
     } catch (error) {
       next(error);
     }

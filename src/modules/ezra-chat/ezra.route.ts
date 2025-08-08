@@ -95,6 +95,12 @@ ezraRouter.post(
   (req, res, next) => ezraController.summarizeIncidents(req, res, next)
 );
 
+ezraRouter.post(
+  "/incidents/visual_graph",
+  authMiddleware.authenticate,
+  (req, res, next) => ezraController.visualGraph(req, res, next)
+);
+
 ezraRouter.post("/rule", authMiddleware.authenticate, (req, res, next) =>
   ezraController.createRuleFromPrompt(req, res, next)
 );

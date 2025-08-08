@@ -6,6 +6,7 @@ import {
   recommendedAction,
   rule,
   summarizeIncidents,
+  visualGraph,
 } from "./prompt";
 
 dotenv.config();
@@ -19,7 +20,7 @@ export const buildPrompt = (
   type: PromptType,
   userPrompt: string,
   data: ExtraData = {}
-) => {
+): string => {
   switch (type) {
     case "rule":
       return rule(userPrompt);
@@ -35,6 +36,9 @@ export const buildPrompt = (
 
     case "recommendedAction":
       return recommendedAction();
+
+    case "visualGraph":
+      return visualGraph(userPrompt);
 
     default:
       throw new Error("Unknown prompt type");
