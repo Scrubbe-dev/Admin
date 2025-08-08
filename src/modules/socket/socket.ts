@@ -3,8 +3,15 @@ import { ConversationParticipant, PrismaClient } from "@prisma/client";
 import { socketAuth } from "./socketAuth";
 import { JoinPayload, SendMessagePayload } from "./socket.type";
 
+let _io: Server;
+
 export const initSocket = (io: Server, prisma: PrismaClient) => {
   io.use(socketAuth);
+
+  _io = io;
+  console.log(
+    "=================== Global Socket.io Initialized ==================="
+  );
 
   io.on("connection", (socket: Socket) => {
     const userId = socket.data.user.id;
@@ -79,4 +86,10 @@ export const initSocket = (io: Server, prisma: PrismaClient) => {
       console.log(`User disconnected: ${userId} (${socket.id})`);
     });
   });
+};
+
+export const getSocketIO = () => {
+  if (!_io) throw new Error("Socket.io not initialized");
+
+  return _io;
 };

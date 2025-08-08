@@ -1,6 +1,8 @@
+import prisma from "../../prisma-clients/client";
 import { IncidentTicket, Priority } from "@prisma/client";
 import { RecommendedActionResponse, RiskScore } from "../ezra-chat/ezra.types";
 import { askEzra } from "../ezra-chat/askezra";
+import { getSocketIO } from "../socket/socket";
 
 export class IncidentUtils {
   constructor() {}
@@ -10,20 +12,25 @@ export class IncidentUtils {
     return `INC${randomNumber}`;
   }
 
-  static calculateSLADueDate(
+  static calculateSLATargets(
     ticketCreatedTime: Date,
     priority: Priority
-  ): Date {
-    const slaThresholds: Record<Priority, number> = {
-      [Priority.CRITICAL]: 15,
-      [Priority.HIGH]: 60,
-      [Priority.MEDIUM]: 360,
-      [Priority.LOW]: 1440, // 24 hours
+  ): { ack: Date; resolve: Date } {
+    const slaThresholds: Record<Priority, { ack: number; resolve: number }> = {
+      [Priority.CRITICAL]: { ack: 15, resolve: 240 }, //P1
+      [Priority.HIGH]: { ack: 30, resolve: 480 }, //P2
+      [Priority.MEDIUM]: { ack: 60, resolve: 1440 }, //P3
+      [Priority.LOW]: { ack: 120, resolve: 2880 }, //P4, P5
     };
 
-    const slaMinutes = slaThresholds[priority];
-    return new Date(ticketCreatedTime.getTime() + slaMinutes * 60 * 1000);
+    const { ack, resolve } = slaThresholds[priority];
+
+    return {
+      ack: new Date(ticketCreatedTime.getTime() + ack * 60 * 1000),
+      resolve: new Date(ticketCreatedTime.getTime() + resolve * 60 * 1000),
+    };
   }
+
   static async ezraDetermineRiskScore(incidentTicket: IncidentTicket) {
     try {
       return await askEzra<RiskScore>(
@@ -53,6 +60,32 @@ export class IncidentUtils {
           error instanceof Error && error.message
         }`
       );
+    }
+  }
+
+  static async sendIncidentTicketNotification(
+    ticket: IncidentTicket,
+    message: string
+  ) {
+    try {
+      await prisma.incidentTicketNotification.create({
+        data: {
+          businessId: ticket.businessId!,
+          ticketId: ticket.id,
+          message,
+        },
+      });
+
+      const io = getSocketIO();
+
+      io.to(ticket.businessId!).emit("incidentNotification", {
+        businessId: ticket.businessId,
+        ticket,
+        message,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error("Failed to trigger notification: " + error);
     }
   }
 }

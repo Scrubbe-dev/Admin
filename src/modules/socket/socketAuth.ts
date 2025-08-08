@@ -28,6 +28,7 @@ export const socketAuth = async (
     socket.data.user = { id: payload.sub, email: payload.email };
     next();
   } catch (err) {
-    next(new Error("Authentication failed"));
+    console.error("Socket auth failed", err);
+    next(new Error("Authentication failed"))
   }
 };

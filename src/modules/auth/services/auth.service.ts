@@ -372,7 +372,6 @@ export class AuthService {
       throw new UnauthorizedError("Invalid credentials");
     }
 
-    await InviteUtil.acceptInvite(user.email, user);
     const businessId = await InviteUtil.getInvitedBusinessId(user.email);
 
     await this.prisma.user.update({
@@ -408,7 +407,6 @@ export class AuthService {
       throw new NotFoundError("User does not exists, Please sign up first");
     }
 
-    await InviteUtil.acceptInvite(user.email, user);
     const businessId = await InviteUtil.getInvitedBusinessId(user.email);
 
     await this.prisma.user.update({

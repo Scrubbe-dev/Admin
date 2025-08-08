@@ -7,8 +7,7 @@ import {
 import { IncidentUtils } from "./incident.util";
 import { IncidentMapper } from "./incident.mapper";
 import { ForbiddenError, NotFoundError } from "../auth/error";
-import { IncidentStatus } from "@prisma/client";
-import { Server } from "socket.io";
+import { IncidentStatus, SLABreachType } from "@prisma/client";
 
 export class IncidentService {
   constructor() {}
@@ -50,7 +49,7 @@ export class IncidentService {
   async submitIncident(
     request: IncidentRequest,
     userId: string,
-    businessId: string,
+    businessId: string
     // io: Server
   ) {
     try {
@@ -78,7 +77,7 @@ export class IncidentService {
             create: {
               participants: {
                 create: [
-                  { user: { connect: { id: userId } } }, // assignedBy as first participant, more would be added through accepted invites
+                  { user: { connect: { id: userId } } }, // assignedBy as first participant
                 ],
               },
             },
@@ -98,7 +97,7 @@ export class IncidentService {
         recommendedActions?.action
       );
 
-      const slaStatus = IncidentUtils.calculateSLADueDate(
+      const slaTargets = IncidentUtils.calculateSLATargets(
         incidentTicket.createdAt,
         incidentTicket.priority
       );
@@ -109,26 +108,16 @@ export class IncidentService {
         },
         data: {
           riskScore: riskScore?.score,
-          slaStatus,
           recommendedActions: mappedActions,
+          slaTargetAck: slaTargets.ack,
+          slaTargetResolve: slaTargets.resolve,
         },
       });
 
-      // await prisma.incidentTicketNotification.create({
-      //   data: {
-      //     businessId,
-      //     ticketId: incidentTicket.id,
-      //     message: incidentTicket.reason,
-      //   },
-      // });
-
-      // io.to(businessId).emit("incidentNotification", {
-      //   ticketId: incidentTicket.id,
-      //   businessId,
-      //   reason: incidentTicket.reason,
-      //   createdAt: incidentTicket.createdAt,
-      //   message: `New incident submitted: ${incidentTicket.reason}`,
-      // });
+      await IncidentUtils.sendIncidentTicketNotification(
+        updatedTicket,
+        "New Ticket submitted"
+      );
 
       return updatedTicket;
     } catch (error) {
@@ -137,6 +126,111 @@ export class IncidentService {
       }`;
       console.error(err);
       throw new Error(err);
+    }
+  }
+
+  async acknowledgeIncident(ticketId: string) {
+    try {
+      const ticket = await prisma.incidentTicket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) throw new NotFoundError("Incident ticket not found with id");
+
+      // already acknowledged
+      if (ticket.firstAcknowledgedAt) return;
+
+      const now = new Date();
+      const breach = ticket.slaTargetAck && now > ticket.slaTargetAck;
+
+      await prisma.incidentTicket.update({
+        where: { id: ticketId },
+        data: {
+          firstAcknowledgedAt: now,
+        },
+      });
+
+      // log breach
+      if (breach && ticket.slaTargetAck) {
+        const breachDurationMinutes = Math.floor(
+          (now.getTime() - ticket.slaTargetAck.getTime()) / 60000
+        );
+
+        await prisma.sLABreachAuditLog.create({
+          data: {
+            incidentId: ticketId,
+            slaType: SLABreachType.ACK,
+            breachedAt: now,
+            breachDurationMinutes,
+          },
+        });
+      }
+
+      await IncidentUtils.sendIncidentTicketNotification(
+        ticket,
+        "Incident ticket was acknowledged"
+      );
+
+      return { success: true };
+    } catch (error) {
+      throw new Error(
+        `${
+          (error instanceof Error && error.message) ||
+          "Error occured while acknowledging"
+        }`
+      );
+    }
+  }
+
+  async resolveIncident(ticketId: string) {
+    try {
+      const ticket = await prisma.incidentTicket.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticket) throw new NotFoundError("Ticket not found");
+
+      if (ticket.resolvedAt) return;
+
+      const now = new Date();
+      const breach = ticket.slaTargetResolve && now > ticket.slaTargetResolve;
+
+      await prisma.incidentTicket.update({
+        where: { id: ticketId },
+        data: {
+          resolvedAt: now,
+          status: IncidentStatus.RESOLVED,
+        },
+      });
+
+      if (breach && ticket.slaTargetResolve) {
+        const breachDurationMinutes = Math.floor(
+          (now.getTime() - ticket.slaTargetResolve.getTime()) / 60000
+        );
+
+        await prisma.sLABreachAuditLog.create({
+          data: {
+            incidentId: ticketId,
+            slaType: SLABreachType.RESOLVE,
+            breachedAt: now,
+            breachDurationMinutes,
+          },
+        });
+      }
+
+      await IncidentUtils.sendIncidentTicketNotification(
+        ticket,
+        "Incident ticket was resolved"
+      );
+
+      return { success: true };
+    } catch (error) {
+      throw new Error(
+        `${
+          (error instanceof Error && error.message) ||
+          "Error occured while resolving"
+        }`
+      );
     }
   }
 
@@ -167,6 +261,11 @@ export class IncidentService {
           status: request.status,
         },
       });
+
+      await IncidentUtils.sendIncidentTicketNotification(
+        updatedTicket,
+        "Ticket updated"
+      );
 
       return updatedTicket;
     } catch (error) {

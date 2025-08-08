@@ -575,4 +575,95 @@ incidentRouter.get("/message/:incidentTicketId", (req, res, next) => {
   incidentController.getMessages(req, res, next);
 });
 
+/**
+ * @swagger
+ * /api/v1/incident-ticket/acknowledge/{incidentTicketId}:
+ *   post:
+ *     summary: Acknowledge an incident ticket
+ *     description: >
+ *       description: >
+ *       Marks the specified incident ticket as acknowledged by setting the `firstAcknowledgedAt` timestamp.
+ *       If the SLA target for acknowledgment is breached, a breach log is recorded.
+ *       Sends a notification after successful acknowledgment.
+ 
+ *       **WebSocket Notification:** Emits `incidentNotification` event with message: `"Incident ticket was acknowledged"`.
+ *       Clients should listen to the `incidentNotification` event in the relevant business room.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket to acknowledge
+ *     responses:
+ *       200:
+ *         description: Incident ticket acknowledged successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       404:
+ *         description: Incident ticket not found
+ *       500:
+ *         description: Failed to acknowledge the incident ticket
+ */
+incidentRouter.post("/acknowledge/:incidentTicketId", (req, res, next) => {
+  incidentController.acknowledgeIncident(req, res, next);
+});
+
+/**
+ * @swagger
+ * /api/v1/incident-ticket/resolve/{incidentTicketId}:
+ *   post:
+ *     summary: Resolve an incident ticket
+ *     description: >
+ *       Marks the specified incident ticket as resolved by setting the `resolvedAt` timestamp and updating its status.
+ *       If the SLA target for resolution is breached, a breach log is recorded.
+ *       Sends a notification after successful resolution.
+
+ *       **WebSocket Notification:** Emits `incidentNotification` event with message: `"Incident ticket was resolved"`.
+ *       Clients should listen to the `incidentNotification` event in the relevant business room.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket to resolve
+ *     responses:
+ *       200:
+ *         description: Incident ticket resolved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       404:
+ *         description: Incident ticket not found
+ *       500:
+ *         description: Failed to resolve the incident ticket
+ */
+incidentRouter.post("/resolve/:incidentTicketId", (req, res, next) => {
+  incidentController.resolveIncident(req, res, next);
+});
+
 export default incidentRouter;

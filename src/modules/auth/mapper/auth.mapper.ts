@@ -16,6 +16,7 @@ export class AuthMapper {
         businessId,
         firstName: user.firstName,
         lastName: user.lastName,
+        accountType: user.accountType,
       },
       tokens: {
         refreshToken: token.refreshToken,
