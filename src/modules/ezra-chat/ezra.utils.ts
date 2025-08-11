@@ -73,10 +73,10 @@ export class EzraUtils {
     timeframe: TimeFrame
   ) {
     const priorityMap: Record<string, Priority> = {
-      high: "HIGH",
-      medium: "MEDIUM",
-      low: "LOW",
-      critical: "CRITICAL",
+      high: Priority.HIGH,
+      medium: Priority.MEDIUM,
+      low: Priority.LOW,
+      critical: Priority.CRITICAL,
     };
 
     let normalizedPriority: Priority | null = null;

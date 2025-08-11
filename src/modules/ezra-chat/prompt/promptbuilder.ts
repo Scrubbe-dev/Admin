@@ -38,7 +38,7 @@ export const buildPrompt = (
       return recommendedAction();
 
     case "visualGraph":
-      return visualGraph(userPrompt);
+      return visualGraph();
 
     default:
       throw new Error("Unknown prompt type");

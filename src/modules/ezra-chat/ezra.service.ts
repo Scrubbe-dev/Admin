@@ -86,12 +86,38 @@ export class EzraService {
     return streamSummary;
   }
 
-  async visualGraph(ezraResponse: SummarizePromptResponse, prompt: string) {
+  /**
+   * TODO - Filter the incidents by business Id not by userId any more
+   * TODO - In submit incident, have a way for users to get added to each new conversation once a new ticket is submitted
+   * TODO - have a structured way of rendering different charts to the user
+   * TODO - look more on the sla
+   */
+  async visualGraph(
+    ezraResponse: SummarizePromptResponse,
+    prompt: string,
+    userId: string
+  ) {
     try {
+      console.log("=========== ezraResponse ===========", ezraResponse);
+
+      const incidents = await this.ezraUtils.fetchIncidentsById(
+        userId,
+        ezraResponse.priority,
+        ezraResponse.timeframe,
+        ezraResponse.searchTerms
+      );
+
+      console.log("=========== incidents fetched ===========", incidents);
+
       const graph = await askEzra<VisualGraphResponse>(
         "visualGraph",
-        prompt,
-        ezraResponse
+        JSON.stringify(incidents),
+        incidents
+      );
+
+      console.log(
+        "=========== Graph response ===========",
+        JSON.stringify(graph)
       );
 
       return graph;

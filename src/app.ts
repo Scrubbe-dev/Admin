@@ -43,6 +43,7 @@ import dataVisualRouter from "./modules/data-visualization/data-visual.route";
 import incidentRouter from "./modules/incident-ticket/incident.route";
 import { Server } from "socket.io";
 import { initSocket } from "./modules/socket/socket";
+import integrationRouter from "./modules/3rd-party-configurables/integration.route";
 dotenvConfig();
 
 // TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
@@ -166,10 +167,11 @@ app.use("/api/v1/ezra/", ezraRouter);
 app.use("/api/v1/data-visual/", dataVisualRouter);
 app.use("/api/v1/fingerprint/", fingerprintRouter);
 app.use("/api/v1/incident-ticket/", incidentRouter);
+app.use("/api/v1/apikey", apikeyRoute);
+app.use("/api/v1/integrations/", integrationRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);
-app.use("/api/v1/apikey", apikeyRoute);
 app.use("/api/v1", passwordResetRoutes.getRouter());
 
 // Add password reset routes

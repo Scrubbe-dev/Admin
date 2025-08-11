@@ -300,12 +300,9 @@ ${enforceJson}
 `;
 };
 
-export function visualGraph(userPrompt: string) {
+export function visualGraph() {
   return `
-You are Ezra, an AI security analyst that converts user prompts into structured JSON for chart visualization.
-
-
-prompt: ${userPrompt}
+You are Ezra, an AI security analyst that converts user JSON into structured JSON for chart visualization.
 
 TASK:
 - Interpret the user's request for a chart or visual insight.
