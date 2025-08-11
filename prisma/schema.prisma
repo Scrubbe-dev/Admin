@@ -9,44 +9,45 @@ datasource db {
 }
 
 model User {
-  id                      String                    @id @default(uuid())
-  email                   String                    @unique
-  passwordHash            String?
-  firstName               String?
-  lastName                String?
-  profileImage            String?
-  isVerified              Boolean                   @default(false)
-  isActive                Boolean                   @default(true)
-  lastLogin               DateTime?
-  apiKeyDuration          DateTime                  @default(now())
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime                  @updatedAt
-  apiKey                  String?                   @default(cuid())
-  role                    Role                      @default(USER)
-  passwordChangedAt       DateTime?
-  username                String?
-  accountType             AccountType?
-  oauthprovider           OAuthProvider?
-  registerdWithOauth      Boolean                   @default(false)
-  oauthProvider_uuid      String?
-  scopes                  String[]                  @default(["api-key:create"])
-  scrubbe_apikey          ApiKey[]
-  business                Business?
-  ConversationParticipant ConversationParticipant[]
-  DetectionRule           DetectionRule[]
-  developer               Developer?
-  Graph                   Graph[]
-  Incident                Incident[]
-  IncidentComment         IncidentComment[]
-  IncidentTicket          IncidentTicket[]
-  Invites                 Invites[]
-  Message                 Message[]
-  PlaybookExecution       PlaybookExecution[]
-  ProjectConfiguration    ProjectConfiguration[]
-  refreshToken            RefreshToken[]
-  resetTokens             ResetToken[]
-  VerificationOTP         VerificationOTP?
-  Customer                Customer[]                @relation("CustomerToUser")
+  id                        String                      @id @default(uuid())
+  email                     String                      @unique
+  passwordHash              String?
+  firstName                 String?
+  lastName                  String?
+  profileImage              String?
+  isVerified                Boolean                     @default(false)
+  isActive                  Boolean                     @default(true)
+  lastLogin                 DateTime?
+  apiKeyDuration            DateTime                    @default(now())
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  apiKey                    String?                     @default(cuid())
+  role                      Role                        @default(USER)
+  passwordChangedAt         DateTime?
+  username                  String?
+  accountType               AccountType?
+  oauthprovider             OAuthProvider?
+  registerdWithOauth        Boolean                     @default(false)
+  oauthProvider_uuid        String?
+  scopes                    String[]                    @default(["api-key:create"])
+  scrubbe_apikey            ApiKey[]
+  business                  Business?
+  ConversationParticipant   ConversationParticipant[]
+  DetectionRule             DetectionRule[]
+  developer                 Developer?
+  Graph                     Graph[]
+  Incident                  Incident[]
+  IncidentComment           IncidentComment[]
+  IncidentTicket            IncidentTicket[]
+  Invites                   Invites[]
+  Message                   Message[]
+  PlaybookExecution         PlaybookExecution[]
+  ProjectConfiguration      ProjectConfiguration[]
+  refreshToken              RefreshToken[]
+  resetTokens               ResetToken[]
+  VerificationOTP           VerificationOTP?
+  Customer                  Customer[]                  @relation("CustomerToUser")
+  userThirdpartyIntegration UserThirdpartyIntegration[]
 
   @@index([apiKey])
 }
@@ -325,6 +326,27 @@ model IncidentTicketNotification {
   message   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserThirdpartyIntegration {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  provider BusinessNotificationChannels
+
+  accessToken  String?
+  refreshToken String?
+
+  metadata Json?
+
+  defaultTarget String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, provider], name: "userId_provider")
 }
 
 model Conversation {
