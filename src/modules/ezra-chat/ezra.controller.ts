@@ -67,7 +67,11 @@ export class EzraController {
         ezraResponse.wantsAction
       );
 
-      const response = await this.ezraService.visualGraph(ezraResponse, prompt);
+      const response = await this.ezraService.visualGraph(
+        ezraResponse,
+        prompt,
+        userId
+      );
 
       res.json(response);
     } catch (error) {

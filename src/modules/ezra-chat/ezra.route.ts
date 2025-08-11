@@ -95,16 +95,6 @@ ezraRouter.post(
   (req, res, next) => ezraController.summarizeIncidents(req, res, next)
 );
 
-ezraRouter.post(
-  "/incidents/visual_graph",
-  authMiddleware.authenticate,
-  (req, res, next) => ezraController.visualGraph(req, res, next)
-);
-
-ezraRouter.post("/rule", authMiddleware.authenticate, (req, res, next) =>
-  ezraController.createRuleFromPrompt(req, res, next)
-);
-
 /**
  * @swagger
  * /api/v1/ezra/reset-chat:
@@ -139,5 +129,126 @@ ezraRouter.post(
     ezraController.clearConversation(req, res, next);
   }
 );
+
+/**
+ * @swagger
+ * /api/v1/ezra/incidents/visual_graph:
+ *   post:
+ *     summary: Generate a visual chart of incidents based on a natural language request
+ *     description: >
+ *       This endpoint uses Ezra AI to interpret a natural language prompt, extract filters (priority, timeframe, and search terms),
+ *       and determine the appropriate visualization type (bar, line, donut, or timeline).
+ *       
+ *       Ezra responds with a **structured JSON object** containing:
+ *       - A `chart` object with metadata (title, labels, timeframe, priority, filters) and chart-ready `data` points.
+ *       - A `followUps` field containing a natural-language question for clarification or deeper exploration.
+ *       
+ *       If the user's prompt is ambiguous (e.g., missing timeframe, unclear metric), `chart` will be `null` but
+ *       `followUps` will still be provided to prompt for more details.
+ *       
+ *     tags: [Ezra]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - prompt
+ *             properties:
+ *               prompt:
+ *                 type: string
+ *                 description: Natural language query describing the desired chart and incident criteria.
+ *                 example: "Show me a bar chart of all high-severity login fraud incidents in the last 30 days"
+ *     responses:
+ *       200:
+ *         description: JSON containing chart configuration and follow-up question
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required:
+ *                 - chart
+ *                 - followUps
+ *               properties:
+ *                 chart:
+ *                   type: object
+ *                   nullable: true
+ *                   description: Chart metadata and data points for visualization. Null if prompt was ambiguous.
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [bar, line, donut, timeline]
+ *                     title:
+ *                       type: string
+ *                       description: Human-readable chart title.
+ *                     xLabel:
+ *                       type: string
+ *                     yLabel:
+ *                       type: string
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           label:
+ *                             type: string
+ *                           value:
+ *                             type: number
+ *                     timeframe:
+ *                       type: object
+ *                       properties:
+ *                         start:
+ *                           type: string
+ *                           format: date-time
+ *                         end:
+ *                           type: string
+ *                           format: date-time
+ *                     filters:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     priority:
+ *                       type: string
+ *                       enum: [Low, Medium, High, Critical, null]
+ *                 followUps:
+ *                   type: string
+ *                   description: Clarifying or next-step question for the user.
+ *             example:
+ *               chart:
+ *                 type: bar
+ *                 title: "High Severity Login Fraud - Last 30 Days"
+ *                 xLabel: "Date"
+ *                 yLabel: "Number of Incidents"
+ *                 data:
+ *                   - label: "2025-07-10"
+ *                     value: 4
+ *                   - label: "2025-07-11"
+ *                     value: 6
+ *                 timeframe:
+ *                   start: "2025-07-08T00:00:00Z"
+ *                   end: "2025-08-08T00:00:00Z"
+ *                 filters: ["login", "fraud"]
+ *                 priority: "High"
+ *               followUps: "Would you like to break this down by region or device type?"
+ *       400:
+ *         description: Bad request (e.g., missing prompt)
+ *       401:
+ *         description: Unauthorized (no valid token provided)
+ *       500:
+ *         description: Failed to generate chart visualization
+ */
+ezraRouter.post(
+  "/incidents/visual_graph",
+  authMiddleware.authenticate,
+  (req, res, next) => ezraController.visualGraph(req, res, next)
+);
+
+ezraRouter.post("/rule", authMiddleware.authenticate, (req, res, next) =>
+  ezraController.createRuleFromPrompt(req, res, next)
+);
+
 
 export default ezraRouter;
