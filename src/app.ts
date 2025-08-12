@@ -43,7 +43,9 @@ import dataVisualRouter from "./modules/data-visualization/data-visual.route";
 import incidentRouter from "./modules/incident-ticket/incident.route";
 import { Server } from "socket.io";
 import { initSocket } from "./modules/socket/socket";
-import integrationRouter from "./modules/3rd-party-configurables/integration.route";
+import slackRouter from "./modules/3rd-party-configurables/slack/slack.router";
+import smsRouter from "./modules/3rd-party-configurables/sms/sms.route";
+import meetRouter from "./modules/3rd-party-configurables/google/google-meet/meet.route";
 dotenvConfig();
 
 // TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
@@ -168,7 +170,9 @@ app.use("/api/v1/data-visual/", dataVisualRouter);
 app.use("/api/v1/fingerprint/", fingerprintRouter);
 app.use("/api/v1/incident-ticket/", incidentRouter);
 app.use("/api/v1/apikey", apikeyRoute);
-app.use("/api/v1/integrations/", integrationRouter);
+app.use("/api/v1/integrations/slack", slackRouter);
+app.use("/api/v1/integrations/sms", smsRouter);
+app.use("/api/v1/integrations/google/meet", meetRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);

@@ -8,6 +8,7 @@ import { IncidentUtils } from "./incident.util";
 import { IncidentMapper } from "./incident.mapper";
 import { ForbiddenError, NotFoundError } from "../auth/error";
 import { IncidentStatus, SLABreachType } from "@prisma/client";
+import { MeetUtil } from "../3rd-party-configurables/google/google-meet/meetUtil";
 
 export class IncidentService {
   constructor() {}
@@ -50,7 +51,6 @@ export class IncidentService {
     request: IncidentRequest,
     userId: string,
     businessId: string
-    // io: Server
   ) {
     try {
       let ticketId: string;
@@ -118,6 +118,18 @@ export class IncidentService {
         updatedTicket,
         "New Ticket submitted"
       );
+
+      if (
+        updatedTicket.priority === "HIGH" ||
+        updatedTicket.priority === "CRITICAL"
+      ) {
+        console.log(
+          "============== HIGH PRIORITY INCIDENT DETECTED =============="
+        );
+        const meetUtil = new MeetUtil();
+
+        await meetUtil.triggerWarRoom(updatedTicket);
+      }
 
       return updatedTicket;
     } catch (error) {
@@ -437,6 +449,67 @@ export class IncidentService {
     } catch (error) {
       throw new Error(
         `Failed to get message history: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  async getIncidentTicketById(incidentTicketId: string) {
+    try {
+      const ticket = await prisma.incidentTicket.findFirst({
+        where: { ticketId: incidentTicketId },
+      });
+
+      if (!ticket) {
+        return {
+          status: 404,
+        };
+      }
+
+      return ticket;
+    } catch (error) {
+      throw new Error(
+        `Failed to get incident ticket: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  async closeTicket(incidentTicketId: string) {
+    try {
+      const ticket = await prisma.incidentTicket.findFirst({
+        where: { ticketId: incidentTicketId },
+      });
+
+      if (!ticket) {
+        return {
+          status: 404,
+        };
+      }
+
+      if (ticket.status === "CLOSED") {
+        return {
+          status: 429,
+        };
+      }
+
+      await prisma.incidentTicket.update({
+        where: {
+          ticketId: incidentTicketId,
+        },
+        data: {
+          status: IncidentStatus.CLOSED,
+        },
+      });
+
+      return {
+        status: 200,
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to close incident ticket: ${
           error instanceof Error ? error.message : String(error)
         }`
       );

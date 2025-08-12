@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { IncidentTicket, PrismaClient } from "@prisma/client";
 import nodemailer from "nodemailer";
 import { emailConfig } from "../../../config/nodemailer.config";
 import { InviteMembers } from "../../business-profile/business.types";
@@ -91,6 +91,32 @@ export class EmailService {
         `Failed to send invite email to ${invite.inviteEmail}:`,
         error.message || error
       );
+    }
+  }
+
+  async sendWarRoomEmail(
+    from: string,
+    to: string,
+    incidentTicket: IncidentTicket,
+    meetingLink: string
+  ) {
+    try {
+      await this.transporter.sendMail({
+        from,
+        to,
+        subject: `P1 Incident War Room - ${incidentTicket.ticketId}`,
+        html: `
+      <p>You are requested to join this War Room as there has been a P1 incident reported.</p>
+      <p><strong>Details:</strong> ${incidentTicket.reason}</p>
+      <p><strong>Status:</strong> ${incidentTicket.status}</p>
+      <p><strong>Priority:</strong> ${incidentTicket.priority}</p>
+      <p>Meeting link: <a href="${meetingLink}">${meetingLink}</a></p>
+    `,
+      });
+
+      console.log(`Invite email sent to: ${to}`);
+    } catch (error) {
+      console.error("Error occured while sending war room email", error);
     }
   }
 }
