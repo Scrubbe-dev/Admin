@@ -1,7 +1,6 @@
 import { BusinessNotificationChannels } from "@prisma/client";
 import prisma from "../../../prisma-clients/client";
 import { WebClient } from "@slack/web-api";
-import { N } from "ethers";
 import { ConflictError } from "../../auth/error";
 
 export class SlackUtil {

@@ -15,8 +15,6 @@ const tokenService = new TokenService(
 const authMiddleware = new AuthMiddleware(tokenService);
 const incidentController = new IncidentController();
 
-incidentRouter.use(authMiddleware.authenticate, mustBeAMember);
-
 /**
  * @swagger
  * tags:
@@ -87,9 +85,14 @@ incidentRouter.use(authMiddleware.authenticate, mustBeAMember);
  *       500:
  *         description: Failed to fetch incidents
  */
-incidentRouter.get("/", (req, res, next) => {
-  incidentController.getIncidentTicketByBusiness(req, res, next);
-});
+incidentRouter.get(
+  "/",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getIncidentTicketByBusiness(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -202,9 +205,14 @@ incidentRouter.get("/", (req, res, next) => {
  *       500:
  *         description: Failed to create incident
  */
-incidentRouter.post("/", (req, res, next) => {
-  incidentController.submitIncident(req, res, next);
-});
+incidentRouter.post(
+  "/",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.submitIncident(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -276,9 +284,14 @@ incidentRouter.post("/", (req, res, next) => {
  *       500:
  *         description: Failed to submit comment
  */
-incidentRouter.post("/comment/:incidentTicketId", (req, res, next) => {
-  incidentController.addComment(req, res, next);
-});
+incidentRouter.post(
+  "/comment/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.addComment(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -337,9 +350,14 @@ incidentRouter.post("/comment/:incidentTicketId", (req, res, next) => {
  *       500:
  *         description: Failed to fetch comments
  */
-incidentRouter.get("/comment/:incidentTicketId", (req, res, next) => {
-  incidentController.getComments(req, res, next);
-});
+incidentRouter.get(
+  "/comment/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getComments(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -457,9 +475,14 @@ incidentRouter.get("/comment/:incidentTicketId", (req, res, next) => {
  *       500:
  *         description: Failed to create incident
  */
-incidentRouter.put("/", (req, res, next) => {
-  incidentController.updateTicket(req, res, next);
-});
+incidentRouter.put(
+  "/",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.updateTicket(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -501,9 +524,14 @@ incidentRouter.put("/", (req, res, next) => {
  *       500:
  *         description: Failed to get analytics
  */
-incidentRouter.get("/analytics", (req, res, next) => {
-  incidentController.getAnalytics(req, res, next);
-});
+incidentRouter.get(
+  "/analytics",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getAnalytics(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -571,9 +599,14 @@ incidentRouter.get("/analytics", (req, res, next) => {
  *       500:
  *         description: Failed to retrieve messages
  */
-incidentRouter.get("/message/:incidentTicketId", (req, res, next) => {
-  incidentController.getMessages(req, res, next);
-});
+incidentRouter.get(
+  "/message/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getMessages(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -617,9 +650,14 @@ incidentRouter.get("/message/:incidentTicketId", (req, res, next) => {
  *       500:
  *         description: Failed to acknowledge the incident ticket
  */
-incidentRouter.post("/acknowledge/:incidentTicketId", (req, res, next) => {
-  incidentController.acknowledgeIncident(req, res, next);
-});
+incidentRouter.post(
+  "/acknowledge/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.acknowledgeIncident(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -662,8 +700,22 @@ incidentRouter.post("/acknowledge/:incidentTicketId", (req, res, next) => {
  *       500:
  *         description: Failed to resolve the incident ticket
  */
-incidentRouter.post("/resolve/:incidentTicketId", (req, res, next) => {
-  incidentController.resolveIncident(req, res, next);
+incidentRouter.post(
+  "/resolve/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.resolveIncident(req, res, next);
+  }
+);
+
+//3rd party interactions
+incidentRouter.get("/:ticketId", (req, res, next) => {
+  incidentController.getIncidentTicketById(req, res, next);
+});
+
+incidentRouter.patch("/:ticketId/close", (req, res, next) => {
+  incidentController.closeTicket(req, res, next);
 });
 
 export default incidentRouter;

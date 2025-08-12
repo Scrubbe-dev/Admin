@@ -97,6 +97,7 @@ model Business {
   IncidentTicket             IncidentTicket[]
   invites                    Invites[]
   IncidentTicketNotification IncidentTicketNotification[]
+  thirdpartyIntegrations     UserThirdpartyIntegration[]
 }
 
 model BusinessDashboard {
@@ -333,6 +334,9 @@ model UserThirdpartyIntegration {
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
+
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id])
 
   provider BusinessNotificationChannels
 
@@ -657,8 +661,12 @@ enum BusinessPrefferedIntegration {
 enum BusinessNotificationChannels {
   SLACK
   MICROSOFT_TEAMS
-  EMAIL
   SMS
+  EMAIL
+  GOOGLE_MEET
+  ZOOM
+  PAGERDUTY
+  WHATSAPP
 }
 
 enum PackageModule {

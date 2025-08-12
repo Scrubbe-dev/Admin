@@ -53,7 +53,6 @@ export class IncidentController {
         request,
         userId,
         businessId
-        // io
       );
 
       res.json(response);
@@ -163,6 +162,32 @@ export class IncidentController {
       const { incidentTicketId } = req.params;
 
       const response = await this.incidentService.getMessages(incidentTicketId);
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getIncidentTicketById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { ticketId } = req.params;
+
+      const response = await this.incidentService.getIncidentTicketById(
+        ticketId
+      );
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async closeTicket(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { ticketId } = req.params;
+
+      const response = await this.incidentService.closeTicket(ticketId);
 
       res.json(response);
     } catch (error) {

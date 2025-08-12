@@ -17,8 +17,6 @@ export const askEzra = async <T>(
 ): Promise<T> => {
   const systemPrompt = buildPrompt(type, userPrompt, extra);
 
-  console.log("============ System Prompt ============", systemPrompt);
-
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

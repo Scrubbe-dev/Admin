@@ -3,11 +3,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const slackConfig = {
-  slackClientId: process.env.SLACK_CLIENT_ID!,
-  slackClientSecret: process.env.SLACK_CLIENT_SECRET!,
-  slackVerificationToken: process.env.SLACK_VERIFICATION_TOKEN!,
-  slackOauthBaseUrl: process.env.SLACK_OAUTH_BASE_URL!,
-  slackRedirectUri: process.env.SLACK_REDIRECT_URI!,
+  clientId: process.env.SLACK_CLIENT_ID!,
+  clientSecret: process.env.SLACK_CLIENT_SECRET!,
+  verificationToken: process.env.SLACK_VERIFICATION_TOKEN!,
+  oauthBaseUrl: process.env.SLACK_OAUTH_BASE_URL!,
+  redirectUri: process.env.SLACK_REDIRECT_URI!,
+  signingSecret: process.env.SLACK_SIGNING_SECRET!,
+  incidentAPIUrl: process.env.INCIDENT_API_URL!,
 };
 
 export default slackConfig;

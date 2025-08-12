@@ -1,18 +1,18 @@
-import prisma from "../../prisma-clients/client";
 import dotenv from "dotenv";
-import slackConfig from "../../config/slack.config";
 import axios from "axios";
 import { BusinessNotificationChannels } from "@prisma/client";
-import { ConflictError } from "../auth/error";
+import prisma from "../../../prisma-clients/client";
 import { WebClient } from "@slack/web-api";
-import { DefaultChannelRequest } from "./types";
-import { ConfigureSMSRequest } from "./sms/sms.type";
+import slackConfig from "../../../config/slack.config";
+import { ConflictError } from "../../auth/error";
+import { DefaultChannelRequest } from "../types";
+import { mapStatusResponse } from "./response-block";
 dotenv.config();
 
-export class IntegrationService {
+export class SlackService {
   constructor() {}
   async connectSlack(redirectUri: string, clientId: string, userId: string) {
-    const url = `${slackConfig.slackOauthBaseUrl}?client_id=${clientId}&scope=channels:join,groups:read,chat:write,channels:read&redirect_uri=${redirectUri}&state=${userId}`;
+    const url = `${slackConfig.oauthBaseUrl}?client_id=${clientId}&scope=channels:join,groups:read,chat:write,channels:read&redirect_uri=${redirectUri}&state=${userId}`;
 
     return url;
   }
@@ -24,18 +24,16 @@ export class IntegrationService {
         null,
         {
           params: {
-            client_id: slackConfig.slackClientId,
-            client_secret: slackConfig.slackClientSecret,
+            client_id: slackConfig.clientId,
+            client_secret: slackConfig.clientSecret,
             code,
-            redirect_uri: slackConfig.slackRedirectUri,
+            redirect_uri: slackConfig.redirectUri,
           },
         }
       );
 
       const data = response.data;
       if (!data.ok) throw new Error(data.error);
-
-      console.log("=========== data ===========", data);
 
       const savedIntegration = await prisma.userThirdpartyIntegration.upsert({
         where: {
@@ -64,8 +62,6 @@ export class IntegrationService {
         },
       });
 
-      console.log("=========== savedIntegration ===========", savedIntegration);
-
       return {
         status: "success",
         message:
@@ -83,8 +79,6 @@ export class IntegrationService {
         where: { userId, provider: BusinessNotificationChannels.SLACK },
       });
 
-      console.log("=========== integration ===========", integration);
-
       if (!integration || !integration.accessToken) {
         throw new ConflictError("Slack not connected for this user");
       }
@@ -95,8 +89,6 @@ export class IntegrationService {
         types: "public_channel,private_channel",
         limit: 100,
       });
-
-      console.log("=========== result ===========", result);
 
       if (!result.channels) return [];
 
@@ -133,39 +125,46 @@ export class IntegrationService {
     }
   }
 
-  async connectSMS(request: ConfigureSMSRequest, userId: string) {
-    try {
-      await prisma.userThirdpartyIntegration.upsert({
-        where: {
-          userId_provider: {
-            userId,
-            provider: BusinessNotificationChannels.SMS,
-          },
-        },
-        update: {
-          accessToken: request.authToken,
-          metadata: {
-            accountSid: request.accountSid,
-            from: request.fromNumber,
-          },
-          defaultTarget: request.fromNumber,
-        },
-        create: {
-          userId,
-          provider: BusinessNotificationChannels.SMS,
-          accessToken: request.authToken,
-          metadata: {
-            accountSid: request.accountSid,
-            from: request.fromNumber,
-          },
-          defaultTarget: request.fromNumber,
-        },
-      });
+  async getIncidentStatus(incidentId: string) {
+    const resp = await axios.get(`${slackConfig.incidentAPIUrl}/${incidentId}`);
 
-      return { status: "success", message: "SMS connected" };
-    } catch (error) {
-      console.error("Error occured while connecting SMS", error);
-      throw new Error(`${error instanceof Error && error.message}`);
+    if (resp.data.status === 404) {
+      return {
+        response_type: "in_channel",
+        text: `Incident ticket not found with id: ${incidentId}`,
+      };
     }
+
+    const blocks = mapStatusResponse(resp.data);
+
+    return {
+      response_type: "in_channel",
+      blocks,
+    };
+  }
+
+  async closeIncident(incidentId: string) {
+    const resp = await axios.patch(
+      `${slackConfig.incidentAPIUrl}/${incidentId}/close`
+    );
+
+    if (resp.data.status === 404) {
+      return {
+        response_type: "in_channel",
+        text: `Incident ticket not found with id: ${incidentId}`,
+      };
+    }
+
+    if (resp.data.status === 429) {
+      return {
+        response_type: "in_channel",
+        text: `Incident ticket: ${incidentId} is already closed`,
+      };
+    }
+
+    return {
+      response_type: "in_channel",
+      text: `Incident ${incidentId} has been closed ✅`,
+    };
   }
 }

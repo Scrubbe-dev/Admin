@@ -15,3 +15,11 @@ export interface SlackDataResponse {
   enterprise: null;
   is_enterprise_install: boolean;
 }
+
+export interface SlackSlashCommandRequest {
+  command: SlackSlashCommand;
+  text: string;
+}
+
+// add more slash commands when needed
+export type SlackSlashCommand = "/incident-status" | "/incident-close";
