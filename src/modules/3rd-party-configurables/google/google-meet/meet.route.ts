@@ -35,9 +35,14 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *       500:
  *         description: Failed to start Google Meet connection process
  */
-meetRouter.get("/connect/", authMiddleware.authenticate, (req, res, next) => {
-  meetcontroller.connectMeet(req, res, next);
-});
+meetRouter.get(
+  "/connect/",
+  // "/connect/:userId",
+  authMiddleware.authenticate,
+  (req, res, next) => {
+    meetcontroller.connectMeet(req, res, next);
+  }
+);
 
 /**
  * @swagger

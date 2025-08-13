@@ -11,7 +11,8 @@ export class MeetController {
 
       const response = await this.meetService.connectMeet(userId);
 
-      res.redirect(response);
+      // res.redirect(response);
+      res.json(response);
     } catch (error) {
       next(error);
     }
