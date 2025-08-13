@@ -46,6 +46,7 @@ import { initSocket } from "./modules/socket/socket";
 import slackRouter from "./modules/3rd-party-configurables/slack/slack.router";
 import smsRouter from "./modules/3rd-party-configurables/sms/sms.route";
 import meetRouter from "./modules/3rd-party-configurables/google/google-meet/meet.route";
+import whatsappRouter from "./modules/3rd-party-configurables/whatsapp/whatsapp.route";
 dotenvConfig();
 
 // TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
@@ -173,6 +174,7 @@ app.use("/api/v1/apikey", apikeyRoute);
 app.use("/api/v1/integrations/slack", slackRouter);
 app.use("/api/v1/integrations/sms", smsRouter);
 app.use("/api/v1/integrations/google/meet", meetRouter);
+app.use("/api/v1/integrations/whatsapp", whatsappRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);

@@ -17,22 +17,16 @@ export class SMSService {
           },
         },
         update: {
-          accessToken: request.authToken,
           metadata: {
-            accountSid: request.accountSid,
-            from: request.fromNumber,
+            recipients: request.recipients,
           },
-          defaultTarget: request.fromNumber,
         },
         create: {
           userId,
           provider: BusinessNotificationChannels.SMS,
-          accessToken: request.authToken,
           metadata: {
-            accountSid: request.accountSid,
-            from: request.fromNumber,
+            recipients: request.recipients,
           },
-          defaultTarget: request.fromNumber,
         },
       });
 

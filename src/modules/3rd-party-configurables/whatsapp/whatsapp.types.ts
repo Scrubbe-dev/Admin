@@ -1,8 +1,8 @@
-export interface ConfigureSMSRequest {
+export interface WhatsappRequest {
   recipients: string[];
   enabled: boolean;
 }
 
-export type SMSMetadata = {
+export type WhatsAppMetadata = {
   recipients: string[];
 };

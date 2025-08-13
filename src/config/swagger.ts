@@ -32,6 +32,10 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/fingerprint/fingerprint.route.ts",
     "./src/modules/data-visualization/data-visual.route.ts",
     "./src/modules/incident-ticket/incident.route.ts",
+    "./src/modules/3rd-party-configurables/whatsapp/whatsapp.route.ts",
+    "./src/modules/3rd-party-configurables/sms/sms.route.ts",
+    "./src/modules/3rd-party-configurables/google/google-meet/meet.route.ts",
+    "./src/modules/3rd-party-configurables/slack/slack.router.ts",
   ],
 };
 

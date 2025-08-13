@@ -14,8 +14,9 @@
   "scripts": {
     "seedIncidentsToDifferentUsers": "ts-node src/seed-with-specific-table/seedIncidents.ts",
     "seedIncidentToUser": "ts-node src/seed-with-specific-table/seedIncidentToAUser.ts",
-    "start": "node dist/app.js",
+    "sendsms": "ts-node src/config/twilio.config.ts",
     "build": "tsc",
+    "start": "node dist/app.js",
     "migrate:init": "npx prisma migrate dev --name init",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
@@ -24,7 +25,7 @@
     "dev": "concurrently \"tsc --watch\" \"nodemon dist/app.js\"",
     "ts:dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "lint": "eslint . --ext .ts",
-    "dockerbuild": "docker build -f ./src/infrastructure/docker/DockerFile -t file-converter-app ",
+    "dockerbuild": "docker build -f ./src/infrastructure/docker/DockerFile -t file-converter-app",
     "dockerrun": "docker run -p 3000:3000 file-converter-app",
     "postinstall": "prisma generate"
   },
