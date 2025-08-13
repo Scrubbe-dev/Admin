@@ -30,6 +30,7 @@ export class SlackController {
       next(error);
     }
   }
+  
   async exchangeCodeForToken(req: Request, res: Response, next: NextFunction) {
     try {
       const { code, state: userId } = req.query;

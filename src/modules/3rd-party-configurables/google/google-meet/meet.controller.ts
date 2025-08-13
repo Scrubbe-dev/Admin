@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { MeetService } from "./meet.service";
-import { googleConfig, oauth2Client } from "../../../../config/google.config";
 
 export class MeetController {
   constructor(private meetService: MeetService) {}

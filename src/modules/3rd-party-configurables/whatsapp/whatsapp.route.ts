@@ -1,11 +1,11 @@
 import express from "express";
 import { TokenService } from "../../auth/services/token.service";
-import { SMSController } from "./sms.controller";
+import { WhatsappService } from "./whatsapp.service";
+import { WhatsappController } from "./whatsapp.controller";
 import { AuthMiddleware } from "../../auth/middleware/auth.middleware";
-import { SMSService } from "./sms.service";
 import { mustBeAMember } from "../../business-profile/business.middleware";
 
-const smsRouter = express.Router();
+const whatsappRouter = express.Router();
 
 const tokenService = new TokenService(
   process.env.JWT_SECRET!,
@@ -13,19 +13,25 @@ const tokenService = new TokenService(
   15 // in mins
 );
 
-const smsService = new SMSService();
-const smsController = new SMSController(smsService);
+const whatsappService = new WhatsappService();
+const whatsappController = new WhatsappController(whatsappService);
 const authMiddleware = new AuthMiddleware(tokenService);
-smsRouter.use(authMiddleware.authenticate);
 
 /**
  * @swagger
- * /api/v1/integrations/sms/connect:
+ * tags:
+ *   name: Integrations
+ *   description: 3rd Party Integrations
+ */
+
+/**
+ * @swagger
+ * /api/v1/integrations/whatsapp/connect:
  *   post:
- *     summary: Connect and configure SMS alerts for a business
+ *     summary: Connect and configure WhatsApp alerts for a business
  *     description: >
- *       This endpoint allows an authenticated business member or owner to configure SMS alerts using Scrubbe's shared Twilio account.
- *       The user can specify recipient phone numbers who will receive automated SMS notifications for incidents.
+ *       This endpoint allows an authenticated business member or owner to configure WhatsApp alerts using Scrubbe's shared Twilio account.
+ *       The user can specify recipient phone numbers who will receive automated WhatsApp notifications for incidents.
  *     tags: [Integrations]
  *     security:
  *       - bearerAuth: []
@@ -41,11 +47,11 @@ smsRouter.use(authMiddleware.authenticate);
  *             properties:
  *               recipients:
  *                 type: array
- *                 description: List of SMS phone numbers (in E.164 format) to receive alerts
+ *                 description: List of WhatsApp phone numbers (in E.164 format) to receive alerts
  *                 example: ["+15551234567", "+447911123456"]
  *               enabled:
  *                 type: boolean
- *                 description: Whether SMS notifications are enabled for this business
+ *                 description: Whether WhatsApp notifications are enabled for this business
  *                 example: true
  *     responses:
  *       200:
@@ -60,7 +66,7 @@ smsRouter.use(authMiddleware.authenticate);
  *                   example: success
  *                 message:
  *                   type: string
- *                   example: Connected to SMS
+ *                   example: Connected to WhatsApp
  *       400:
  *         description: Bad request (validation error)
  *       401:
@@ -68,10 +74,15 @@ smsRouter.use(authMiddleware.authenticate);
  *       403:
  *         description: Forbidden (user is not a member of the business)
  *       500:
- *         description: Failed to connect SMS integration
+ *         description: Failed to connect WhatsApp integration
  */
-smsRouter.post("/connect", mustBeAMember, (req, res, next) => {
-  smsController.connectSMS(req, res, next);
-});
+whatsappRouter.post(
+  "/connect",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    whatsappController.connectWhatsapp(req, res, next);
+  }
+);
 
-export default smsRouter;
+export default whatsappRouter;

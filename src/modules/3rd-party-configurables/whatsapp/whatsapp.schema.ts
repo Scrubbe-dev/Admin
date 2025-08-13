@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const configureSMSschema = z.object({
+export const whatsappSchema = z.object({
   recipients: z.string().array(),
   enabled: z.boolean(),
 });
