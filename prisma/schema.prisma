@@ -277,6 +277,7 @@ model IncidentTicket {
   status          IncidentStatus   @default(OPEN)
 
   assignedById String
+  createdFrom  String? // ticket may have been created from slack, email, github etc
 
   // SLA targets
   slaTargetAck        DateTime?
@@ -666,6 +667,8 @@ enum BusinessNotificationChannels {
   GOOGLE_MEET
   ZOOM
   PAGERDUTY
+  GITHUB
+  GITLAB
   WHATSAPP
 }
 

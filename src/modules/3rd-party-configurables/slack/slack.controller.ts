@@ -25,7 +25,8 @@ export class SlackController {
         userId
       );
 
-      res.redirect(response);
+      // res.redirect(response);
+      res.json(response);
     } catch (error) {
       next(error);
     }

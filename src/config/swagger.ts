@@ -36,6 +36,7 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/3rd-party-configurables/sms/sms.route.ts",
     "./src/modules/3rd-party-configurables/google/google-meet/meet.route.ts",
     "./src/modules/3rd-party-configurables/slack/slack.router.ts",
+    "./src/modules/3rd-party-configurables/github/github.router.ts",
   ],
 };
 
