@@ -72,6 +72,7 @@ export class IncidentService {
           userName: request.username,
           assignedById: userId,
           priority: request.priority,
+          createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
           businessId,
           conversation: {
             create: {

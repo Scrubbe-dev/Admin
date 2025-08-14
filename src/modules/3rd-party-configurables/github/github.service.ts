@@ -1,14 +1,16 @@
 import { Octokit } from "@octokit/rest";
 import axios from "axios";
-import crypto from "crypto";
 import prisma from "../../../prisma-clients/client";
 import { BusinessNotificationChannels } from "@prisma/client";
 import { githubConfig } from "../../../config/github.config";
-import { NotFoundError } from "../../auth/error";
-import { GithubRepoRequest } from "./github.types";
+import { NotFoundError, UnauthorizedError } from "../../auth/error";
 import { InputJsonValue } from "@prisma/client/runtime/library";
+import { GithubWebhookService } from "./github.webhook";
+import { Request } from "express";
+import { GithubRepoRequest } from "./github.schema";
 
 export class GithubService {
+  constructor(private githubWebhookService: GithubWebhookService) {}
   async getAuthUrl(userId: string) {
     const clientId = githubConfig.clientId;
     const redirectUrl = githubConfig.redirectUrl;
@@ -81,23 +83,27 @@ export class GithubService {
     return mappedRepos;
   }
 
-  async saveMonitoredRepos(userId: string, repos: GithubRepoRequest[]) {
+  async saveMonitoredRepos(userId: string, request: GithubRepoRequest) {
     const integration = await prisma.userThirdpartyIntegration.findFirst({
-      where: { userId, provider: BusinessNotificationChannels.GITHUB },
+      where: {
+        userId,
+        provider: BusinessNotificationChannels.GITHUB,
+        assignedToEmail: request.assignTo,
+      },
     });
 
     if (!integration?.accessToken) {
-      throw new NotFoundError("GitHub connection not found");
+      throw new NotFoundError("GitHub connection not found for this user");
     }
 
     const octokit = new Octokit({ auth: integration.accessToken });
 
-    for (const repo of repos) {
+    for (const repo of request.repos) {
       await octokit.repos.createWebhook({
         owner: repo.owner,
         repo: repo.name,
         config: {
-          url: githubConfig.webhookUrl,
+          url: `${githubConfig.webhookUrl}?userId=${userId}`,
           content_type: "json",
           secret: githubConfig.webhookSecret,
         },
@@ -107,31 +113,28 @@ export class GithubService {
 
     await prisma.userThirdpartyIntegration.update({
       where: { id: integration.id },
-      data: { metadata: { repos } as unknown as InputJsonValue },
+      data: { metadata: { repos: request.repos } as unknown as InputJsonValue },
     });
 
     return { status: "success", message: "Repositories connected" };
   }
 
-  async handleWebhook(payload: any, signature: string, event: string) {
-    // const expectedSignature =
-    //   "sha256=" +
-    //   crypto
-    //     .createHmac("sha256", githubConfig.webhookSecret)
-    //     .update(JSON.stringify(payload))
-    //     .digest("hex");
+  async handleWebhook(
+    payload: any,
+    event: string,
+    userId: string,
+    req: Request
+  ) {
+    const isSignValid = this.githubWebhookService.verifySignature(req);
 
-    // if (signature !== expectedSignature) {
-    //   throw new Error("Invalid signature");
-    // }
+    if (!isSignValid) {
+      throw new UnauthorizedError("Invalid signature");
+    }
 
-    // // Use event to handle different cases
-    // if (
-    //   event === "deployment_status" &&
-    //   payload.deployment_status?.state === "failure"
-    // ) {
-    //   console.log("Trigger incident:", payload);
-    //   // incident creation logic...
-    // }
+    if (!event) {
+      throw new UnauthorizedError("Missing X-GitHub-Event header");
+    }
+
+    await this.githubWebhookService.handleEvent(event, payload, userId);
   }
 }

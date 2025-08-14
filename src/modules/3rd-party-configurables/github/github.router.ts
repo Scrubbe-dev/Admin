@@ -3,6 +3,11 @@ import { AuthMiddleware } from "../../auth/middleware/auth.middleware";
 import { TokenService } from "../../auth/services/token.service";
 import { GithubService } from "./github.service";
 import { GithubController } from "./github.controller";
+import { GithubWebhookService } from "./github.webhook";
+
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const githubRouter = express.Router();
 
@@ -13,7 +18,8 @@ const tokenService = new TokenService(
 );
 const authMiddleware = new AuthMiddleware(tokenService);
 
-const githubService = new GithubService();
+const githubWebhookService = new GithubWebhookService();
+const githubService = new GithubService(githubWebhookService);
 const githubController = new GithubController(githubService);
 
 /**
@@ -127,27 +133,37 @@ githubRouter.get("/repos", authMiddleware.authenticate, (req, res, next) => {
  *       content:
  *         application/json:
  *           schema:
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - id
- *                 - name
- *                 - private
- *                 - owner
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 123456
- *                 name:
- *                   type: string
- *                   example: "my-repo"
- *                 private:
- *                   type: boolean
- *                   example: false
- *                 owner:
- *                   type: string
- *                   example: "username"
+ *             type: object
+ *             required:
+ *               - assignTo
+ *               - repos
+ *             properties:
+ *               assignTo:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
+ *               repos:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - id
+ *                     - name
+ *                     - private
+ *                     - owner
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                       example: 123456
+ *                     name:
+ *                       type: string
+ *                       example: "my-repo"
+ *                     private:
+ *                       type: boolean
+ *                       example: false
+ *                     owner:
+ *                       type: string
+ *                       example: "username"
  *     responses:
  *       200:
  *         description: Repositories connected successfully

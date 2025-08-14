@@ -9,27 +9,27 @@ datasource db {
 }
 
 model User {
-  id                        String                      @id @default(uuid())
-  email                     String                      @unique
+  id                        String                         @id @default(uuid())
+  email                     String                         @unique
   passwordHash              String?
   firstName                 String?
   lastName                  String?
   profileImage              String?
-  isVerified                Boolean                     @default(false)
-  isActive                  Boolean                     @default(true)
+  isVerified                Boolean                        @default(false)
+  isActive                  Boolean                        @default(true)
   lastLogin                 DateTime?
-  apiKeyDuration            DateTime                    @default(now())
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
-  apiKey                    String?                     @default(cuid())
-  role                      Role                        @default(USER)
+  apiKeyDuration            DateTime                       @default(now())
+  createdAt                 DateTime                       @default(now())
+  updatedAt                 DateTime                       @updatedAt
+  apiKey                    String?                        @default(cuid())
+  role                      Role                           @default(USER)
   passwordChangedAt         DateTime?
   username                  String?
   accountType               AccountType?
   oauthprovider             OAuthProvider?
-  registerdWithOauth        Boolean                     @default(false)
+  registerdWithOauth        Boolean                        @default(false)
   oauthProvider_uuid        String?
-  scopes                    String[]                    @default(["api-key:create"])
+  scopes                    String[]                       @default(["api-key:create"])
   scrubbe_apikey            ApiKey[]
   business                  Business?
   ConversationParticipant   ConversationParticipant[]
@@ -46,8 +46,9 @@ model User {
   refreshToken              RefreshToken[]
   resetTokens               ResetToken[]
   VerificationOTP           VerificationOTP?
-  Customer                  Customer[]                  @relation("CustomerToUser")
+  Customer                  Customer[]                     @relation("CustomerToUser")
   userThirdpartyIntegration UserThirdpartyIntegration[]
+  integrated                BusinessNotificationChannels[]
 
   @@index([apiKey])
 }
@@ -80,8 +81,12 @@ model ApiKey {
 }
 
 model Business {
-  id                         String                       @id @default(uuid())
-  name                       String?
+  id   String  @id @default(uuid())
+  name String?
+
+  incidentEmail String? @unique
+  subdomain     String? @unique
+
   industry                   String?
   primaryRegion              String?
   logo                       String?
@@ -114,23 +119,24 @@ model BusinessDashboard {
 }
 
 model Invites {
-  id                String              @id @default(uuid())
-  firstName         String?
-  lastName          String?
-  email             String              @unique
-  role              Role
-  accessPermissions AccessPermissions[]
-  sentById          String
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  accepted          Boolean             @default(false)
-  acceptedAt        DateTime?
-  stillAMember      Boolean             @default(true)
-  status            InviteStatus        @default(PENDING)
-  userId            String?
-  IncidentTicket    IncidentTicket[]
-  business          Business            @relation(fields: [sentById], references: [id])
-  user              User?               @relation(fields: [userId], references: [id])
+  id                        String                      @id @default(uuid())
+  firstName                 String?
+  lastName                  String?
+  email                     String                      @unique
+  role                      Role
+  accessPermissions         AccessPermissions[]
+  sentById                  String
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  accepted                  Boolean                     @default(false)
+  acceptedAt                DateTime?
+  stillAMember              Boolean                     @default(true)
+  status                    InviteStatus                @default(PENDING)
+  userId                    String?
+  IncidentTicket            IncidentTicket[]
+  business                  Business                    @relation(fields: [sentById], references: [id])
+  user                      User?                       @relation(fields: [userId], references: [id])
+  userThirdpartyIntegration UserThirdpartyIntegration[]
 
   @@index([sentById])
 }
@@ -345,6 +351,9 @@ model UserThirdpartyIntegration {
   refreshToken String?
 
   metadata Json?
+
+  assignedToEmail String? // assign incident raised automatically by default
+  assignedTo      Invites? @relation(fields: [assignedToEmail], references: [email])
 
   defaultTarget String?
 
@@ -659,6 +668,7 @@ enum BusinessPrefferedIntegration {
   SERVICE_NOW
 }
 
+// should be renamed to ThirdPartIntegrations
 enum BusinessNotificationChannels {
   SLACK
   MICROSOFT_TEAMS

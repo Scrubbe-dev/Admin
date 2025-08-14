@@ -12,6 +12,7 @@ export type IncidentRequest = {
   priority: Priority;
   username: string;
   assignedTo: string;
+  createdFrom?: string;
 };
 
 export type UpdateTicket = {
