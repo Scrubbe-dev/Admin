@@ -7,11 +7,9 @@ export class MeetController {
   async connectMeet(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
-      // const { userId } = req.params; // TODO: REPLACE THIS WITH MIDDLEWARE AFTER TESTING
 
       const response = await this.meetService.connectMeet(userId);
 
-      // res.redirect(response);
       res.json(response);
     } catch (error) {
       next(error);

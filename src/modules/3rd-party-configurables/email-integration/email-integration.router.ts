@@ -1,9 +1,14 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import { AuthMiddleware } from "../../auth/middleware/auth.middleware";
 import { TokenService } from "../../auth/services/token.service";
 import { EmailIntegrationService } from "./email-integration.service";
 import { EmailIntegrationController } from "./email-integration.controller";
-import { businessAccountOnly } from "../../business-profile/business.middleware";
+import {
+  businessAccountOnly,
+  mustBeAMember,
+} from "../../business-profile/business.middleware";
 
 const emailRouter = express.Router();
 
@@ -70,7 +75,7 @@ emailRouter.post(
  *       401:
  *         description: Unauthorized
  */
-emailRouter.get("/", auth.authenticate, (req, res, next) =>
+emailRouter.get("/", auth.authenticate, mustBeAMember, (req, res, next) =>
   emailIntegrationController.getEmailIntegration(req, res, next)
 );
 

@@ -9,12 +9,10 @@ export class GitlabController {
   async connectGitlab(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
-      // const { userId } = req.params;
 
       const response = this.gitlabService.getAuthUrl(userId);
 
-      res.json(response);
-      // res.redirect(response);
+      res.json(response); 
     } catch (error) {
       next(error);
     }
