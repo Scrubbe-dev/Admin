@@ -1,7 +1,9 @@
 import prisma from "../../prisma-clients/client";
 import {
   CommentRequest,
+  CustomerFacingKbRequest,
   IncidentRequest,
+  ResolveIncidentRequest,
   UpdateTicket,
 } from "./incident.types";
 import { IncidentUtils } from "./incident.util";
@@ -9,6 +11,11 @@ import { IncidentMapper } from "./incident.mapper";
 import { ForbiddenError, NotFoundError } from "../auth/error";
 import { IncidentStatus, SLABreachType } from "@prisma/client";
 import { MeetUtil } from "../3rd-party-configurables/google/google-meet/meetUtil";
+import { askEzra } from "../ezra-chat/askezra";
+import {
+  RootCauseSuggestionResponse,
+  StakeHolderMessageResponse,
+} from "../ezra-chat/ezra.types";
 
 export class IncidentService {
   constructor() {}
@@ -195,21 +202,26 @@ export class IncidentService {
     }
   }
 
-  async resolveIncident(ticketId: string) {
+  async resolveIncident(
+    incidentTicketId: string,
+    request: ResolveIncidentRequest
+  ) {
     try {
       const ticket = await prisma.incidentTicket.findUnique({
-        where: { id: ticketId },
+        where: { id: incidentTicketId },
       });
 
       if (!ticket) throw new NotFoundError("Ticket not found");
 
       if (ticket.resolvedAt) return;
 
+      await IncidentUtils.submitPostmortemForm(incidentTicketId, request);
+
       const now = new Date();
       const breach = ticket.slaTargetResolve && now > ticket.slaTargetResolve;
 
       await prisma.incidentTicket.update({
-        where: { id: ticketId },
+        where: { id: incidentTicketId },
         data: {
           resolvedAt: now,
           status: IncidentStatus.RESOLVED,
@@ -223,7 +235,7 @@ export class IncidentService {
 
         await prisma.sLABreachAuditLog.create({
           data: {
-            incidentId: ticketId,
+            incidentId: incidentTicketId,
             slaType: SLABreachType.RESOLVE,
             breachedAt: now,
             breachDurationMinutes,
@@ -245,6 +257,84 @@ export class IncidentService {
         }`
       );
     }
+  }
+
+  async publishCustomerFacingKb(
+    incidentTicketId: string,
+    request: CustomerFacingKbRequest
+  ) {
+    const ticket = await prisma.incidentTicket.findUnique({
+      where: { id: incidentTicketId },
+    });
+
+    if (!ticket) throw new NotFoundError("Ticket not found");
+
+    await prisma.resolveIncident.update({
+      where: {
+        incidentTicketId: ticket.id,
+      },
+
+      data: {
+        knowledgeTitleCustomer: request.title,
+        knowledgeSummaryCustomer: request.summary,
+      },
+    });
+
+    return { status: "success" };
+  }
+
+  async getAiSuggestion(incidentTicketId: string) {
+    const incidentTicket = await prisma.incidentTicket.findFirst({
+      where: {
+        id: incidentTicketId,
+      },
+    });
+
+    if (!incidentTicket)
+      throw new NotFoundError("Ticket not found with id: " + incidentTicketId);
+
+    const response = await askEzra<RootCauseSuggestionResponse>(
+      "rootCauseSuggestion",
+      JSON.stringify(incidentTicket)
+    );
+
+    return response;
+  }
+
+  async getFiveWhys(incidentTicketId: string) {
+    const incidentTicket = await prisma.incidentTicket.findFirst({
+      where: {
+        id: incidentTicketId,
+      },
+    });
+
+    if (!incidentTicket)
+      throw new NotFoundError("Ticket not found with id: " + incidentTicketId);
+
+    const response = await askEzra<RootCauseSuggestionResponse>(
+      "generateFiveWhys",
+      JSON.stringify(incidentTicket)
+    );
+
+    return response;
+  }
+
+  async getStakeHolderMessage(incidentTicketId: string) {
+    const incidentTicket = await prisma.incidentTicket.findFirst({
+      where: {
+        id: incidentTicketId,
+      },
+    });
+
+    if (!incidentTicket)
+      throw new NotFoundError("Ticket not found with id: " + incidentTicketId);
+
+    const response = await askEzra<StakeHolderMessageResponse>(
+      "generateStakeHolderMessage",
+      JSON.stringify(incidentTicket)
+    );
+
+    return response;
   }
 
   async updateTicket(request: UpdateTicket) {

@@ -668,7 +668,7 @@ incidentRouter.post(
  *       Marks the specified incident ticket as resolved by setting the `resolvedAt` timestamp and updating its status.
  *       If the SLA target for resolution is breached, a breach log is recorded.
  *       Sends a notification after successful resolution.
-
+ *
  *       **WebSocket Notification:** Emits `incidentNotification` event with message: `"Incident ticket was resolved"`.
  *       Clients should listen to the `incidentNotification` event in the relevant business room.
  *     tags: [Incident Tickets]
@@ -682,6 +682,67 @@ incidentRouter.post(
  *           type: string
  *           format: uuid
  *         description: ID of the incident ticket to resolve
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rootCauseAnalysis:
+ *                 type: object
+ *                 properties:
+ *                   causeCategory:
+ *                     type: string
+ *                   rootCause:
+ *                     type: string
+ *                   fiveWhys:
+ *                     type: object
+ *                     properties:
+ *                       why1: { type: string }
+ *                       why2: { type: string }
+ *                       why3: { type: string }
+ *                       why4: { type: string }
+ *                       why5: { type: string }
+ *               resolutionDetails:
+ *                 type: object
+ *                 properties:
+ *                   temporaryFix: { type: string }
+ *                   permanentFix: { type: string }
+ *               knowledgeDraft:
+ *                 type: object
+ *                 properties:
+ *                   internalKb:
+ *                     type: object
+ *                     properties:
+ *                       title: { type: string }
+ *                       summary: { type: string }
+ *                       identificationSteps: { type: string }
+ *                       resolutionSteps: { type: string }
+ *                       preventiveMeasures: { type: string }
+ *                       tags:
+ *                         type: array
+ *                         items: { type: string }
+ *               followUpActions:
+ *                 type: object
+ *                 properties:
+ *                   task: { type: string }
+ *                   owner: { type: string }
+ *                   dueDate:
+ *                     type: string
+ *                     format: date-time
+ *                   status: { type: string }
+ *                   ticketingSystems:
+ *                     type: array
+ *                     items: { type: string }
+ *               stakeHolder:
+ *                 type: object
+ *                 properties:
+ *                   communicationChannel: { type: string }
+ *                   targetStakeholders:
+ *                     type: array
+ *                     items: { type: string }
+ *                   messageContent: { type: string }
  *     responses:
  *       200:
  *         description: Incident ticket resolved successfully
@@ -709,7 +770,222 @@ incidentRouter.post(
   }
 );
 
-//3rd party interactions
+/**
+ * @swagger
+ * /api/v1/incident-ticket/resolve/customer-kb/{incidentTicketId}:
+ *   post:
+ *     summary: Publish customer facing kb
+ *     description: >
+ *       Submit Customer facing kb inside post-mortem form
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket to resolve
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the customer-facing KB
+ *                 example: "Service Outage on 2025-08-16"
+ *               summary:
+ *                 type: string
+ *                 description: Summary of the incident and resolution
+ *                 example: "We experienced a temporary outage due to network issues, which has now been resolved."
+ *     responses:
+ *       200:
+ *         description: Incident ticket resolved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       403:
+ *         description: Only business members allowed
+ *       404:
+ *         description: Incident ticket not found
+ *       500:
+ *         description: Failed to publish kb
+ */
+incidentRouter.post(
+  "/resolve/customer-kb/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.publishCustomerFacingKb(req, res, next);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/incident-ticket/resolve/ai/suggestion/{incidentTicketId}:
+ *   get:
+ *     summary: Get AI suggestion for an incident ticket
+ *     description: >
+ *       Generates an AI-powered suggestion for the specified incident ticket.
+ *       The suggestion provides a short, actionable recommendation based on the ticket's details.
+ *       If no meaningful suggestion can be generated, `suggestion` will be `null`.
+ *
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicket
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket to analyze
+ *     responses:
+ *       200:
+ *         description: AI suggestion generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 suggestion:
+ *                   type: string
+ *                   nullable: true
+ *                   example: "Implement stricter input validation and add automated null checks in the transaction processor."
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       404:
+ *         description: Incident ticket not found
+ *       500:
+ *         description: Failed to generate AI suggestion
+ */
+incidentRouter.get(
+  "/resolve/ai/suggestion/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getAiSuggestion(req, res, next);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/incident-ticket/resolve/ai/five-whys/{incidentTicketId}:
+ *   get:
+ *     summary: Generate 5 Whys analysis for an incident ticket
+ *     description: >
+ *       Performs an AI-driven "5 Whys" root cause analysis on the specified incident ticket.
+ *       Returns exactly 5 progressively deeper why-questions based on the incident details.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicket
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket to analyze
+ *     responses:
+ *       200:
+ *         description: 5 Whys analysis generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 why1:
+ *                   type: string
+ *                   example: "Why did the payment gateway API fail?"
+ *                 why2:
+ *                   type: string
+ *                   example: "Why did the transaction processor throw a null pointer exception?"
+ *                 why3:
+ *                   type: string
+ *                   example: "Why was input validation missing?"
+ *                 why4:
+ *                   type: string
+ *                   example: "Why was the validation layer not implemented?"
+ *                 why5:
+ *                   type: string
+ *                   example: "Why did developers assume client-side validation was sufficient?"
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       404:
+ *         description: Incident ticket not found
+ *       500:
+ *         description: Failed to generate 5 Whys analysis
+ */
+incidentRouter.get(
+  "/resolve/ai/five-whys/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getFiveWhys(req, res, next);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/incident-ticket/resolve/ai/stakeholder/{incidentTicketId}:
+ *   get:
+ *     summary: Generate stakeholder message for an incident ticket
+ *     description: >
+ *       Produces an AI-generated communication message for stakeholders based on the specified incident ticket.
+ *       The message is concise, professional, and non-technical, providing either a resolution update or a current status update.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: incidentTicketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the incident ticket to generate a stakeholder message for
+ *     responses:
+ *       200:
+ *         description: Stakeholder message generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Payment gateway issue resolved as of August 8, 2025. All services are fully operational."
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       404:
+ *         description: Incident ticket not found
+ *       500:
+ *         description: Failed to generate stakeholder message
+ */
+incidentRouter.get(
+  "/resolve/ai/stakeholder/:incidentTicketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req, res, next) => {
+    incidentController.getStakeHolderMessage(req, res, next);
+  }
+);
+
+//3rd party interactions (see slack module)
 incidentRouter.get("/:ticketId", (req, res, next) => {
   incidentController.getIncidentTicketById(req, res, next);
 });

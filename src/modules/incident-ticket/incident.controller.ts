@@ -3,17 +3,18 @@ import { IncidentService } from "./incident.service";
 import { validateRequest } from "../auth/utils/validators";
 import {
   CommentRequest,
+  CustomerFacingKbRequest,
   IncidentRequest,
+  ResolveIncidentRequest,
   UpdateTicket,
 } from "./incident.types";
 import {
   commentSchema,
+  customerFacingKbSchema,
+  resolutionSchema,
   submitIncidentSchema,
   updateTicketSchema,
 } from "./incident.schema";
-import { getIO } from "../socket/init-socket";
-
-// const io = getIO();
 
 export class IncidentController {
   constructor(private incidentService = new IncidentService()) {}
@@ -79,7 +80,77 @@ export class IncidentController {
     try {
       const { incidentTicketId } = req.params;
 
+      const request = await validateRequest<ResolveIncidentRequest>(
+        resolutionSchema,
+        req.body
+      );
+
       const respone = await this.incidentService.resolveIncident(
+        incidentTicketId,
+        request
+      );
+
+      res.json(respone);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async publishCustomerFacingKb(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const request = await validateRequest<CustomerFacingKbRequest>(
+        customerFacingKbSchema,
+        req.body
+      );
+
+      const respone = await this.incidentService.publishCustomerFacingKb(
+        incidentTicketId,
+        request
+      );
+
+      res.json(respone);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAiSuggestion(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const respone = await this.incidentService.getAiSuggestion(
+        incidentTicketId
+      );
+
+      res.json(respone);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getFiveWhys(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const respone = await this.incidentService.getFiveWhys(incidentTicketId);
+
+      res.json(respone);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getStakeHolderMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { incidentTicketId } = req.params;
+
+      const respone = await this.incidentService.getStakeHolderMessage(
         incidentTicketId
       );
 

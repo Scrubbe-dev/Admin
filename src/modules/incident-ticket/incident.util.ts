@@ -3,6 +3,7 @@ import { IncidentTicket, Priority } from "@prisma/client";
 import { RecommendedActionResponse, RiskScore } from "../ezra-chat/ezra.types";
 import { askEzra } from "../ezra-chat/askezra";
 import { getSocketIO } from "../socket/socket";
+import { ResolveIncidentRequest } from "./incident.types";
 
 export class IncidentUtils {
   constructor() {}
@@ -87,5 +88,53 @@ export class IncidentUtils {
     } catch (error) {
       console.error("Failed to trigger notification: " + error);
     }
+  }
+
+  static async submitPostmortemForm(
+    incidentTicketId: string,
+    request: ResolveIncidentRequest
+  ) {
+    console.log("============ SUBMIT FORM TRIGGERED ============");
+    console.log(
+      "============ KNOWLEDGE DRAFT ============",
+      request.knowledgeDraft
+    );
+    
+    await prisma.resolveIncident.create({
+      data: {
+        incidentTicketId,
+
+        causeCategory: request.rootCauseAnalysis.causeCategory,
+        rootCause: request.rootCauseAnalysis.rootCause,
+        why1: request.rootCauseAnalysis.fiveWhys.why1,
+        why2: request.rootCauseAnalysis.fiveWhys.why2,
+        why3: request.rootCauseAnalysis.fiveWhys.why3,
+        why4: request.rootCauseAnalysis.fiveWhys.why4,
+        why5: request.rootCauseAnalysis.fiveWhys.why5,
+
+        temporaryFix: request.resolutionDetails.temporaryFix,
+        permanentFix: request.resolutionDetails.permanentFix,
+
+        knowledgeTitleInternal: request.knowledgeDraft.internalKb.title,
+        knowledgeSummaryInternal: request.knowledgeDraft.internalKb.summary,
+        identificationStepsInternal:
+          request.knowledgeDraft.internalKb.identificationSteps,
+        resolutionStepsInternal:
+          request.knowledgeDraft.internalKb.resolutionSteps,
+        preventiveMeasuresInternal:
+          request.knowledgeDraft.internalKb.preventiveMeasures,
+        knowledgeTagsInternal: request.knowledgeDraft.internalKb.tags,
+
+        followUpTask: request.followUpActions.task,
+        followUpOwner: request.followUpActions.owner,
+        followUpDueDate: request.followUpActions.dueDate,
+        followUpStatus: request.followUpActions.status,
+        followUpTicketingSystems: request.followUpActions.ticketingSystems,
+
+        communicationChannel: request.stakeHolder.communicationChannel,
+        targetStakeholders: request.stakeHolder.targetStakeholders,
+        messageContent: request.stakeHolder.messageContent,
+      },
+    });
   }
 }

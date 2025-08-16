@@ -41,7 +41,6 @@ export class EmailIntegrationService {
   }
 
   async getEmailIntegration(userId: string) {
-    // TODO - ADD INVITES AS PART OF SENDERS
     const business = await prisma.business.findFirst({
       where: { userId },
       select: {

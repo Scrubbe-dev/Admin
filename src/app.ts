@@ -52,7 +52,10 @@ import gitlabRouter from "./modules/3rd-party-configurables/gitlab/gitlab.router
 import emailRouter from "./modules/3rd-party-configurables/email-integration/email-integration.router";
 dotenvConfig();
 
-// TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
+// SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
+/**
+ * ========================= ALWAYS RUN BUILD SCRIPT BEFORE PUSHING TO PROD =========================
+ */
 
 const app = express();
 const prisma = new PrismaClient();
@@ -103,7 +106,7 @@ const tokenService = new TokenService(
   config.jwtExpiresIn,
   config.refreshTokenExpiresInDays
 );
-// TODO - BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
+// BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
 const emailService = new EmailService(); // verification token service
 const emailServices = new EmailServices();
 const authService = new AuthService(

@@ -2,8 +2,11 @@ import { ExtraData, PromptType } from "../ezra.types";
 import dotenv from "dotenv";
 import {
   determineRiskScore,
+  incidentFiveWhys,
+  incidentStakeholderMessage,
   interpretPrompt,
   recommendedAction,
+  rootCauseSuggestion,
   rule,
   summarizeIncidents,
   visualGraph,
@@ -39,6 +42,15 @@ export const buildPrompt = (
 
     case "visualGraph":
       return visualGraph();
+
+    case "rootCauseSuggestion":
+      return rootCauseSuggestion();
+
+    case "generateFiveWhys":
+      return incidentFiveWhys();
+
+    case "generateStakeHolderMessage":
+      return incidentStakeholderMessage();
 
     default:
       throw new Error("Unknown prompt type");

@@ -53,6 +53,46 @@ model User {
   @@index([apiKey])
 }
 
+model ResolveIncident {
+  id               String         @id @default(uuid())
+  incidentTicketId String         @unique
+  incidentTicket   IncidentTicket @relation(fields: [incidentTicketId], references: [id])
+
+  causeCategory CauseCategory
+  rootCause     String
+  why1          String
+  why2          String
+  why3          String
+  why4          String
+  why5          String
+
+  temporaryFix String
+  permanentFix String
+
+  knowledgeTitleInternal      String
+  knowledgeSummaryInternal    String
+  identificationStepsInternal String
+  resolutionStepsInternal     String
+  preventiveMeasuresInternal  String
+  knowledgeTagsInternal       String[]
+
+  knowledgeTitleCustomer   String?
+  knowledgeSummaryCustomer String?
+
+  followUpTask             String
+  followUpOwner            String
+  followUpDueDate          DateTime
+  followUpStatus           FollowUpStatus
+  followUpTicketingSystems BusinessPrefferedIntegration[]
+
+  communicationChannel COMMUNICATION_CHANNEL
+  targetStakeholders   String[]
+  messageContent       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Developer {
   id             String   @id @default(uuid())
   experience     String?
@@ -306,6 +346,7 @@ model IncidentTicket {
   assignedTo                 Invites                      @relation(fields: [assignedToEmail], references: [email])
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
+  ResolveIncident            ResolveIncident?
 }
 
 model SLABreachAuditLog {
@@ -719,4 +760,26 @@ enum SLAStatus {
   PENDING
   MET
   BREACHED
+}
+
+// for postmartum(incident resolve)
+enum CauseCategory {
+  SOFTWARE_BUG
+  NETWORK_ISSUE
+  HUMAN_ERROR
+  DATA_BREACH
+}
+
+enum FollowUpStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  DEALT_WITH
+}
+
+enum COMMUNICATION_CHANNEL {
+  EMAIL
+  SLACK
+  PUBLIC_ANNOUNCEMENT
+  CUSTOMER_PORTAL
 }

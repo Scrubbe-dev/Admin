@@ -24,7 +24,7 @@ import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 import { InviteUtil } from "../../invite/invite.util";
 import { AuthMapper } from "../mapper/auth.mapper";
 
-// TODO - run changes to production db with this command - npx prisma migrate deploy
+// run changes to production db with this command - npx prisma migrate deploy
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
 export class AuthService {
   constructor(

@@ -12,6 +12,9 @@ export type PromptType =
   | "summarizeIncidents"
   | "recommendedAction"
   | "visualGraph"
+  | "rootCauseSuggestion"
+  | "generateFiveWhys"
+  | "generateStakeHolderMessage"
   | "determineRiskScore";
 
 export interface ExtraData extends Object {
@@ -108,3 +111,19 @@ export interface VisualGraphResponse {
   } | null;
   followUps: string;
 }
+
+export type RootCauseSuggestionResponse = {
+  suggestion: string | null;
+};
+
+export type FiveWhysResponse = {
+  why1: string;
+  why2: string;
+  why3: string;
+  why4: string;
+  why5: string;
+};
+
+export type StakeHolderMessageResponse = {
+  message: string;
+};
