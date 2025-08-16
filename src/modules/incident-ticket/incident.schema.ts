@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { emailSchema } from "../../shared/validation/validation.schema";
 import { IncidentTemplate } from "./incident.types";
-import { IncidentStatus, Priority } from "@prisma/client";
+import {
+  BusinessPrefferedIntegration,
+  CauseCategory,
+  COMMUNICATION_CHANNEL,
+  FollowUpStatus,
+  IncidentStatus,
+  Priority,
+} from "@prisma/client";
 
 export const submitIncidentSchema = z.object({
   template: z.enum([
@@ -47,4 +54,60 @@ export const updateTicketSchema = z.object({
 
 export const commentSchema = z.object({
   content: z.string().min(1, "content cannot be empty"),
+});
+
+// =============== RESOLUTION STEPS ===============
+const rootCauseAnalysisSchema = z.object({
+  causeCategory: z.nativeEnum(CauseCategory),
+  rootCause: z.string().min(1, "Root cause is required"),
+  fiveWhys: z.object({
+    why1: z.string().min(1),
+    why2: z.string().min(1),
+    why3: z.string().min(1),
+    why4: z.string().min(1),
+    why5: z.string().min(1),
+  }),
+});
+
+const resolutiondetailsSchema = z.object({
+  temporaryFix: z.string().min(1, "Temporary fix is required"),
+  permanentFix: z.string().min(1, "Permanent fix is required"),
+});
+
+const knowledgeDraftSchema = z.object({
+  internalKb: z.object({
+    title: z.string().min(1),
+    summary: z.string().min(1),
+    identificationSteps: z.string().min(1),
+    resolutionSteps: z.string().min(1),
+    preventiveMeasures: z.string().min(1),
+    tags: z.array(z.string()).min(1),
+  }),
+});
+
+const followUpActionsSchema = z.object({
+  task: z.string().min(1),
+  owner: z.string().min(1),
+  dueDate: z.coerce.date(),
+  status: z.nativeEnum(FollowUpStatus),
+  ticketingSystems: z.array(z.nativeEnum(BusinessPrefferedIntegration)).min(1),
+});
+
+const stackHolderSchema = z.object({
+  communicationChannel: z.nativeEnum(COMMUNICATION_CHANNEL),
+  targetStakeholders: z.array(z.string()).min(1),
+  messageContent: z.string().min(1),
+});
+
+export const resolutionSchema = z.object({
+  rootCauseAnalysis: rootCauseAnalysisSchema,
+  resolutionDetails: resolutiondetailsSchema,
+  knowledgeDraft: knowledgeDraftSchema,
+  followUpActions: followUpActionsSchema,
+  stakeHolder: stackHolderSchema,
+});
+
+export const customerFacingKbSchema = z.object({
+  title: z.string().min(1),
+  summary: z.string().min(1),
 });

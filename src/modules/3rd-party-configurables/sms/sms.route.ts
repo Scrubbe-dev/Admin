@@ -16,6 +16,7 @@ const tokenService = new TokenService(
 const smsService = new SMSService();
 const smsController = new SMSController(smsService);
 const authMiddleware = new AuthMiddleware(tokenService);
+
 smsRouter.use(authMiddleware.authenticate);
 
 /**

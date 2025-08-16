@@ -86,12 +86,6 @@ export class EzraService {
     return streamSummary;
   }
 
-  /**
-   * TODO - Filter the incidents by business Id not by userId any more
-   * TODO - In submit incident, have a way for users to get added to each new conversation once a new ticket is submitted
-   * TODO - have a structured way of rendering different charts to the user
-   * TODO - look more on the sla
-   */
   async visualGraph(
     ezraResponse: SummarizePromptResponse,
     prompt: string,

@@ -49,9 +49,13 @@ import meetRouter from "./modules/3rd-party-configurables/google/google-meet/mee
 import whatsappRouter from "./modules/3rd-party-configurables/whatsapp/whatsapp.route";
 import githubRouter from "./modules/3rd-party-configurables/github/github.router";
 import gitlabRouter from "./modules/3rd-party-configurables/gitlab/gitlab.router";
+import emailRouter from "./modules/3rd-party-configurables/email-integration/email-integration.router";
 dotenvConfig();
 
-// TODO - SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
+// SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
+/**
+ * ========================= ALWAYS RUN BUILD SCRIPT BEFORE PUSHING TO PROD =========================
+ */
 
 const app = express();
 const prisma = new PrismaClient();
@@ -102,7 +106,7 @@ const tokenService = new TokenService(
   config.jwtExpiresIn,
   config.refreshTokenExpiresInDays
 );
-// TODO - BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
+// BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
 const emailService = new EmailService(); // verification token service
 const emailServices = new EmailServices();
 const authService = new AuthService(
@@ -179,6 +183,7 @@ app.use("/api/v1/integrations/google/meet", meetRouter);
 app.use("/api/v1/integrations/whatsapp", whatsappRouter);
 app.use("/api/v1/integrations/github", githubRouter);
 app.use("/api/v1/integrations/gitlab", gitlabRouter);
+app.use("/api/v1/integrations/email", emailRouter);
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);

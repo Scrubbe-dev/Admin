@@ -1,10 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { GithubService } from "./github.service";
 import { validateRequest } from "../../auth/utils/validators";
-import {
-  GithubRepoRequest,
-  githubRepoSchema,
-} from "./github.schema";
+import { GithubRepoRequest, githubRepoSchema } from "./github.schema";
 
 export class GithubController {
   constructor(private githubService: GithubService) {}
@@ -12,9 +9,9 @@ export class GithubController {
   async connectGithub(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
+
       const response = await this.githubService.getAuthUrl(userId);
 
-      res.redirect(response);
       res.json(response);
     } catch (error) {
       next(error);

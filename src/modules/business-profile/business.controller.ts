@@ -43,8 +43,9 @@ export class BusinessController {
   async fetchAllValidMembers(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
+      const businessId = req.user?.businessId!;
 
-      const response = await this.businessService.fetchAllValidMembers(userId);
+      const response = await this.businessService.fetchAllValidMembers(userId, businessId);
 
       res.json(response);
     } catch (error) {

@@ -84,15 +84,13 @@ export class BusinessService {
     }
   }
 
-  async fetchAllValidMembers(userId: string) {
+  async fetchAllValidMembers(userId: string, businessId: string) {
     try {
       const invites = await prisma.invites.findMany({
         where: {
+          sentById: businessId,
           accepted: true,
           stillAMember: true,
-          business: {
-            userId,
-          },
         },
       });
 

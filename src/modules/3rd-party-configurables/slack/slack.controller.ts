@@ -16,7 +16,6 @@ export class SlackController {
     try {
       const redirectUri = encodeURIComponent(process.env.SLACK_REDIRECT_URI!);
       const userId = req.user?.sub!;
-      // const { userId } = req.params; // replace with middleware userId after testing
       const clientId = slackConfig.clientId;
 
       const response = await this.slackService.connectSlack(
@@ -25,13 +24,12 @@ export class SlackController {
         userId
       );
 
-      // res.redirect(response);
       res.json(response);
     } catch (error) {
       next(error);
     }
   }
-  
+
   async exchangeCodeForToken(req: Request, res: Response, next: NextFunction) {
     try {
       const { code, state: userId } = req.query;

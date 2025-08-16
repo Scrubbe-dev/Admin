@@ -16,9 +16,9 @@ export class MeetUtil {
         return;
       }
 
-      const test = await this.generateMeetingLink(incidentTicket);
+      const response = await this.generateMeetingLink(incidentTicket);
 
-      if (!test) {
+      if (!response) {
         console.warn("Failed to generate meeting link");
 
         return {
@@ -28,31 +28,33 @@ export class MeetUtil {
       }
 
       const from =
-        test.integration.defaultTarget || test.integration.user.email;
+        response.integration.defaultTarget || response.integration.user.email;
 
       const members = await prisma.invites.findMany({
         where: {
+          sentById: incidentTicket.businessId,
           accepted: true,
           stillAMember: true,
-          business: {
-            id: incidentTicket.businessId,
-          },
         },
       });
 
+      console.log("============ FETCHED MEMBERS ==============", members);
+
       // including the user who triggered the incident
       const toMembers = [from, ...members.map((member) => member.email)];
+
+      console.log("============ SEND TO MEMBERS ==============", members);
 
       for (const to of toMembers) {
         await this.sendMeetingDetails(
           from,
           to,
           incidentTicket,
-          test.meetingLink
+          response.meetingLink
         );
       }
 
-      return { status: "success", meetingLink: test.meetingLink };
+      return { status: "success", meetingLink: response.meetingLink };
     } catch (error) {
       console.error("Failed to trigger War Room", error);
     }

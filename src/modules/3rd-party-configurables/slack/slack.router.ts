@@ -1,7 +1,6 @@
 import express from "express";
 import { TokenService } from "../../auth/services/token.service";
 import { AuthMiddleware } from "../../auth/middleware/auth.middleware";
-import { verifySlackSignature } from "./slack.middleware";
 import { SlackService } from "./slack.service";
 import { SlackController } from "./slack.controller";
 

@@ -1,4 +1,12 @@
-import { IncidentStatus, Priority } from "@prisma/client";
+import {
+  IncidentStatus,
+  Priority,
+  CauseCategory,
+  FollowUpStatus,
+  COMMUNICATION_CHANNEL,
+  BusinessNotificationChannels,
+  BusinessPrefferedIntegration,
+} from "@prisma/client";
 
 export enum IncidentTemplate {
   NONE = "NONE",
@@ -50,3 +58,48 @@ export type Comment = {
   lastname: string | null;
   isBusinessOwner: boolean;
 };
+
+export interface ResolveIncidentRequest {
+  rootCauseAnalysis: {
+    causeCategory: CauseCategory;
+    rootCause: string;
+    fiveWhys: {
+      why1: string;
+      why2: string;
+      why3: string;
+      why4: string;
+      why5: string;
+    };
+  };
+  resolutionDetails: {
+    temporaryFix: string;
+    permanentFix: string;
+  };
+  knowledgeDraft: {
+    internalKb: {
+      title: string;
+      summary: string;
+      identificationSteps: string;
+      resolutionSteps: string;
+      preventiveMeasures: string;
+      tags: string[];
+    };
+  };
+  followUpActions: {
+    task: string;
+    owner: string;
+    dueDate: Date;
+    status: FollowUpStatus;
+    ticketingSystems: BusinessPrefferedIntegration[];
+  };
+  stakeHolder: {
+    communicationChannel: COMMUNICATION_CHANNEL;
+    targetStakeholders: string[];
+    messageContent: string;
+  };
+}
+
+export interface CustomerFacingKbRequest {
+  title: string;
+  summary: string;
+}
