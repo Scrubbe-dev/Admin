@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { IncidentStatus, PrismaClient } from '@prisma/client';
 import { TicketDetailResponse } from './types';
 import { TicketHistoryUtils } from './utils/mainutils';
 
@@ -13,97 +13,99 @@ export class TicketService {
       history
     };
   }
-  static async getTicketById(ticketId: string): Promise<TicketDetailResponse | null | any> {
+static async getTicketById(ticketId: string): Promise<TicketDetailResponse | null | any> {
     return prisma.incidentTicket.findUnique({
-      where: { id: ticketId },
-      include: {
-        assignedBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        },
-        assignedTo: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        },
-        business: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        comments: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
+        where: { id: ticketId },
+        include: {
+            assignedBy: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                }
+            },
+            assignedTo: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true
+                }
+            },
+            business: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            },
+            comments: {
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            },
+            Incident: {
+                include: {
+                    customer: {
+                        select: {
+                            id: true,
+                            name: true,
+                            contactEmail: true
+                        }
+                    }
+                }
             }
-          },
-          orderBy: {
-            createdAt: 'desc'
-          }
-        },
-        Incident: {
-          include: {
-            customer: {
-              select: {
-                id: true,
-                name: true,
-                contactEmail: true
-              }
-            }
-          }
         }
-      }
     }).then(ticket => {
-      if (!ticket) return null;
-      
-      return {
-        id: ticket.id,
-        title: ticket.Incident[0]?.title || 'Untitled Incident',
-        description: ticket.Incident[0]?.description || '',
-        status: ticket.status,
-        priority: ticket.priority,
-        createdAt: ticket.createdAt,
-        updatedAt: ticket.updatedAt,
-        assignee: ticket.assignedTo ? {
-          id: ticket.assignedTo.id,
-          name: `${ticket.assignedTo.firstName} ${ticket.assignedTo.lastName}`,
-          email: ticket.assignedTo.email
-        } : undefined,
-        customer: ticket.Incident[0]?.customer ? {
-          id: ticket.Incident[0].customer.id,
-          name: ticket.Incident[0].customer.name,
-          contactEmail: ticket.Incident[0].customer.contactEmail
-        } : undefined,
-        business: ticket.business ? {
-          id: ticket.business.id,
-          name: ticket.business.name
-        } : undefined,
-        conversationId: ticket.comments.length > 0 ? ticket.comments[0].id : undefined,
-        comments: ticket.comments.map(comment => ({
-          id: comment.id,
-          content: comment.content,
-          isInternal: comment.isInternal,
-          createdAt: comment.createdAt,
-          author: {
-            id: comment.author.id,
-            name: `${comment.author.firstName} ${comment.author.lastName}`,
-            email: comment.author.email
-          }
-        }))
-      };
+        if (!ticket) return null;
+        
+        // Map status to required format
+        const mapStatus = (status: IncidentStatus): string => {
+            switch (status) {
+                case 'OPEN': return 'OPEN';
+                case 'IN_PROGRESS': return 'in-progress';
+                case 'RESOLVED': return 'CLOSED'; // Treat resolved as closed
+                case 'CLOSED': return 'CLOSED';
+                case 'ON_HOLD': return 'on-hold';
+                default: return 'OPEN';
+            }
+        };
+
+        // Determine SLA status
+        const determineSLAStatus = (ticket: any): string => {
+            if (ticket.status === 'CLOSED') {
+                return ticket.sLABreachAuditLog && ticket.sLABreachAuditLog.length > 0 ? 'BREACHED' : 'MET';
+            } else {
+                return ticket.sLABreachAuditLog && ticket.sLABreachAuditLog.length > 0 ? 'BREACHED' : 'PENDING';
+            }
+        };
+
+        return {
+            id: ticket.id,
+            ticketId: ticket.ticketId,
+            reason: ticket.reason,
+            userName: ticket.userName,
+            priority: ticket.priority as "HIGH" | "MEDIUM" | "LOW", // Ensure correct priority type
+            status: mapStatus(ticket.status),
+            assignedToEmail: ticket.assignedToEmail,
+            score: ticket.riskScore, // Use riskScore for score
+            createdAt: ticket.createdAt.toISOString(),
+            recommendedActions: ticket.recommendedActions.map(action => action.toString()),
+            riskScore: ticket.riskScore,
+            businessId: ticket.businessId,
+            slaStatus: determineSLAStatus(ticket),
+            template: ticket.template
+        };
     });
-  }
+}
 }
