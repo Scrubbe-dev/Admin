@@ -3,6 +3,27 @@ import { Request } from 'express';
 import { JwtPayload } from '../modules/auth/types/auth.types';
 import { Role } from '@prisma/client';
 
+import { z } from 'zod';
+
+export const PdfRequestSchema = z.object({
+    id: z.string().min(1),
+    description: z.string().min(1)
+});
+
+export type PdfRequest = z.infer<typeof PdfRequestSchema>;
+
+// Add Swagger components
+declare global {
+    namespace OpenAPIV3 {
+        export interface Components {
+            schemas: {
+                PdfRequest: typeof PdfRequestSchema;
+            };
+        }
+    }
+}
+
+
 interface User {
   id: string;
   sub: string;
