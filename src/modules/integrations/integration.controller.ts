@@ -10,8 +10,9 @@ export class IntegrationController {
    * @returns Promise<void>
    */
   static async getAllIntegrations(req: Request, res: Response): Promise<void> {
+    const {userId} =  req.params;
     try {
-      const integrations = await IntegrationService.getSingleIntegrations(req) as Integration[];
+      const integrations = await IntegrationService.getSingleIntegrations(userId) as Integration[];
 
       const response: IntegrationResponse = {
         success: true,

@@ -9,12 +9,12 @@ export class IntegrationService {
    * Retrieves all available integrations
    * @returns Promise<Integration[]> - Array of available integrations
    */
-  static async getSingleIntegrations(req: Request): Promise<Integration[] | any[] | unknown> {
-    const id = getUserId(req)
+  static async getSingleIntegrations(userId:string): Promise<Integration[] | any[] | unknown> {
+
     try {
       // Map the enum values to the response format
       const integrations = await prisma?.userThirdpartyIntegration.findMany({
-        where:{userId:id}
+        where:{userId}
       })
  
       
