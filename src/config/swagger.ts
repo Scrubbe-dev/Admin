@@ -39,6 +39,9 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/3rd-party-configurables/github/github.router.ts",
     "./src/modules/3rd-party-configurables/gitlab/gitlab.router.ts",
     "./src/modules/3rd-party-configurables/email-integration/email-integration.router.ts",
+    "./src/modules/3rd-party-configurables/text2pdf/text2pdf.route.ts",
+    "./src/modules/tickets/routes.ts",
+    "./src/modules/integrations/integration.route.ts",
   ],
 };
 
