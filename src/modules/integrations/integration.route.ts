@@ -1,7 +1,37 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { IntegrationController } from './integration.controller';
+import { AuthMiddleware } from "../auth/middleware/auth.middleware";
+import { TokenService } from "../auth/services/token.service";
 
 const integrationRouter = Router();
+
+const tokenService = new TokenService(
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+const authMiddleware = new AuthMiddleware(tokenService);
+/**
+
+/**
+ * @swagger
+ * tags:
+ *   name: Integrations
+ *   description: Integration management operations
+ */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *       description: |
+ *         JWT Authorization header using the Bearer scheme.
+ *         Example: "Authorization: Bearer {token}"
+ */
 
 /**
  * @swagger
@@ -20,6 +50,8 @@ const integrationRouter = Router();
  *       configured for notifications and workflows. The integrations include communication
  *       platforms, ticketing systems, and development tools.
  *     tags: [Integrations]
+ *     security:
+ *       - bearerAuth: []  # Requires authentication
  *     responses:
  *       200:
  *         description: Integrations retrieved successfully
@@ -64,17 +96,20 @@ const integrationRouter = Router();
  *                     - name: "Gitlab"
  *                     - name: "Slack"
  *                   message: "Integrations retrieved successfully"
+ *       401:
+ *         description: Unauthorized - Invalid or missing authentication token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedError'
  *       500:
  *         description: Failed to fetch integrations
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               success: false
- *               message: "Failed to fetch integrations"
  */
-integrationRouter.get('/integrations', (req: Request, res: Response, next: NextFunction) => {
+integrationRouter.get('/integrations',authMiddleware.authenticate,(req: Request, res: Response, next: NextFunction) => {
   IntegrationController.getAllIntegrations(req, res).catch(next);
 });
 

@@ -49,7 +49,6 @@ model User {
   Customer                  Customer[]                     @relation("CustomerToUser")
   userThirdpartyIntegration UserThirdpartyIntegration[]
   integrated                BusinessNotificationChannels[]
-
   @@index([apiKey])
 }
 

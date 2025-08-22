@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { IntegrationService } from './integration.service';
-import { IntegrationResponse, ErrorResponse } from './integration.type';
+import { IntegrationResponse, ErrorResponse, Integration } from './integration.type';
 
 export class IntegrationController {
   /**
@@ -11,8 +11,8 @@ export class IntegrationController {
    */
   static async getAllIntegrations(req: Request, res: Response): Promise<void> {
     try {
-      const integrations = await IntegrationService.getAllIntegrations();
-      
+      const integrations = await IntegrationService.getSingleIntegrations(req) as Integration[];
+
       const response: IntegrationResponse = {
         success: true,
         data: integrations,
