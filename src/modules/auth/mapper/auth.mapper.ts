@@ -7,8 +7,9 @@ export class AuthMapper {
   static toUserResponse(
     user: User,
     businessId: string | undefined,
-    token: Tokens
-  ): MappedUser {
+    token: Tokens,
+    purpose?: any
+  ): MappedUser | any {
     return {
       user: {
         id: user.id,
@@ -17,6 +18,7 @@ export class AuthMapper {
         firstName: user.firstName,
         lastName: user.lastName,
         accountType: user.accountType,
+        purpose,
       },
       tokens: {
         refreshToken: token.refreshToken,

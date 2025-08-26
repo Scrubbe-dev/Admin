@@ -384,16 +384,11 @@ export class AuthService {
       businessId ?? user.business?.id
     );
 
-    const businessPurpose = await this.prisma.business.findUnique({
-      where: { id: businessId ?? user.business?.id },
-      select: { purpose: true },
-    });
-
     return AuthMapper.toUserResponse(
       user,
       businessId ?? user.business?.id,
       tokens,
-      purpose: businessPurpose?.purpose,
+      user?.business?.purpose
     );
   }
 
@@ -427,16 +422,11 @@ export class AuthService {
       businessId ?? user.business?.id
     );
 
-    const businessPurpose = await this.prisma.business.findUnique({
-      where: { id: businessId ?? user.business?.id },
-      select: { purpose: true },
-    });
-
     return AuthMapper.toUserResponse(
       user,
       businessId ?? user.business?.id,
       tokens,
-      purpose: businessPurpose?.purpose,
+      user?.business?.purpose
     );
   }
 
