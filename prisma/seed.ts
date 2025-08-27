@@ -3,7 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { generateApiKey } from 'generate-api-key';
 import { faker } from '@faker-js/faker';
-
+import {config} from 'dotenv'
+config();
 const prisma = new PrismaClient();
 
 async function main() {
@@ -129,7 +130,7 @@ const waitingUsers = await prisma.$transaction(
 console.log(`Created ${waitingUsers.length} waiting users`);
 
   // Create sample incidents with related data
-  await prisma.$transaction(
+  const incidents = await prisma.$transaction(
     customers.map((customer) =>
       prisma.incident.create({
         data: {
@@ -139,13 +140,6 @@ console.log(`Created ${waitingUsers.length} waiting users`);
           priority: 'HIGH',
           customer: { connect: { id: customer.id } },
           assignee: { connect: { id: users[0].id } },
-          comments: {
-            create: {
-              content: 'Initial investigation started',
-              isInternal: true,
-              author: { connect: { id: users[0].id } },
-            },
-          },
           alerts: {
             create: {
               rule: { connect: { id: detectionRules[0].id } },
@@ -153,6 +147,20 @@ console.log(`Created ${waitingUsers.length} waiting users`);
               severity: 8,
             },
           },
+        },
+      })
+    )
+  );
+
+  // Create related comments for each incident
+  await Promise.all(
+    incidents.map((incident) =>
+      prisma.incidentComment.create({
+        data: {
+          content: 'Initial investigation started',
+          isInternal: true,
+          author: { connect: { id: users[0].id } },
+          // incidentId: incident.id,
         },
       })
     )
