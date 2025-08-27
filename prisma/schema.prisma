@@ -585,6 +585,9 @@ enum Role {
   ADMIN
   CUSTOMER
   INTEGRATION
+  MANAGER
+  ANALYST
+  VIEWER
 }
 
 enum AlertStatus {

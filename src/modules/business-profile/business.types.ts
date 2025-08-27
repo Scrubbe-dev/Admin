@@ -40,6 +40,7 @@ export enum AccessPermissions {
   MODIFY_DASHBOARD = "MODIFY_DASHBOARD",
   EXECUTE_ACTIONS = "EXECUTE_ACTIONS",
   MANAGE_USERS = "MANAGE_USERS",
+
 }
 
 export enum DashboardType {
