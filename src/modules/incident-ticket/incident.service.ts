@@ -75,7 +75,7 @@ export class IncidentService {
         data: {
           ticketId,
           reason: request.reason,
-          assignedToEmail: request.assignedTo,
+          assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
           userName: request.username,
           assignedById: userId,
           priority: request.priority,

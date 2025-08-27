@@ -315,7 +315,7 @@ model IncidentTicket {
   template        IncidentTemplate @default(NONE)
   userName        String
   reason          String
-  assignedToEmail String           @map("assignedTo")
+  assignedToEmail String           @map("assignedTo") 
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   ticketId        String           @unique
