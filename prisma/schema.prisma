@@ -9,46 +9,49 @@ datasource db {
 }
 
 model User {
-  id                        String                         @id @default(uuid())
-  email                     String                         @unique
-  passwordHash              String?
-  firstName                 String?
-  lastName                  String?
-  profileImage              String?
-  isVerified                Boolean                        @default(false)
-  isActive                  Boolean                        @default(true)
-  lastLogin                 DateTime?
-  apiKeyDuration            DateTime                       @default(now())
-  createdAt                 DateTime                       @default(now())
-  updatedAt                 DateTime                       @updatedAt
-  apiKey                    String?                        @default(cuid())
-  role                      Role                           @default(USER)
-  passwordChangedAt         DateTime?
-  username                  String?
-  accountType               AccountType?
-  oauthprovider             OAuthProvider?
-  registerdWithOauth        Boolean                        @default(false)
-  oauthProvider_uuid        String?
-  scopes                    String[]                       @default(["api-key:create"])
-  scrubbe_apikey            ApiKey[]
-  business                  Business?
-  ConversationParticipant   ConversationParticipant[]
-  DetectionRule             DetectionRule[]
-  developer                 Developer?
-  Graph                     Graph[]
-  Incident                  Incident[]
-  IncidentComment           IncidentComment[]
-  IncidentTicket            IncidentTicket[]
-  Invites                   Invites[]
-  Message                   Message[]
-  PlaybookExecution         PlaybookExecution[]
-  ProjectConfiguration      ProjectConfiguration[]
-  refreshToken              RefreshToken[]
-  resetTokens               ResetToken[]
-  VerificationOTP           VerificationOTP?
-  Customer                  Customer[]                     @relation("CustomerToUser")
-  userThirdpartyIntegration UserThirdpartyIntegration[]
-  integrated                BusinessNotificationChannels[]
+  id                         String                         @id @default(uuid())
+  email                      String                         @unique
+  passwordHash               String?
+  firstName                  String?
+  lastName                   String?
+  profileImage               String?
+  isVerified                 Boolean                        @default(false)
+  isActive                   Boolean                        @default(true)
+  lastLogin                  DateTime?
+  apiKeyDuration             DateTime                       @default(now())
+  createdAt                  DateTime                       @default(now())
+  updatedAt                  DateTime                       @updatedAt
+  apiKey                     String?                        @default(cuid())
+  role                       Role                           @default(USER)
+  passwordChangedAt          DateTime?
+  username                   String?
+  accountType                AccountType?
+  oauthprovider              OAuthProvider?
+  registerdWithOauth         Boolean                        @default(false)
+  oauthProvider_uuid         String?
+  scopes                     String[]                       @default(["api-key:create"])
+  scrubbe_apikey             ApiKey[]
+  business                   Business?
+  ConversationParticipant    ConversationParticipant[]
+  DetectionRule              DetectionRule[]
+  developer                  Developer?
+  Graph                      Graph[]
+  Incident                   Incident[]
+  IncidentComment            IncidentComment[]
+  IncidentTicket             IncidentTicket[]
+  Invites                    Invites[]
+  Message                    Message[]
+  PlaybookExecution          PlaybookExecution[]
+  ProjectConfiguration       ProjectConfiguration[]
+  refreshToken               RefreshToken[]
+  resetTokens                ResetToken[]
+  VerificationOTP            VerificationOTP?
+  Customer                   Customer[]                     @relation("CustomerToUser")
+  userThirdpartyIntegration  UserThirdpartyIntegration[]
+  integrated                 BusinessNotificationChannels[]
+  escalatedIncidentsReceived EscalatedIncident[]            @relation("UserEscalatedTo")
+  escalatedIncidentsMade     EscalatedIncident[]            @relation("UserEscalatedBy")
+
   @@index([apiKey])
 }
 
@@ -310,20 +313,14 @@ model Incident {
   @@index([priority, createdAt])
 }
 
-
-
 // ===================== START INCIDENT TICKET ==================
-
-
-
-
 
 model IncidentTicket {
   id              String           @id @default(uuid())
   template        IncidentTemplate @default(NONE)
   userName        String
   reason          String
-  assignedToEmail String?          @map("assignedTo") 
+  assignedToEmail String?          @map("assignedTo")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   ticketId        String           @unique
@@ -350,41 +347,59 @@ model IncidentTicket {
 
   Incident                   Incident[]
   assignedBy                 User                         @relation(fields: [assignedById], references: [id])
-  assignedTo                 Invites?                      @relation(fields: [assignedToEmail], references: [email])
+  assignedTo                 Invites?                     @relation(fields: [assignedToEmail], references: [email])
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
   ResolveIncident            ResolveIncident?
 
   // New required fields
-  source         Source   @default(EMAIL)
-  category       String
-  subCategory    String
-  description    String
-  impact         Impact   @default(LOW)
-  MTTR           String  // Time taken to raise incident
-  
+  source      Source @default(EMAIL)
+  category    String
+  subCategory String
+  description String
+  impact      Impact @default(LOW)
+  MTTR        String // Time taken to raise incident
+
   // New optional fields
   suggestionFix  String?
   escalate       String?
   affectedSystem String?
+  escalations    EscalatedIncident[]
+  intel          Intel[]
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ===================== END INCIDENT TICKET ==================
 
+model EscalatedIncident {
+  id                String           @id @default(uuid())
+  incidentTicketId  String
+  escalatedToUserId String
+  escalatedById     String
+  escalationReason  String?
+  escalatedAt       DateTime         @default(now())
+  status            EscalationStatus @default(PENDING)
 
+  // Relations
+  incidentTicket  IncidentTicket @relation(fields: [incidentTicketId], references: [id], onDelete: Cascade)
+  escalatedToUser User           @relation("UserEscalatedTo", fields: [escalatedToUserId], references: [id])
+  escalatedByUser User           @relation("UserEscalatedBy", fields: [escalatedById], references: [id])
 
+  @@index([incidentTicketId])
+  @@index([escalatedToUserId])
+  @@index([escalatedById])
+}
+
+model Intel {
+  id               String   @id @default(uuid())
+  incidentTicketId String
+  intelType        String
+  details          String
+  createdAt        DateTime @default(now())
+
+  incidentTicket IncidentTicket @relation(fields: [incidentTicketId], references: [id], onDelete: Cascade)
+
+  @@index([incidentTicketId])
+}
 
 model SLABreachAuditLog {
   id                    String         @id @default(uuid())
@@ -602,6 +617,12 @@ model DetectionRule {
   @@index([createdById])
   @@index([isActive])
   @@index([lastExecuted])
+}
+
+enum EscalationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 enum GraphType {
@@ -824,17 +845,6 @@ enum COMMUNICATION_CHANNEL {
   CUSTOMER_PORTAL
 }
 
-
-
-
-
-
-
-
-
-
-
-
 enum Status {
   OPEN
   ACKNOWLEDGED
@@ -852,10 +862,9 @@ enum Source {
   OTHERS
 }
 
- enum Impact {
+enum Impact {
   LOW
   MEDIUM
   HIGH
   CRITICAL
 }
-

@@ -42,6 +42,8 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/3rd-party-configurables/text2pdf/text2pdf.route.ts",
     "./src/modules/tickets/routes.ts",
     "./src/modules/integrations/integration.route.ts",
+    "./src/modules/intel/intel.route.ts",
+    "./src/modules/escalate/escalate.route.ts",
   ],
 };
 

@@ -53,6 +53,8 @@ import emailRouter from "./modules/3rd-party-configurables/email-integration/ema
 import {pdfRoutes} from './modules/3rd-party-configurables/text2pdf/text2pdf.route'
 import ticketRoutes from './modules/tickets/routes';
 import integrationRouter from './modules/integrations/integration.route';
+import intelRouter from "./modules/intel/intel.route";
+import escalateRouter from "./modules/escalate/escalate.route";
 
 dotenvConfig();
 
@@ -195,6 +197,9 @@ app.use("/api/v1", fraudDictation);
 app.use("/api/v1", passwordResetRoutes.getRouter());
 app.use("/api/v1", pdfRoutes); // New  pdf file generation route
 app.use("/api/v1", ticketRoutes); // New  ticket management route
+
+app.use("/api/v1", intelRouter); // New  intel file generation route
+app.use("/api/v1", escalateRouter); // New  escalate management route
 
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
