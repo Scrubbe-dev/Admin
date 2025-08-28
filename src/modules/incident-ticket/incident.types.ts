@@ -14,14 +14,119 @@ export enum IncidentTemplate {
   MALWARE = "MALWARE",
 }
 
+// export type IncidentRequest = {
+//   template: IncidentTemplate;
+//   reason: string;
+//   priority: Priority;
+//   username: string;
+//   assignedTo: string;
+//   createdFrom?: string;
+// };
+
+
+
+export enum Status {
+  OPEN = "OPEN",
+  ACKNOWLEDGED = "ACKNOWLEDGED",
+  INVESTIGATION = "INVESTIGATION",
+  MITIGATED = "MITIGATED",
+  RESOLVED = "RESOLVED",
+  CLOSED = "CLOSED"
+}
+
+export enum Source {
+  EMAIL = "EMAIL",
+  SLACK = "SLACK",
+  PORTAL = "PORTAL",
+  PHONE = "PHONE",
+  OTHERS = "OTHERS"
+}
+
+export enum Impact {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL"
+}
+
+
+
 export type IncidentRequest = {
+  // Original fields
   template: IncidentTemplate;
   reason: string;
   priority: Priority;
   username: string;
-  assignedTo: string;
+  assignedTo?: string;  // Now optional as per new requirements
   createdFrom?: string;
+  
+  // New required fields
+  source: Source;
+  category: string;
+  subCategory: string;
+  description: string;
+  impact: Impact;
+  status: Status;
+  MTTR: string;  // Time taken to raise incident
+  
+  // New optional fields
+  suggestionFix?: string;
+  escalate?: string;
+  affectedSystem?: string;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export type UpdateTicket = {
   template: IncidentTemplate;

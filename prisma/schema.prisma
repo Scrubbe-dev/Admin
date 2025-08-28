@@ -310,6 +310,14 @@ model Incident {
   @@index([priority, createdAt])
 }
 
+
+
+// ===================== START INCIDENT TICKET ==================
+
+
+
+
+
 model IncidentTicket {
   id              String           @id @default(uuid())
   template        IncidentTemplate @default(NONE)
@@ -346,7 +354,37 @@ model IncidentTicket {
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
   ResolveIncident            ResolveIncident?
+
+  // New required fields
+  source         Source   @default(EMAIL)
+  category       String
+  subCategory    String
+  description    String
+  impact         Impact   @default(LOW)
+  MTTR           String  // Time taken to raise incident
+  
+  // New optional fields
+  suggestionFix  String?
+  escalate       String?
+  affectedSystem String?
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===================== END INCIDENT TICKET ==================
+
+
+
 
 model SLABreachAuditLog {
   id                    String         @id @default(uuid())
@@ -785,3 +823,39 @@ enum COMMUNICATION_CHANNEL {
   PUBLIC_ANNOUNCEMENT
   CUSTOMER_PORTAL
 }
+
+
+
+
+
+
+
+
+
+
+
+
+enum Status {
+  OPEN
+  ACKNOWLEDGED
+  INVESTIGATION
+  MITIGATED
+  RESOLVED
+  CLOSED
+}
+
+enum Source {
+  EMAIL
+  SLACK
+  PORTAL
+  PHONE
+  OTHERS
+}
+
+ enum Impact {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+

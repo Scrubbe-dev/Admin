@@ -24,11 +24,196 @@ const incidentController = new IncidentController();
 
 /**
  * @swagger
- /api/v1/incident-ticket:
+ * components:
+ *   schemas:
+ *     IncidentTicket:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           example: "b1a3e383-deb7-49f0-9c42-b1f6488d2e6f"
+ *         template:
+ *           type: string
+ *           enum: [MALWARE, NONE, PHISHING]
+ *           example: "NONE"
+ *         userName:
+ *           type: string
+ *           example: "John Doe"
+ *         reason:
+ *           type: string
+ *           example: "Investigating network anomaly"
+ *         assignedToEmail:
+ *           type: string
+ *           format: email
+ *           example: "example@gmail.com"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-02T16:28:23.146Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-02T16:28:23.146Z"
+ *         ticketId:
+ *           type: string
+ *           example: "INC6932612"
+ *         status:
+ *           type: string
+ *           enum: [OPEN, ACKNOWLEDGED, INVESTIGATION, MITIGATED, RESOLVED, CLOSED]
+ *           example: "OPEN"
+ *         assignedById:
+ *           type: string
+ *           format: uuid
+ *           example: "83516959-470c-4c01-bdd5-17eb73f675ec"
+ *         createdFrom:
+ *           type: string
+ *           enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *           example: "EMAIL"
+ *         slaTargetAck:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-02T17:28:23.146Z"
+ *         slaTargetResolve:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-03T16:28:23.146Z"
+ *         firstAcknowledgedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-02T16:30:00.000Z"
+ *         resolvedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-02T18:28:23.146Z"
+ *         closedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-02T19:28:23.146Z"
+ *         riskScore:
+ *           type: integer
+ *           example: 20
+ *         businessId:
+ *           type: string
+ *           format: uuid
+ *           example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+ *         priority:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *           example: "HIGH"
+ *         source:
+ *           type: string
+ *           enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *           example: "EMAIL"
+ *         category:
+ *           type: string
+ *           example: "Security"
+ *         subCategory:
+ *           type: string
+ *           example: "Network"
+ *         description:
+ *           type: string
+ *           example: "Detailed description of the incident"
+ *         impact:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *           example: "MEDIUM"
+ *         MTTR:
+ *           type: string
+ *           example: "2 hours"
+ *         suggestionFix:
+ *           type: string
+ *           example: "Suggested fix for the incident"
+ *         escalate:
+ *           type: string
+ *           example: "Escalation details"
+ *         affectedSystem:
+ *           type: string
+ *           example: "System name"
+ *         recommendedActions:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: [LOCK_ACCOUNT, NOTIFY_ANALYST, QUARANTINE, TERMINATE_SESSION]
+ *           example: ["LOCK_ACCOUNT", "TERMINATE_SESSION"]
+ *
+ *     IncidentRequest:
+ *       type: object
+ *       required:
+ *         - template
+ *         - reason
+ *         - priority
+ *         - userName
+ *         - source
+ *         - category
+ *         - subCategory
+ *         - description
+ *         - impact
+ *         - status
+ *         - MTTR
+ *       properties:
+ *         template:
+ *           type: string
+ *           enum: [MALWARE, NONE, PHISHING]
+ *           example: "NONE"
+ *         reason:
+ *           type: string
+ *           example: "Suspicious login detected on multiple accounts"
+ *         priority:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *           example: "HIGH"
+ *         userName:
+ *           type: string
+ *           example: "John Doe"
+ *         assignedTo:
+ *           type: string
+ *           format: email
+ *           example: "example@gmail.com"
+ *         createdFrom:
+ *           type: string
+ *           enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *           example: "EMAIL"
+ *         source:
+ *           type: string
+ *           enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *           example: "EMAIL"
+ *         category:
+ *           type: string
+ *           example: "Security"
+ *         subCategory:
+ *           type: string
+ *           example: "Network"
+ *         description:
+ *           type: string
+ *           example: "Detailed description of the incident"
+ *         impact:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *           example: "MEDIUM"
+ *         status:
+ *           type: string
+ *           enum: [OPEN, ACKNOWLEDGED, INVESTIGATION, MITIGATED, RESOLVED, CLOSED]
+ *           example: "OPEN"
+ *         MTTR:
+ *           type: string
+ *           example: "2 hours"
+ *         suggestionFix:
+ *           type: string
+ *           example: "Suggested fix for the incident"
+ *         escalate:
+ *           type: string
+ *           example: "Escalation details"
+ *         affectedSystem:
+ *           type: string
+ *           example: "System name"
+ *
+ * /api/v1/incident-ticket:
  *   get:
  *     summary: Retrieve incidents assigned to the authenticated user
  *     description: >
- *       This endpoint returns all incident tickets associated with the authenticated user. You must be a member of the organization be allowed on this route
+ *       This endpoint returns all incident tickets associated with the authenticated user.
+ *       You must be a member of the organization to access this route.
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -40,46 +225,7 @@ const incidentController = new IncidentController();
  *             schema:
  *               type: array
  *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     format: uuid
- *                     example: b1a3e383-deb7-49f0-9c42-b1f6488d2e6f
- *                   template:
- *                     type: string
- *                     enum: [MALWARE, NONE, PHISHING]
- *                     example: NONE
- *                   userName:
- *                     type: string
- *                     example: John Doe
- *                   reason:
- *                     type: string
- *                     example: "Investigating network anomaly"
- *                   priority:
- *                     type: string
- *                     enum: [CRITICAL, HIGH, MEDIUM, LOW, NONE]
- *                     example: HIGH
- *                   assignedTo:
- *                     type: string
- *                     format: email
- *                     example: example@gmail.com
- *                   ticketId:
- *                     type: string
- *                     format: email
- *                     example: "INC6932612"
- *                   assignedById:
- *                     type: string
- *                     format: uuid
- *                     example: 83516959-470c-4c01-bdd5-17eb73f675ec
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                     example: 2025-08-02T16:28:23.146Z
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
- *                     example: 2025-08-02T16:28:23.146Z
+ *                 $ref: '#/components/schemas/IncidentTicket'
  *       401:
  *         description: Unauthorized (no valid token provided)
  *       500:
@@ -100,7 +246,8 @@ incidentRouter.get(
  *   post:
  *     summary: Create a new incident ticket
  *     description: >
- *       This endpoint allows creating a new incident ticket with required fields like template, reason, priority, assigned user, and username. You must be a member of the organization be allowed on this route
+ *       This endpoint allows creating a new incident ticket with required fields.
+ *       You must be a member of the organization to access this route.
  *     tags: [Incident Tickets]
  *     security:
  *       - bearerAuth: []
@@ -114,8 +261,14 @@ incidentRouter.get(
  *               - template
  *               - reason
  *               - priority
- *               - assignedTo
- *               - username
+ *               - userName
+ *               - source
+ *               - category
+ *               - subCategory
+ *               - description
+ *               - impact
+ *               - status
+ *               - MTTR
  *             properties:
  *               template:
  *                 type: string
@@ -131,15 +284,63 @@ incidentRouter.get(
  *                 enum: [CRITICAL, HIGH, MEDIUM, LOW, NONE]
  *                 description: Priority level of the incident
  *                 example: HIGH
- *               assignedTo:
- *                 type: string
- *                 format: email
- *                 description: Email of the person the incident is assigned to
- *                 example: example@gmail.com
- *               username:
+ *               userName:
  *                 type: string
  *                 description: Name of the user creating the incident
  *                 example: John Doe
+ *               assignedTo:
+ *                 type: string
+ *                 format: email
+ *                 description: Email of the person the incident is assigned to (optional)
+ *                 example: example@gmail.com
+ *               createdFrom:
+ *                 type: string
+ *                 enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *                 description: Source system where the incident was created from (optional)
+ *                 example: EMAIL
+ *               source:
+ *                 type: string
+ *                 enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *                 description: Source of the incident report
+ *                 example: EMAIL
+ *               category:
+ *                 type: string
+ *                 description: Category of the incident
+ *                 example: Security
+ *               subCategory:
+ *                 type: string
+ *                 description: Sub-category of the incident
+ *                 example: Network
+ *               description:
+ *                 type: string
+ *                 description: Detailed description of the incident
+ *                 example: "Multiple suspicious login attempts detected from unusual IP addresses"
+ *               impact:
+ *                 type: string
+ *                 enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *                 description: Impact level of the incident
+ *                 example: MEDIUM
+ *               status:
+ *                 type: string
+ *                 enum: [OPEN, ACKNOWLEDGED, INVESTIGATION, MITIGATED, RESOLVED, CLOSED]
+ *                 description: Current status of the incident
+ *                 example: OPEN
+ *               MTTR:
+ *                 type: string
+ *                 description: Mean time to resolve - Time taken to raise the incident
+ *                 example: "2 hours"
+ *               suggestionFix:
+ *                 type: string
+ *                 description: Suggested fix for the incident (optional)
+ *                 example: "Implement multi-factor authentication"
+ *               escalate:
+ *                 type: string
+ *                 description: Escalation details (optional)
+ *                 example: "Escalate to security team if pattern continues"
+ *               affectedSystem:
+ *                 type: string
+ *                 description: System affected by the incident (optional)
+ *                 example: "User authentication system"
  *     responses:
  *       201:
  *         description: Incident created successfully
@@ -159,29 +360,12 @@ incidentRouter.get(
  *                   type: string
  *                   enum: [MALWARE, NONE, PHISHING]
  *                   example: NONE
- *                 slaStatus:
- *                   type: string
- *                   format: date-time
- *                   example: 2025-08-05T15:59:25.655Z
- *                 recommendedActions:
- *                   type: array
- *                   items:
- *                     type: string
- *                     enum: [LOCK_ACCOUNT, NOTIFY_ANALYST, QUARANTINE, TERMINATE_SESSION]
- *                   example: ["LOCK_ACCOUNT", "TERMINATE_SESSION"]
- *                 riskScore:
- *                   type: number
- *                   example: 20
  *                 userName:
  *                   type: string
- *                   example: Jane doe
+ *                   example: Jane Doe
  *                 reason:
  *                   type: string
- *                   example: "Different ip address logged in at same time"
- *                 priority:
- *                   type: string
- *                   enum: [CRITICAL, HIGH, MEDIUM, LOW, NONE]
- *                   example: LOW
+ *                   example: "Different IP address logged in at same time"
  *                 assignedToEmail:
  *                   type: string
  *                   format: email
@@ -198,6 +382,80 @@ incidentRouter.get(
  *                   type: string
  *                   format: date-time
  *                   example: 2025-08-04T15:59:30.793Z
+ *                 status:
+ *                   type: string
+ *                   enum: [OPEN, ACKNOWLEDGED, INVESTIGATION, MITIGATED, RESOLVED, CLOSED]
+ *                   example: OPEN
+ *                 createdFrom:
+ *                   type: string
+ *                   enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *                   example: EMAIL
+ *                 slaTargetAck:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-08-04T16:59:25.655Z
+ *                 slaTargetResolve:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-08-05T15:59:25.655Z
+ *                 firstAcknowledgedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-08-04T16:05:30.123Z
+ *                 resolvedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-08-04T18:30:45.789Z
+ *                 closedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-08-04T19:15:22.456Z
+ *                 recommendedActions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     enum: [LOCK_ACCOUNT, NOTIFY_ANALYST, QUARANTINE, TERMINATE_SESSION]
+ *                   example: ["LOCK_ACCOUNT", "TERMINATE_SESSION"]
+ *                 riskScore:
+ *                   type: integer
+ *                   example: 20
+ *                 businessId:
+ *                   type: string
+ *                   format: uuid
+ *                   example: a1b2c3d4-e5f6-7890-1234-567890abcdef
+ *                 priority:
+ *                   type: string
+ *                   enum: [CRITICAL, HIGH, MEDIUM, LOW, NONE]
+ *                   example: LOW
+ *                 source:
+ *                   type: string
+ *                   enum: [EMAIL, SLACK, PORTAL, PHONE, OTHERS]
+ *                   example: EMAIL
+ *                 category:
+ *                   type: string
+ *                   example: Security
+ *                 subCategory:
+ *                   type: string
+ *                   example: Network
+ *                 description:
+ *                   type: string
+ *                   example: "Detailed description of the incident"
+ *                 impact:
+ *                   type: string
+ *                   enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *                   example: MEDIUM
+ *                 MTTR:
+ *                   type: string
+ *                   example: "2 hours"
+ *                 suggestionFix:
+ *                   type: string
+ *                   example: "Suggested fix for the incident"
+ *                 escalate:
+ *                   type: string
+ *                   example: "Escalation details"
+ *                 affectedSystem:
+ *                   type: string
+ *                   example: "System name"
  *       400:
  *         description: Bad request (validation error)
  *       401:
@@ -380,7 +638,7 @@ incidentRouter.get(
  *               - reason
  *               - priority
  *               - assignedTo
- *               - username
+ *               - userName
  *               - incidentId
  *             properties:
  *               template:
@@ -402,7 +660,7 @@ incidentRouter.get(
  *                 format: email
  *                 description: Email of the person the incident is assigned to
  *                 example: example@gmail.com
- *               username:
+ *               userName:
  *                 type: string
  *                 description: Name of the user creating the incident
  *                 example: John Doe
