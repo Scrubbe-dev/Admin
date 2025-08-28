@@ -53,10 +53,10 @@ export enum Impact {
 
 export type IncidentRequest = {
   // Original fields
-  template: IncidentTemplate;
+  template?: IncidentTemplate;
   reason: string;
   priority: Priority;
-  username: string;
+  userName: string;
   assignedTo?: string;  // Now optional as per new requirements
   createdFrom?: string;
   
