@@ -316,15 +316,15 @@ model Incident {
 // ===================== START INCIDENT TICKET ==================
 
 model IncidentTicket {
-  id              String           @id @default(uuid())
-  template        IncidentTemplate @default(NONE)
+  id              String            @id @default(uuid())
+  template        IncidentTemplate? @default(NONE)
   userName        String
   reason          String
-  assignedToEmail String?          @map("assignedTo")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  ticketId        String           @unique
-  status          IncidentStatus   @default(OPEN)
+  assignedToEmail String?           @map("assignedTo")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ticketId        String            @unique
+  status          IncidentStatus    @default(OPEN)
 
   assignedById String
   createdFrom  String? // ticket may have been created from slack, email, github etc

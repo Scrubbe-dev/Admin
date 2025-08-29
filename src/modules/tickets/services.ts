@@ -104,7 +104,7 @@ static async getTicketById(ticketId: string): Promise<TicketDetailResponse | nul
             riskScore: ticket.riskScore,
             businessId: ticket.businessId,
             slaStatus: determineSLAStatus(ticket),
-            template: ticket.template
+            template: ticket.template  
         };
     });
 }

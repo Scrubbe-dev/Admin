@@ -140,7 +140,6 @@ const incidentController = new IncidentController();
  *     IncidentRequest:
  *       type: object
  *       required:
- *         - template
  *         - reason
  *         - priority
  *         - userName
@@ -258,7 +257,6 @@ incidentRouter.get(
  *           schema:
  *             type: object
  *             required:
- *               - template
  *               - reason
  *               - priority
  *               - userName
@@ -634,7 +632,6 @@ incidentRouter.get(
  *           schema:
  *             type: object
  *             required:
- *               - template
  *               - reason
  *               - priority
  *               - assignedTo

@@ -360,7 +360,7 @@ export class IncidentService {
           id: incidentTicket.id,
         },
         data: {
-          template: request.template,
+          template: request.template || "NONE",
           priority: request.priority,
           reason: request.reason,
           userName: request.username,

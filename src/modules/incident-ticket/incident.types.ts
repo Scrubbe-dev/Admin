@@ -129,7 +129,7 @@ export type IncidentRequest = {
 
 
 export type UpdateTicket = {
-  template: IncidentTemplate;
+  template?: IncidentTemplate;
   reason: string;
   priority: Priority;
   username: string;
