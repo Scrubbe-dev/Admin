@@ -56,7 +56,7 @@ export class IncidentService {
 
   async submitIncident(
     request: IncidentRequest,
-    userId: string,
+    userId: string | any,
     businessId: string
   ) {
     try {
@@ -84,15 +84,15 @@ export class IncidentService {
       //     MTTR: request.MTTR as string,
       //     createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
       //     businessId,
-      //     conversation: {
-      //       create: {
-      //         participants: {
-      //           create: [
-      //             { user: { connect: { id: userId } } }, // assignedBy as first participant
-      //           ],
-      //         },
-      //       },
-      //     },
+          // conversation: {
+          //   create: {
+          //     participants: {
+          //       create: [
+          //         { user: { connect: { id: userId } } }, // assignedBy as first participant
+          //       ],
+          //     },
+          //   },
+          // },
       //   },
       // });
 
@@ -102,7 +102,7 @@ export class IncidentService {
               reason: request.reason,
               // assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
               userName: request.userName,
-              assignedById: userId,
+              assignedById: request.userId as string,
               priority: request.priority as Priority, // Cast to enum
               category: request.category as string, 
               subCategory: request.subCategory as string,
@@ -121,7 +121,7 @@ export class IncidentService {
                 create: {
                   participants: {
                     create: [
-                      { user: { connect: { id: userId } } },
+                      { user: { connect: { id: request.userId as string} } },
                     ],
                   },
                 },
