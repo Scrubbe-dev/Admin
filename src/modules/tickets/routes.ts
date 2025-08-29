@@ -200,7 +200,12 @@ ticketRouter.get(
  *               success: false
  *               message: "Internal server error"
  */
-ticketRouter.get("/tickets/history/:ticketId", (req, res, next) => {
+import { TicketParams } from "./types";
+
+ticketRouter.get("/tickets/history/:ticketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+   (req: Request<{ ticketId: string }>, res: Response, next: NextFunction) => {
   TicketController.getTicketHistory(req, res).catch(next);
 });
 
