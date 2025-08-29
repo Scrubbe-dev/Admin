@@ -139,7 +139,7 @@ export class PdfService {
         });
 
     const incidentUser = await prisma.user.findFirst({  
-        where:{email:incident?.assignedToEmail}
+        where:{email:incident?.assignedToEmail as string}
         });
 
     const resolveIncident = await prisma.resolveIncident.findFirst({
@@ -208,7 +208,7 @@ export class PdfService {
         timestamp: incident.firstAcknowledgedAt,
         event: 'Incident Acknowledged',
         description: 'On-call engineer acknowledged the alert',
-        actor: incident.assignedToEmail
+        actor: incident?.assignedToEmail as string
       });
     }
 
@@ -217,7 +217,7 @@ export class PdfService {
         timestamp: incident.resolvedAt,
         event: 'Incident Resolved',
         description: 'Root cause identified and fix deployed',
-        actor: incident.assignedToEmail
+        actor: incident?.assignedToEmail as string
       });
     }
 
