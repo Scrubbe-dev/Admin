@@ -56,7 +56,7 @@ export type IncidentRequest = {
   template?: IncidentTemplate;
   reason: string;
   priority: Priority;
-  userId: string | any;
+  userId?: string ;
   userName: string;
   assignedTo?: string;  // Now optional as per new requirements
   createdFrom?: string;
