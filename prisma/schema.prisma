@@ -175,7 +175,7 @@ model Invites {
   stillAMember              Boolean                     @default(true)
   status                    InviteStatus                @default(PENDING)
   userId                    String?
-  // IncidentTicket            IncidentTicket[]
+  IncidentTicket            IncidentTicket[]
   business                  Business                    @relation(fields: [sentById], references: [id])
   user                      User?                       @relation(fields: [userId], references: [id])
   userThirdpartyIntegration UserThirdpartyIntegration[]
@@ -320,13 +320,13 @@ model IncidentTicket {
   template        IncidentTemplate? @default(NONE)
   userName        String
   reason          String
-  // assignedToEmail String?           @default(cuid())
+  assignedToEmail String?           @map("assignedTo") 
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   ticketId        String            @unique
   status          IncidentStatus    @default(OPEN)
 
-  assignedById String?
+  assignedById String
   createdFrom  String? // ticket may have been created from slack, email, github etc
 
   // SLA targets
@@ -346,8 +346,8 @@ model IncidentTicket {
   comments     IncidentComment[]
 
   Incident                   Incident[]
-  assignedBy                 User?                        @relation(fields: [assignedById], references: [id])
-  // assignedTo                 Invites?                     @relation(fields: [assignedToEmail], references: [email])
+  assignedBy                 User?                         @relation(fields: [assignedById], references: [id])
+  assignedTo                 Invites?                     @relation(fields: [assignedToEmail], references: [email])
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
   playbookRecommendations    TicketPlaybookRecommendation[]
