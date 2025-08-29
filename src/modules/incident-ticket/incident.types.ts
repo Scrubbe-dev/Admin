@@ -58,7 +58,7 @@ export type IncidentRequest = {
   priority: Priority;
   userId?: string ;
   userName: string;
-  assignedTo?: string;  // Now optional as per new requirements
+  // assignedTo?: string;  // Now optional as per new requirements
   createdFrom?: string;
   
   // New required fields
