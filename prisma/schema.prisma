@@ -346,7 +346,7 @@ model IncidentTicket {
   comments     IncidentComment[]
 
   Incident                   Incident[]
-  assignedBy                 User                         @relation(fields: [assignedById], references: [id])
+  assignedBy                 User?                         @relation(fields: [assignedById], references: [id])
   assignedTo                 Invites?                     @relation(fields: [assignedToEmail], references: [email])
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
