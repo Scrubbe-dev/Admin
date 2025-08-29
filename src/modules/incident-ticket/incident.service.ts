@@ -100,7 +100,7 @@ export class IncidentService {
             data: {
               ticketId,
               reason: request.reason,
-              assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
+              assignedToEmail: request.assignedToEmail || "",
               userName: request.userName,
               assignedById: userId,
               priority: request.priority as Priority, // Cast to enum
