@@ -13,8 +13,8 @@ export class TicketService {
       history
     };
   }
-static async getTicketById(ticketId: string): Promise<TicketDetailResponse | null | any> {
-    return prisma.incidentTicket.findUnique({
+static async getTicketById(ticketId: string): Promise<TicketDetailResponse[] | null | any[]> {
+    return prisma.incidentTicket.findMany({
         where: { id: ticketId },
         include: {
             assignedBy: {
@@ -90,22 +90,27 @@ static async getTicketById(ticketId: string): Promise<TicketDetailResponse | nul
             }
         };
 
-        return {
-            id: ticket.id,
-            ticketId: ticket.ticketId,
-            reason: ticket.reason,
-            userName: ticket.userName,
-            priority: ticket.priority as "HIGH" | "MEDIUM" | "LOW", // Ensure correct priority type
-            status: mapStatus(ticket.status),
-            assignedToEmail: ticket.assignedToEmail,
-            score: ticket.riskScore, // Use riskScore for score
-            createdAt: ticket.createdAt.toISOString(),
-            recommendedActions: ticket.recommendedActions.map(action => action.toString()),
-            riskScore: ticket.riskScore,
-            businessId: ticket.businessId,
-            slaStatus: determineSLAStatus(ticket),
-            template: ticket.template  
-        };
+
+      const allData = ticket.map((data)=>{
+         return {
+            id: data.id,
+            ticketId: data.ticketId,
+            reason: data.reason,
+            userName: data.userName,
+            priority: data.priority as "HIGH" | "MEDIUM" | "LOW", // Ensure correct priority type
+            status: mapStatus(data.status),
+            assignedToEmail: data.assignedToEmail,
+            score: data.riskScore, // Use riskScore for score
+            createdAt: data.createdAt.toISOString(),
+            recommendedActions: data.recommendedActions.map(action => action.toString()),
+            riskScore: data.riskScore,
+            businessId: data.businessId,
+            slaStatus: determineSLAStatus(data),
+            template: data.template
+         };
+      })
+
+        return allData;
     });
 }
 }

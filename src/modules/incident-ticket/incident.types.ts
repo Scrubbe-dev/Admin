@@ -76,57 +76,6 @@ export type IncidentRequest = {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export type UpdateTicket = {
   template?: IncidentTemplate;
   reason: string;

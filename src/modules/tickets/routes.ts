@@ -1,7 +1,18 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { TicketController } from "./controller";
+import { TokenService } from "../auth/services/token.service";
+import { mustBeAMember } from "../business-profile/business.middleware";
+import { AuthMiddleware } from "../auth/middleware/auth.middleware";
 
 const ticketRouter = Router();
+
+const tokenService = new TokenService(
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+
+const authMiddleware = new AuthMiddleware(tokenService);
 
 /**
  * @swagger
@@ -106,9 +117,14 @@ const ticketRouter = Router();
  *               success: false
  *               message: "Internal server error"
  */
-ticketRouter.get("/tickets/:ticketId", (req, res, next) => {
-  TicketController.getTicketDetail(req, res).catch(next);
-});
+ticketRouter.get(
+  "/tickets/:ticketId",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  (req: Request<{ ticketId: string }>, res: Response, next: NextFunction) => {
+    TicketController.getTicketDetail(req, res).catch(next);
+  }
+);
 
 /**
  * @swagger
