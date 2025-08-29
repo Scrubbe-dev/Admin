@@ -62,7 +62,6 @@ export class IncidentService {
     try {
       let ticketId: string;
       let exists;
-
       do {
         ticketId = IncidentUtils.generateTicketId();
 

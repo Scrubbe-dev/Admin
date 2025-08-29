@@ -45,10 +45,11 @@ export class IncidentController {
     try {
       const userId = req.user?.sub!;
       const businessId = req.user?.businessId!;
-      const request = await validateRequest<IncidentRequest>(
-        submitIncidentSchema,
-        req.body
-      );
+      // const request = await validateRequest<IncidentRequest>(
+      //   submitIncidentSchema,
+      //   req.body
+      // );
+      const request = await req.body as IncidentRequest;
 
       const response = await this.incidentService.submitIncident(
         request,
