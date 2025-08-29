@@ -350,6 +350,7 @@ model IncidentTicket {
   assignedTo                 Invites?                     @relation(fields: [assignedToEmail], references: [email])
   business                   Business?                    @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
+  playbookRecommendations    TicketPlaybookRecommendation[]
   ResolveIncident            ResolveIncident?
 
   // New required fields
@@ -562,6 +563,8 @@ model PlaybookExecution {
   initiatedById String?
   incident      Incident       @relation(fields: [incidentId], references: [id])
   initiatedBy   User?          @relation(fields: [initiatedById], references: [id])
+  playbookId    String?
+  playbook      Playbook?      @relation(fields: [playbookId], references: [id])
 
   @@index([incidentId])
   @@index([status])
@@ -617,6 +620,38 @@ model DetectionRule {
   @@index([createdById])
   @@index([isActive])
   @@index([lastExecuted])
+}
+
+
+// ===========PLAYBOOK=======================
+model Playbook {
+  id          String   @id @default(uuid())
+  name        String   @unique 
+  title       String
+  description String?
+  steps       Json?     // Array of step strings
+  tags        String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  playbookRecommendations TicketPlaybookRecommendation[]
+  playbookExecutions      PlaybookExecution[]
+}
+
+model TicketPlaybookRecommendation {
+  id          String   @id @default(uuid())
+  ticketId    String
+  playbookId  String
+  recommended Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  ticket    IncidentTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  playbook  Playbook        @relation(fields: [playbookId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, playbookId])
 }
 
 enum EscalationStatus {
