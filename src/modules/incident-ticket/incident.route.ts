@@ -463,8 +463,8 @@ incidentRouter.get(
  */
 incidentRouter.post(
   "/",
-  authMiddleware.authenticate,
-  mustBeAMember,
+  // authMiddleware.authenticate,
+  // mustBeAMember,
   (req, res, next) => {
     incidentController.submitIncident(req, res, next);
   }

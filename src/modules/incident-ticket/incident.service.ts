@@ -9,7 +9,7 @@ import {
 import { IncidentUtils } from "./incident.util";
 import { IncidentMapper } from "./incident.mapper";
 import { ForbiddenError, NotFoundError } from "../auth/error";
-import { IncidentStatus, SLABreachType } from "@prisma/client";
+import { Impact, IncidentStatus, Priority, SLABreachType, Source } from "@prisma/client";
 import { MeetUtil } from "../3rd-party-configurables/google/google-meet/meetUtil";
 import { askEzra } from "../ezra-chat/askezra";
 import {
@@ -70,31 +70,64 @@ export class IncidentService {
         });
       } while (exists);
 
-      const incidentTicket = await prisma.incidentTicket.create({
-        data: {
-          ticketId,
-          reason: request.reason,
-          assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
-          userName: request.userName,
-          assignedById: userId,
-          priority: request.priority,
-          category: request.category as string, 
-          subCategory: request.subCategory as string,
-          description: request.description as string,
-          MTTR: request.MTTR as string,
-          createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
-          businessId,
-          conversation: {
-            create: {
-              participants: {
-                create: [
-                  { user: { connect: { id: userId } } }, // assignedBy as first participant
-                ],
+      // const incidentTicket = await prisma.incidentTicket.create({
+      //   data: {
+      //     ticketId,
+      //     reason: request.reason,
+      //     assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
+      //     userName: request.userName,
+      //     assignedById: userId,
+      //     priority: request.priority ,
+      //     category: request.category as string, 
+      //     subCategory: request.subCategory as string,
+      //     description: request.description as string,
+      //     MTTR: request.MTTR as string,
+      //     createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
+      //     businessId,
+      //     conversation: {
+      //       create: {
+      //         participants: {
+      //           create: [
+      //             { user: { connect: { id: userId } } }, // assignedBy as first participant
+      //           ],
+      //         },
+      //       },
+      //     },
+      //   },
+      // });
+
+    const incidentTicket = await prisma.incidentTicket.create({
+            data: {
+              ticketId,
+              reason: request.reason,
+              assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
+              userName: request.userName,
+              assignedById: userId,
+              priority: request.priority as Priority, // Cast to enum
+              category: request.category as string, 
+              subCategory: request.subCategory as string,
+              description: request.description as string,
+              MTTR: request.MTTR as string,
+              createdFrom: request.createdFrom ?? null,
+              businessId,
+              // Add these missing fields:
+              source: request.source as Source, // Cast to enum
+              impact: request.impact as Impact, // Cast to enum
+              suggestionFix: request.suggestionFix,
+              affectedSystem: request.affectedSystem,
+              // Optional: Add status if you want to override default
+              status: request.status as IncidentStatus, // Cast to enum
+              conversation: {
+                create: {
+                  participants: {
+                    create: [
+                      { user: { connect: { id: userId } } },
+                    ],
+                  },
+                },
               },
             },
-          },
-        },
-      });
+          });
 
       const riskScore = await IncidentUtils.ezraDetermineRiskScore(
         incidentTicket
