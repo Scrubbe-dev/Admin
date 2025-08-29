@@ -9,7 +9,13 @@ import {
 import { IncidentUtils } from "./incident.util";
 import { IncidentMapper } from "./incident.mapper";
 import { ForbiddenError, NotFoundError } from "../auth/error";
-import { Impact, IncidentStatus, Priority, SLABreachType, Source } from "@prisma/client";
+import {
+  Impact,
+  IncidentStatus,
+  Priority,
+  SLABreachType,
+  Source,
+} from "@prisma/client";
 import { MeetUtil } from "../3rd-party-configurables/google/google-meet/meetUtil";
 import { askEzra } from "../ezra-chat/askezra";
 import {
@@ -56,7 +62,7 @@ export class IncidentService {
 
   async submitIncident(
     request: IncidentRequest,
-    userId: string ,
+    userId: string,
     businessId: string
   ) {
     try {
@@ -78,56 +84,56 @@ export class IncidentService {
       //     userName: request.userName,
       //     assignedById: userId,
       //     priority: request.priority ,
-      //     category: request.category as string, 
+      //     category: request.category as string,
       //     subCategory: request.subCategory as string,
       //     description: request.description as string,
       //     MTTR: request.MTTR as string,
       //     createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
       //     businessId,
+      // conversation: {
+      //   create: {
+      //     participants: {
+      //       create: [
+      //         { user: { connect: { id: userId } } }, // assignedBy as first participant
+      //       ],
+      //     },
+      //   },
+      // },
+      //   },
+      // });
+
+      const incidentTicket = await prisma.incidentTicket.create({
+        data: {
+          ticketId,
+          reason: request.reason,
+          // Set to null if not provided, not a placeholder string
+          assignedToEmail: request.assignedTo ?? null,
+          userName: request.userName,
+          assignedById: userId as string,
+          priority: request.priority as Priority,
+          category: request.category as string,
+          subCategory: request.subCategory as string,
+          description: request.description as string,
+          MTTR: request.MTTR as string,
+          createdFrom: request.createdFrom ?? null,
+          businessId,
+          // Add other required fields
+          source: request.source as Source,
+          impact: request.impact as Impact,
+          suggestionFix: request.suggestionFix,
+          affectedSystem: request.affectedSystem,
+          status: request.status as IncidentStatus,
           // conversation: {
           //   create: {
           //     participants: {
           //       create: [
-          //         { user: { connect: { id: userId } } }, // assignedBy as first participant
+          //         { user: { connect: { id: request.userId as string } } },
           //       ],
           //     },
           //   },
           // },
-      //   },
-      // });
-
-const incidentTicket = await prisma.incidentTicket.create({
-  data: {
-    ticketId,
-    reason: request.reason,
-    // Set to null if not provided, not a placeholder string
-    assignedToEmail: request.assignedTo ?? null,
-    userName: request.userName,
-    assignedById: userId as string ,
-    priority: request.priority as Priority,
-    category: request.category as string, 
-    subCategory: request.subCategory as string,
-    description: request.description as string,
-    MTTR: request.MTTR as string,
-    createdFrom: request.createdFrom ?? null,
-    businessId,
-    // Add other required fields
-    source: request.source as Source,
-    impact: request.impact as Impact,
-    suggestionFix: request.suggestionFix,
-    affectedSystem: request.affectedSystem,
-    status: request.status as IncidentStatus,
-    // conversation: {
-    //   create: {
-    //     participants: {
-    //       create: [
-    //         { user: { connect: { id: request.userId as string } } },
-    //       ],
-    //     },
-    //   },
-    // },
-  },
-});
+        },
+      });
 
       const riskScore = await IncidentUtils.ezraDetermineRiskScore(
         incidentTicket
@@ -392,12 +398,19 @@ const incidentTicket = await prisma.incidentTicket.create({
           id: incidentTicket.id,
         },
         data: {
-          template: request.template || "NONE",
-          priority: request.priority,
           reason: request.reason,
-          userName: request.username,
-          assignedToEmail: request.assignedTo,
-          status: request.status,
+          userName: request.userName,
+          priority: request.priority as Priority,
+          category: request.category as string,
+          subCategory: request.subCategory as string,
+          description: request.description as string,
+          MTTR: (request.MTTR as string) || undefined,
+          createdFrom: request.createdFrom ?? null,
+          source: request.source as Source,
+          impact: request.impact as Impact,
+          suggestionFix: request.suggestionFix,
+          affectedSystem: request.affectedSystem,
+          status: request.status as IncidentStatus,
         },
       });
 

@@ -49,7 +49,7 @@ export class IncidentController {
       //   submitIncidentSchema,
       //   req.body
       // );
-      const request = await req.body as IncidentRequest;
+      const request = (await req.body) as IncidentRequest;
 
       const response = await this.incidentService.submitIncident(
         request,
@@ -164,11 +164,12 @@ export class IncidentController {
   async updateTicket(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
-      const request = await validateRequest<UpdateTicket>(
-        updateTicketSchema,
-        req.body
-      );
+      // const request = await validateRequest<UpdateTicket>(
+      //   updateTicketSchema,
+      //   req.body
+      // );
 
+      const request = (await req.body) as UpdateTicket;
       const response = await this.incidentService.updateTicket(request);
 
       res.json(response);

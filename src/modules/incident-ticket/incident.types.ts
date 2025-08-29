@@ -77,14 +77,29 @@ export type IncidentRequest = {
 
 
 export type UpdateTicket = {
+  // Original fields
   template?: IncidentTemplate;
+  incidentId:string;
   reason: string;
   priority: Priority;
-  username: string;
-  assignedTo: string;
-  incidentId: string;
-  status: IncidentStatus;
+  userId?: string ;
+  userName: string;
+  assignedTo?: string;  // Now optional as per new requirements
+  createdFrom?: string;
+  
+  // New required fields
+  source?: Source;
+  category?: string;
+  subCategory?: string;
+  description?: string;
+  impact?: Impact;
+  status?: Status;
+  MTTR?: string;  // Time taken to raise incident
+  suggestionFix?: string;
+  escalate?: string;
+  affectedSystem?: string;
 };
+
 
 export type SLAThresholds = {
   ttr: number;
