@@ -53,7 +53,7 @@ export enum Impact {
 
 export type IncidentRequest = {
   // Original fields
-  template?: IncidentTemplate;
+  // template?: IncidentTemplate;
   reason: string;
   priority: Priority;
   userName: string;
@@ -68,8 +68,6 @@ export type IncidentRequest = {
   impact: Impact;
   status: Status;
   MTTR: string;  // Time taken to raise incident
-  
-  // New optional fields
   suggestionFix?: string;
   escalate?: string;
   affectedSystem?: string;
