@@ -91,26 +91,26 @@ static async getTicketById(ticketId: string): Promise<TicketDetailResponse[] | n
         };
 
 
-      const allData = ticket.map((data)=>{
-         return {
-            id: data.id,
-            ticketId: data.ticketId,
-            reason: data.reason,
-            userName: data.userName,
-            priority: data.priority as "HIGH" | "MEDIUM" | "LOW", // Ensure correct priority type
-            status: mapStatus(data.status),
-            assignedToEmail: data.assignedToEmail,
-            score: data.riskScore, // Use riskScore for score
-            createdAt: data.createdAt.toISOString(),
-            recommendedActions: data.recommendedActions.map(action => action.toString()),
-            riskScore: data.riskScore,
-            businessId: data.businessId,
-            slaStatus: determineSLAStatus(data),
-            template: data.template
-         };
-      })
+    //   const allData = ticket.map((data)=>{
+    //      return {
+    //         id: data.id,
+    //         ticketId: data.ticketId,
+    //         reason: data.reason,
+    //         userName: data.userName,
+    //         priority: data.priority as "HIGH" | "MEDIUM" | "LOW", // Ensure correct priority type
+    //         status: mapStatus(data.status),
+    //         assignedToEmail: data.assignedToEmail,
+    //         score: data.riskScore, // Use riskScore for score
+    //         createdAt: data.createdAt.toISOString(),
+    //         recommendedActions: data.recommendedActions.map(action => action.toString()),
+    //         riskScore: data.riskScore,
+    //         businessId: data.businessId,
+    //         slaStatus: determineSLAStatus(data),
+    //         template: data.template
+    //      };
+    //   })
 
-        return allData;
+        return ticket;
     });
 }
 }
