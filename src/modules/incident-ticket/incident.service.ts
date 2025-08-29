@@ -56,7 +56,7 @@ export class IncidentService {
 
   async submitIncident(
     request: IncidentRequest,
-    userId: string | any,
+    userId: string ,
     businessId: string
   ) {
     try {
@@ -103,7 +103,7 @@ const incidentTicket = await prisma.incidentTicket.create({
     // Set to null if not provided, not a placeholder string
     assignedToEmail: request.assignedTo ?? null,
     userName: request.userName,
-    assignedById: request.userId as string ,
+    assignedById: userId as string ,
     priority: request.priority as Priority,
     category: request.category as string, 
     subCategory: request.subCategory as string,
