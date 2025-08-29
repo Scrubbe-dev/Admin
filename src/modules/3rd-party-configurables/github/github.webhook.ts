@@ -132,7 +132,7 @@ export class GithubWebhookService {
       template: IncidentTemplate.NONE,
       reason: reason + `\n url: ${repoUrl}`,
       priority: Priority.MEDIUM,
-      username: "github deployment",
+      userName: "github deployment",
       assignedTo: integration.assignedToEmail,
       createdFrom: "GITHUB",
     };

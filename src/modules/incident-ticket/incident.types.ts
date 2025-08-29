@@ -61,13 +61,13 @@ export type IncidentRequest = {
   createdFrom?: string;
   
   // New required fields
-  source: Source;
-  category: string;
-  subCategory: string;
-  description: string;
-  impact: Impact;
-  status: Status;
-  MTTR: string;  // Time taken to raise incident
+  source?: Source;
+  category?: string;
+  subCategory?: string;
+  description?: string;
+  impact?: Impact;
+  status?: Status;
+  MTTR?: string;  // Time taken to raise incident
   suggestionFix?: string;
   escalate?: string;
   affectedSystem?: string;

@@ -116,7 +116,7 @@ export class EmailIntegrationService {
         parsedCommand.incident?.reason ??
         `Reason not specified, incident was raised through email by: ${parsedCommand.incident?.fromEmail}`,
       template: parsedCommand.incident?.template as any,
-      username: parsedCommand.incident?.username || "N/A",
+      userName: parsedCommand.incident?.username || "N/A",
       createdFrom: "EMAIL",
     };
 

@@ -79,10 +79,10 @@ export class IncidentService {
           userName: request.userName,
           assignedById: userId,
           priority: request.priority,
-          category: request.category, 
-          subCategory: request.subCategory,
-          description: request.description,
-          MTTR: request.MTTR,
+          category: request.category as string, 
+          subCategory: request.subCategory as string,
+          description: request.description as string,
+          MTTR: request.MTTR as string,
           createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
           businessId,
           conversation: {

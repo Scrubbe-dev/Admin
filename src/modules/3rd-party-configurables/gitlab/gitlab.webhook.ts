@@ -90,7 +90,7 @@ export class GitlabWebhookService {
       template: IncidentTemplate.NONE,
       reason: `${reason}\nurl: ${repoUrl}`,
       priority: Priority.MEDIUM,
-      username: "gitlab webflow",
+      userName: "gitlab webflow",
       assignedTo: integration.assignedToEmail,
       createdFrom: "GITLAB",
     };
