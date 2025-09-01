@@ -120,33 +120,38 @@ export class PdfService {
   /**
    * Fetch comprehensive incident data
    */
-  private static async fetchIncidentData(incidentId: string, description:string): Promise<IncidentReportData | null> {
+private static async fetchIncidentData(incidentId: string, description:string): Promise<IncidentReportData | null> {
     const incident = await prisma.incidentTicket.findFirst({
       where: { id: incidentId },
       include: {
         // Include related data if available in your schema
-        // timeline: true,
-        // actionItems: true,
-        // affectedSystems: true,
       }
     });
 
+    // Check if incident exists before proceeding
+    if (!incident) return null;
+
     const mainIncident = await prisma.incident.findFirst({
-        where: { incidentTicketId: incident?.id },
+        where: { incidentTicketId: incident.id },
         include: {
             // resolveIncident: true,
         }
-        });
+    });
 
-    const incidentUser = await prisma.user.findFirst({  
-        where:{email:incident?.assignedToEmail as string}
+    // Fix: Only query for user if assignedToEmail exists
+    let incidentUser = null;
+    if (incident.assignedToEmail) {
+        incidentUser = await prisma.user.findFirst({  
+            where: { email: incident.assignedToEmail }
         });
+    }
 
     const resolveIncident = await prisma.resolveIncident.findFirst({
-         where:{incidentTicketId: incident?.id}
-    })
+         where: { incidentTicketId: incident.id }
+    });
 
-    if (!incident) return null;
+    // Generate timeline entries
+    const timeline = await this.generateMockTimeline(incident);
 
     // Transform and enrich the data - Filter out N/A values properly
     const contributingFactors = [
@@ -156,13 +161,13 @@ export class PdfService {
       resolveIncident?.why4,
       resolveIncident?.why5,
     ].filter(factor => factor && factor.trim() !== '' && factor.toLowerCase() !== 'n/a');
-
+    
     const improvements = incident.recommendedActions ? 
       incident.recommendedActions.filter(action => action && action.trim() !== '' && action.toLowerCase() !== 'n/a') : [];
 
     return {
       ...incident,
-      timeline: resolveIncident?.followUpDueDate as any,
+      timeline: timeline, // Fix: Use the generated timeline array
       rootCause: {
         technical: resolveIncident?.rootCause || 'N/A',
         contributingFactors: (contributingFactors.length > 0 ? contributingFactors : ['']) as any[]
@@ -179,9 +184,10 @@ export class PdfService {
       },
       actionItems: [
         {
-          id: incident?.id,
-          description: incident?.reason,
-          owner: `${incidentUser?.firstName || ''} ${incidentUser?.lastName || ''}`.trim() || 'N/A',
+          id: incident.id,
+          description: incident.reason,
+          // Fix: Handle case where incidentUser is null
+          owner: incidentUser ? `${incidentUser.firstName || ''} ${incidentUser.lastName || ''}`.trim() || 'N/A' : 'N/A',
           dueDate: resolveIncident?.followUpDueDate as any,
           priority: incident.priority,
           status: incident.status  
@@ -189,11 +195,10 @@ export class PdfService {
       ]
     };
   }
-
   /**
    * Generate timeline from incident data
    */
-  private static async generateMockTimeline(incident: IncidentTicket): Promise<IncidentTimelineEntry[]> {
+private static async generateMockTimeline(incident: IncidentTicket): Promise<IncidentTimelineEntry[]> {
     const timeline: IncidentTimelineEntry[] = [
       {
         timestamp: incident.createdAt,
@@ -202,25 +207,25 @@ export class PdfService {
         actor: 'Monitoring System'
       }
     ];
-
+    
     if (incident.firstAcknowledgedAt) {
       timeline.push({
         timestamp: incident.firstAcknowledgedAt,
         event: 'Incident Acknowledged',
         description: 'On-call engineer acknowledged the alert',
-        actor: incident?.assignedToEmail as string
+        actor: incident.assignedToEmail || 'On-call Engineer' // Fix: Handle null case
       });
     }
-
+    
     if (incident.resolvedAt) {
       timeline.push({
         timestamp: incident.resolvedAt,
         event: 'Incident Resolved',
         description: 'Root cause identified and fix deployed',
-        actor: incident?.assignedToEmail as string
+        actor: incident.assignedToEmail || 'Support Engineer' // Fix: Handle null case
       });
     }
-
+    
     if (incident.closedAt) {
       timeline.push({
         timestamp: incident.closedAt,
@@ -229,10 +234,9 @@ export class PdfService {
         actor: 'Incident Manager'
       });
     }
-
+    
     return timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
-
   /**
    * Calculate downtime in minutes
    */
