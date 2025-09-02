@@ -756,6 +756,9 @@ enum IncidentStatus {
   RESOLVED
   CLOSED
   ON_HOLD
+  ACKNOWLEDGED
+  INVESTIGATION
+  MITIGATED
 }
 
 enum Priority {
@@ -763,6 +766,7 @@ enum Priority {
   MEDIUM
   HIGH
   CRITICAL
+  INFORMATIONAL
 }
 
 enum Roles {
@@ -895,8 +899,9 @@ enum Source {
   PORTAL
   PHONE
   OTHERS
+  HIGH
+  CRITICAL
 }
-
 enum Impact {
   LOW
   MEDIUM
