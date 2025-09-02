@@ -44,7 +44,8 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/integrations/integration.route.ts",
     "./src/modules/intel/intel.route.ts",
     "./src/modules/escalate/escalate.route.ts",
-    "./src/modules/playbook/playbook.route.ts"
+    "./src/modules/playbook/playbook.route.ts",
+    "./src/modules/ims-setup/ims.router.ts"
   ],
 };
 

@@ -56,6 +56,7 @@ import integrationRouter from './modules/integrations/integration.route';
 import intelRouter from "./modules/intel/intel.route";
 import escalateRouter from "./modules/escalate/escalate.route";
 import playbookRouter from "./modules/playbook/playbook.route";
+import imsRouter from "./modules/ims-setup/ims.router";
 
 dotenvConfig();
 
@@ -202,6 +203,7 @@ app.use("/api/v1", ticketRoutes); // New  ticket management route
 app.use("/api/v1", intelRouter); // New  intel file generation route
 app.use("/api/v1", escalateRouter); // New  escalate management route
 app.use("/api/v1", playbookRouter); // New  playbook management route
+app.use("/api/v1", imsRouter); // New  IMS management route
 
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
