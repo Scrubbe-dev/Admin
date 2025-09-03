@@ -21,7 +21,8 @@ export class IncidentUtils {
       [Priority.CRITICAL]: { ack: 15, resolve: 240 }, //P1
       [Priority.HIGH]: { ack: 30, resolve: 480 }, //P2
       [Priority.MEDIUM]: { ack: 60, resolve: 1440 }, //P3
-      [Priority.LOW]: { ack: 120, resolve: 2880 }, //P4, P5
+      [Priority.LOW]: { ack: 120, resolve: 2880 }, //P4,
+      [Priority.INFORMATIONAL]: { ack: 240, resolve: 5760 }, //P5
     };
 
     const { ack, resolve } = slaThresholds[priority];
