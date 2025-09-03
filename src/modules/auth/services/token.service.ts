@@ -26,6 +26,8 @@ export class TokenService {
     const payload: JwtPayload = {
       businessId,
       sub: user.id,
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
       email: user.email,
       accountType: user.accountType,
       scopes: user.scopes,

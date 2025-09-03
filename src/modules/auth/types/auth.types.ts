@@ -53,6 +53,8 @@ export type Tokens = {
 export type JwtPayload = {
   sub: string; // User ID
   email: string;
+  firstName:string;
+  lastName:string;
   accountType: string;
   businessId?: string;
   scopes: string[];

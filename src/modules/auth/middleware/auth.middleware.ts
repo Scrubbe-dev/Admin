@@ -10,6 +10,8 @@ declare global {
       user?: {
         id: string;
         sub: string;
+        firstName:string;
+        lastName:string;
         email: string;
         accountType?: AccountType;
         businessId?: string;
@@ -50,12 +52,7 @@ export class AuthMiddleware {
 
       const hasRequiredRole = roles.some((role) =>
         (
-          req.user as {
-            id: string;
-            sub: string;
-            email: string;
-            roles: string[];
-          }
+          req.user as any
         ).roles.includes(role)
       );
       if (!hasRequiredRole) {

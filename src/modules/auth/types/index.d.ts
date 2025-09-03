@@ -3,6 +3,8 @@ declare global {
     interface Request {
       user?: {
         id: string;
+        firstName:string;
+        lastName:string;
         scopes: string[];
         id: string;
         email: string;
