@@ -51,6 +51,7 @@ model User {
   integrated                 BusinessNotificationChannels[]
   escalatedIncidentsReceived EscalatedIncident[]            @relation("UserEscalatedTo")
   escalatedIncidentsMade     EscalatedIncident[]            @relation("UserEscalatedBy")
+  Imssetup                   Imssetup[]
 
   @@index([apiKey])
 }
@@ -161,6 +162,45 @@ model BusinessDashboard {
   business             Business                       @relation("BusinessToDashboard", fields: [businessId], references: [id])
 }
 
+model Imssetup {
+  id             String   @id @default(uuid())
+  name           String?
+  incidentEmail  String?  @unique
+  subdomain      String?  @unique
+  industry       String?
+  primaryRegion  String?
+  logo           String?
+  address        String?
+  companySize    String?
+  companyPurpose String?
+  purpose        String?
+  dashBoardId    String?  @unique
+  userId         String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  user                        User                         @relation(fields: [userId], references: [id])
+  dashboard                   ImssetupDashboard?           @relation("ImssetupToDashboard")
+  incidentTickets             IncidentTicket[]
+  invites                     Invites[]
+  incidentTicketNotifications IncidentTicketNotification[]
+  thirdpartyIntegrations      UserThirdpartyIntegration[]
+}
+
+model ImssetupDashboard {
+  id                   String                         @id @default(uuid())
+  createdAt            DateTime                       @default(now())
+  updatedAt            DateTime                       @updatedAt
+  imssetupId           String                         @unique
+  colorAccent          String                         @default("#4A90E2")
+  defaultDashboard     DashboardType                  @default(SCRUBBE_DASHBOARD_SOUR)
+  prefferedIntegration BusinessPrefferedIntegration[] @default([JIRA])
+  notificationChannels BusinessNotificationChannels[] @default([EMAIL])
+  defaultPriority      Priority[]                     @default([MEDIUM])
+  imssetup             Imssetup                       @relation("ImssetupToDashboard", fields: [imssetupId], references: [id])
+}
+
 model Invites {
   id                        String                      @id @default(uuid())
   firstName                 String?
@@ -180,6 +220,7 @@ model Invites {
   business                  Business                    @relation(fields: [sentById], references: [id])
   user                      User?                       @relation(fields: [userId], references: [id])
   userThirdpartyIntegration UserThirdpartyIntegration[]
+  Imssetup                  Imssetup[]
 
   @@index([sentById])
 }
@@ -321,7 +362,7 @@ model IncidentTicket {
   template        IncidentTemplate? @default(NONE)
   userName        String
   reason          String
-  assignedToEmail String?           @map("assignedTo") 
+  assignedToEmail String?           @map("assignedTo")
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   ticketId        String            @unique
@@ -347,9 +388,9 @@ model IncidentTicket {
   comments     IncidentComment[]
 
   Incident                   Incident[]
-  assignedBy                 User?                         @relation(fields: [assignedById], references: [id])
-  assignedTo                 Invites?                     @relation(fields: [assignedToEmail], references: [email])
-  business                   Business?                    @relation(fields: [businessId], references: [id])
+  assignedBy                 User?                          @relation(fields: [assignedById], references: [id])
+  assignedTo                 Invites?                       @relation(fields: [assignedToEmail], references: [email])
+  business                   Business?                      @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
   playbookRecommendations    TicketPlaybookRecommendation[]
   ResolveIncident            ResolveIncident?
@@ -368,6 +409,8 @@ model IncidentTicket {
   affectedSystem String?
   escalations    EscalatedIncident[]
   intel          Intel[]
+
+  Imssetup Imssetup[]
 }
 
 // ===================== END INCIDENT TICKET ==================
@@ -429,6 +472,8 @@ model IncidentTicketNotification {
   message   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  Imssetup Imssetup[]
 }
 
 model UserThirdpartyIntegration {
@@ -452,8 +497,9 @@ model UserThirdpartyIntegration {
 
   defaultTarget String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Imssetup  Imssetup[]
 
   @@unique([userId, provider], name: "userId_provider")
 }
@@ -623,14 +669,13 @@ model DetectionRule {
   @@index([lastExecuted])
 }
 
-
 // ===========PLAYBOOK=======================
 model Playbook {
   id          String   @id @default(uuid())
-  name        String   @unique 
+  name        String   @unique
   title       String
   description String?
-  steps       Json?     // Array of step strings
+  steps       Json? // Array of step strings
   tags        String[]
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -649,8 +694,8 @@ model TicketPlaybookRecommendation {
   createdAt   DateTime @default(now())
 
   // Relations
-  ticket    IncidentTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  playbook  Playbook        @relation(fields: [playbookId], references: [id], onDelete: Cascade)
+  ticket   IncidentTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  playbook Playbook       @relation(fields: [playbookId], references: [id], onDelete: Cascade)
 
   @@unique([ticketId, playbookId])
 }
@@ -903,6 +948,7 @@ enum Source {
   HIGH
   CRITICAL
 }
+
 enum Impact {
   LOW
   MEDIUM

@@ -32,12 +32,12 @@ export class IMSService {
       }
 
       // Check if user already has a business
-      const existingBusiness = await prisma.business.findUnique({
+      const existingBusiness = await prisma.imssetup.findUnique({
         where: { userId }
       });
 
       if (existingBusiness) {
-        throw new Error('User already has a business setup');
+        throw new Error('User already has a IMS setup');
       }
 
       // Start transaction for atomic operations
@@ -49,14 +49,14 @@ export class IMSService {
           userId: userId,
         };
 
-        const business = await tx.business.create({
+        const business = await tx.imssetup.create({
           data: businessData
         });
 
         // 2. Create Business Dashboard
-        const dashboard = await tx.businessDashboard.create({
+        const dashboard = await tx.imssetupDashboard.create({
           data: {
-            businessId: business.id,
+            imssetupId: business.id,
             colorAccent: '#4A90E2',
             defaultDashboard: 'SCRUBBE_DASHBOARD_SOUR',
             prefferedIntegration: ['JIRA'],
@@ -74,7 +74,7 @@ export class IMSService {
         );
 
         // 4. Update business with dashboard ID
-        await tx.business.update({
+        await tx.imssetup.update({
           where: { id: business.id },
           data: { dashBoardId: dashboard.id }
         });
