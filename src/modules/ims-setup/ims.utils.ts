@@ -76,15 +76,6 @@ export const calculateUserLevel = (
 
 
 
-
-
-
-
-
-
-
-
-
 /**
  * Generates a valid domain name from an input string
  * @param input The input string to convert to a domain
@@ -95,29 +86,24 @@ export function generateDomain(input: string): string {
     if (!input || input.trim() === '') {
         return 'default.incident.scrubbe.com';
     }
-
     // Step 1: Convert to lowercase
     let processed = input.toLowerCase().trim();
-
     // Step 2: Replace invalid characters with hyphens
     // Keep only: a-z, 0-9, hyphens (but not at start/end)
     processed = processed
         .replace(/[^a-z0-9-]/g, '-')      // Replace invalid chars with hyphens
         .replace(/-+/g, '-')              // Replace multiple hyphens with single
         .replace(/^-|-$/g, '');            // Remove leading/trailing hyphens
-
     // Step 3: Handle empty result after processing
     if (processed.length === 0) {
         processed = 'default';
     }
-
     // Step 4: Truncate to max label length (63 characters)
     if (processed.length > 63) {
         processed = processed.substring(0, 63);
         // Ensure we don't end with a hyphen after truncation
         processed = processed.replace(/-$/, '');
     }
-
     // Step 5: Internationalization support (punycode conversion)
     // This handles non-ASCII characters (e.g., Chinese, Arabic, emojis)
     try {
@@ -129,7 +115,39 @@ export function generateDomain(input: string): string {
         // Fallback to original processed string if URL parsing fails
         console.warn('Punycode conversion failed, using ASCII fallback:', error);
     }
-
     // Final domain assembly
     return `${processed}.incident.scrubbe.com`;
+}
+
+/**
+ * Extracts company name from a subdomain
+ * @param host The host header (e.g., 'acme.incident.scrubbe.com')
+ * @returns The company name (e.g., 'acme') or null if not found
+ */
+export function extractCompanyNameFromHost(host: string): string | null {
+    if (!host) return null;
+    
+    // Remove port if present
+    const hostname = host.split(':')[0];
+    
+    // Check if the host ends with our main domain
+    const mainDomain = 'incident.scrubbe.com';
+    if (!hostname.endsWith(`.${mainDomain}`) && hostname !== mainDomain) {
+        return null;
+    }
+    
+    // Extract the subdomain part
+    const subdomain = hostname.substring(0, hostname.length - mainDomain.length - 1);
+    
+    // If the subdomain is empty, return null
+    if (!subdomain) {
+        return null;
+    }
+    
+    // Validate the subdomain (same as in generateDomain but without the domain part)
+    if (!/^[a-z0-9-]{1,63}$/.test(subdomain)) {
+        return null;
+    }
+    
+    return subdomain;
 }
