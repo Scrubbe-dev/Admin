@@ -75,7 +75,6 @@ export const calculateUserLevel = (
 };
 
 
-
 /**
  * Generates a valid domain name from an input string
  * @param input The input string to convert to a domain

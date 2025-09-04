@@ -1,15 +1,29 @@
 import { Request, Response } from 'express';
 import { IMSService } from './ims.service';
 import { IMSSetupRequest, IMSSetupResponse } from './ims.type';
+import { TokenService } from "../auth/services/token.service";
+import { UnauthorizedError } from '../auth/error';
 
+
+const tokenService: TokenService = new TokenService(process.env.JWT_SECRET!,process.env.JWT_EXPIRES_IN || "1h", 15);
 export class IMSController {
   /**
    * Setup IMS endpoint
    */
+  
   static async setupIMS(req: Request, res: Response): Promise<void> {
     try {
       // const userId = (req as any).user?.id; // Assuming user is authenticated and user ID is available
-      const userId = req.user?.id
+       const authHeader = req.headers.authorization;
+      
+            if (!authHeader || !authHeader.startsWith("Bearer ")) {
+              throw new UnauthorizedError("Authentication required");
+            }
+      
+            const token = authHeader.split(" ")[1];
+            const payload = await tokenService.verifyAccessToken(token);
+
+            const userId = payload.sub
 
 
       if (!userId) {
