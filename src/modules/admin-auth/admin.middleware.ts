@@ -9,6 +9,8 @@ declare global {
       user?: {
         id: string;
         sub: string;
+        firstName: string;
+        lastName: string;
         email: string;
         accountType?: AccountType;
         businessId?: string;
@@ -28,7 +30,14 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   const token = authHeader.split(' ')[1];
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id:string; sub: string; email: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {id: string;
+        sub: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        accountType?: AccountType;
+        businessId?: string;
+        scopes?: string[] };
     req.user = decoded;
     next();
   } catch (err) {

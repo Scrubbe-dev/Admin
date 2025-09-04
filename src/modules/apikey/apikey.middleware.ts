@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ApiKeyService } from "./apikey.service";
 import { AuthenticatedRequest, VerifyApiKeyResponse } from "./apikey.types";
+import { AccountType } from "@prisma/client";
 
 const apiKeyService = new ApiKeyService();
 
@@ -37,8 +38,14 @@ export async function apiKeyAuthMiddleware(
   req.user = {
     id: verification.userId!,
     sub: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    accountType: AccountType.DEVELOPER,
+    businessId: "" ,
+    scopes: []
   };
+
 
   next();
 }
