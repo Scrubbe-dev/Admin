@@ -295,6 +295,6 @@ imsRouter.post(
  *                   type: string
  *                   example: "Database connection error"
  */
-imsRouter.get('/health', IMSController.healthCheck);
+imsRouter.get('/ims/health', IMSController.healthCheck);
 
 export default imsRouter;
