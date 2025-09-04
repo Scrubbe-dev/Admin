@@ -133,7 +133,8 @@ model Business {
   primaryRegion              String?
   logo                       String?
   address                    String?
-  companySize                String
+  companySize                String?
+  companyPurpose             String?
   purpose                    String?
   dashBoardId                String?                      @unique
   userId                     String                       @unique

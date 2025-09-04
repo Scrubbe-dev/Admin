@@ -9,7 +9,7 @@ export interface InviteMemberRequest {
 
 export interface IMSSetupRequest {
   companyName: string;
-  companySize: string;
+  companyPurpose: string;
   inviteMembers: InviteMemberRequest[];
 }
 
@@ -25,7 +25,7 @@ export interface IMSSetupResponse {
 
 export interface BusinessCreationData {
   name: string;
-  companySize: string;
+  companyPurpose: string;
   userId: string;
   industry?: string;
   primaryRegion?: string;

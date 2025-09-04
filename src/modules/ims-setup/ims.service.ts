@@ -45,7 +45,7 @@ export class IMSService {
         // 1. Create Business
         const businessData: BusinessCreationData = {
           name: requestData.companyName,
-          companySize: requestData.companySize,
+          companyPurpose: requestData.companyPurpose,
           userId: userId,
         };
 
@@ -171,8 +171,8 @@ export class IMSService {
       errors.push('Company name is required');
     }
 
-    if (!data.companySize || typeof data.companySize !== 'string' || data.companySize.trim().length === 0) {
-      errors.push('Company size is required');
+    if (!data.companyPurpose || typeof data.companyPurpose !== 'string' || data.companyPurpose.trim().length === 0) {
+      errors.push('Company purpose is required');
     }
 
     if (!Array.isArray(data.inviteMembers)) {
