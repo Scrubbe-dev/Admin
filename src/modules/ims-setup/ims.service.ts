@@ -66,12 +66,12 @@ export class IMSService {
         });
 
         // 3. Process invitations
-        const inviteResults = await this.processInvitations(
-          tx, 
-          requestData.inviteMembers, 
-          business.id,
-          {...user,firstName: user.firstName || '', lastName: user.lastName || ''} 
-        );
+        // const inviteResults = await this.processInvitations(
+        //   tx, 
+        //   requestData.inviteMembers, 
+        //   business.id,
+        //   {...user,firstName: user.firstName || '', lastName: user.lastName || ''} 
+        // );
 
         // 4. Update business with dashboard ID
         await tx.imssetup.update({
@@ -82,10 +82,10 @@ export class IMSService {
         return {
           success: true,
           message: 'IMS setup completed successfully',
-          businessId: business.id,
+          imssetupId: business.id,
           dashboardId: dashboard.id,
-          invitesSent: inviteResults.sent,
-          totalInvites: inviteResults.total,
+          // invitesSent: inviteResults.sent,
+          // totalInvites: inviteResults.total,
           domain: generateDomain(requestData.companyName)
         };
       });
@@ -99,67 +99,67 @@ export class IMSService {
   /**
    * Process member invitations
    */
-  private static async processInvitations(
-    tx: any,
-    inviteMembers: any[],
-    businessId: string,
-    user: { id: string; email: string; firstName?: string; lastName?: string }
-  ): Promise<{ sent: number; total: number }> {
-    let sentCount = 0;
-    const emailService = new IMSEmailService();
-    for (const member of inviteMembers) {
-      try {
-        const inviteData: InviteCreationData = {
-          email: member.inviteEmail,
-          role: member.role,
-          accessPermissions: member.accessPermissions,
-          sentById: businessId,
-          Level: member.Level
-        };
+  // private static async processInvitations(
+  //   tx: any,
+  //   inviteMembers: any[],
+  //   businessId: string,
+  //   user: { id: string; email: string; firstName?: string; lastName?: string }
+  // ): Promise<{ sent: number; total: number }> {
+  //   let sentCount = 0;
+  //   const emailService = new IMSEmailService();
+  //   for (const member of inviteMembers) {
+  //     try {
+  //       const inviteData: InviteCreationData = {
+  //         email: member.inviteEmail,
+  //         role: member.role,
+  //         accessPermissions: member.accessPermissions,
+  //         sentById: businessId,
+  //         Level: member.Level
+  //       };
 
-        // Check if invite already exists for this email and business
-        const existingInvite = await tx.invites.findUnique({
-          where: {
-            email_sentById: {
-              email: member.inviteEmail,
-              sentById: businessId
-            }
-          }
-        });
+  //       // Check if invite already exists for this email and business
+  //       const existingInvite = await tx.invites.findUnique({
+  //         where: {
+  //           email_sentById: {
+  //             email: member.inviteEmail,
+  //             sentById: businessId
+  //           }
+  //         }
+  //       });
 
-        if (existingInvite) {
-          console.log(`Invite already exists for ${member.inviteEmail}`);
-          continue;
-        }
+  //       if (existingInvite) {
+  //         console.log(`Invite already exists for ${member.inviteEmail}`);
+  //         continue;
+  //       }
 
-        // Create invite
-        const invite = await tx.invites.create({
-          data: inviteData
-        });
+  //       // Create invite
+  //       const invite = await tx.invites.create({
+  //         data: inviteData
+  //       });
        
-        const existingBusiness = await prisma.business.findUnique({
-        where: { id: businessId}
-      });
+  //       const existingBusiness = await prisma.business.findUnique({
+  //       where: { id: businessId}
+  //     });
 
-        // Send invitation email
-    await emailService.sendIMSInvitation(
-        member.inviteEmail,
-        `${user.firstName} ${user.lastName}`.trim() || user.email,
-        existingBusiness?.name || '', // Company name from business
-        member.role,
-        member.Level,
-        invite.id // Using invite ID as token for now
-      );
-        sentCount++;
+  //       // Send invitation email
+  //   await emailService.sendIMSInvitation(
+  //       member.inviteEmail,
+  //       `${user.firstName} ${user.lastName}`.trim() || user.email,
+  //       existingBusiness?.name || '', // Company name from business
+  //       member.role,
+  //       member.Level,
+  //       invite.id // Using invite ID as token for now
+  //     );
+  //       sentCount++;
 
-      } catch (inviteError) {
-        console.error(`Failed to process invite for ${member.inviteEmail}:`, inviteError);
-        // Continue with other invites even if one fails
-      }
-    }
+  //     } catch (inviteError) {
+  //       console.error(`Failed to process invite for ${member.inviteEmail}:`, inviteError);
+  //       // Continue with other invites even if one fails
+  //     }
+  //   }
 
-    return { sent: sentCount, total: inviteMembers.length };
-  }
+  //   return { sent: sentCount, total: inviteMembers.length };
+  // }
 
   /**
    * Validate IMS setup request
