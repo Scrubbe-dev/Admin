@@ -2,8 +2,16 @@ import { Router } from 'express';
 import { IMSController } from './ims.controller';
 // import { authenticateToken } from '../middleware/authMiddleware';
 // import { validateIMSSetup } from '../middleware/validationMiddleware';
+import { AuthMiddleware } from "../auth/middleware/auth.middleware";
+import { TokenService } from "../auth/services/token.service";
 
 const imsRouter = Router();
+const tokenService = new TokenService(
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+const authMiddleware = new AuthMiddleware(tokenService)
 
 /**
  * @swagger
@@ -241,7 +249,8 @@ const imsRouter = Router();
  */
 imsRouter.post(
   '/ims/setup',
-  IMSController.setupIMS
+  authMiddleware.authenticate,
+   (req, res) =>IMSController.setupIMS(req, res)
 );
 
 /**

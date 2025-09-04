@@ -7,6 +7,7 @@ import {
 } from './ims.type';
 import { IMSEmailService } from './ims.emailService';
 import { generateRandomString } from './ims.helpers';
+import { generateDomain } from './ims.utils';
 
 const prisma = new PrismaClient();
 
@@ -84,7 +85,8 @@ export class IMSService {
           businessId: business.id,
           dashboardId: dashboard.id,
           invitesSent: inviteResults.sent,
-          totalInvites: inviteResults.total
+          totalInvites: inviteResults.total,
+          domain: generateDomain(requestData.companyName)
         };
       });
 

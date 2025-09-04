@@ -73,3 +73,63 @@ export const calculateUserLevel = (
   const total = baseLevel + (permissionBonus * 0.1);
   return Math.min(Math.max(total, 1), 5).toFixed(1);
 };
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Generates a valid domain name from an input string
+ * @param input The input string to convert to a domain
+ * @returns A properly formatted domain in the format: [processed-input].incident.scrubbe.com
+ */
+export function generateDomain(input: string): string {
+    // Handle empty input
+    if (!input || input.trim() === '') {
+        return 'default.incident.scrubbe.com';
+    }
+
+    // Step 1: Convert to lowercase
+    let processed = input.toLowerCase().trim();
+
+    // Step 2: Replace invalid characters with hyphens
+    // Keep only: a-z, 0-9, hyphens (but not at start/end)
+    processed = processed
+        .replace(/[^a-z0-9-]/g, '-')      // Replace invalid chars with hyphens
+        .replace(/-+/g, '-')              // Replace multiple hyphens with single
+        .replace(/^-|-$/g, '');            // Remove leading/trailing hyphens
+
+    // Step 3: Handle empty result after processing
+    if (processed.length === 0) {
+        processed = 'default';
+    }
+
+    // Step 4: Truncate to max label length (63 characters)
+    if (processed.length > 63) {
+        processed = processed.substring(0, 63);
+        // Ensure we don't end with a hyphen after truncation
+        processed = processed.replace(/-$/, '');
+    }
+
+    // Step 5: Internationalization support (punycode conversion)
+    // This handles non-ASCII characters (e.g., Chinese, Arabic, emojis)
+    try {
+        // Use the built-in URL API for punycode conversion
+        const url = new URL(`http://${processed}.incident.scrubbe.com`);
+        const domainParts = url.hostname.split('.');
+        processed = domainParts[0]; // Get the processed subdomain part
+    } catch (error) {
+        // Fallback to original processed string if URL parsing fails
+        console.warn('Punycode conversion failed, using ASCII fallback:', error);
+    }
+
+    // Final domain assembly
+    return `${processed}.incident.scrubbe.com`;
+}

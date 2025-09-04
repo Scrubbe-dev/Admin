@@ -8,8 +8,10 @@ export class IMSController {
    */
   static async setupIMS(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user?.id; // Assuming user is authenticated and user ID is available
-      
+      // const userId = (req as any).user?.id; // Assuming user is authenticated and user ID is available
+      const userId = req.user?.id
+
+
       if (!userId) {
         res.status(401).json({
           success: false,

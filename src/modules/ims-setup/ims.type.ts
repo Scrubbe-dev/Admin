@@ -20,6 +20,7 @@ export interface IMSSetupResponse {
   dashboardId?: string;
   invitesSent?: number;
   totalInvites?: number;
+  domain:string;
 }
 
 export interface BusinessCreationData {
