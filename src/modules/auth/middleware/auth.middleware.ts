@@ -10,8 +10,8 @@ declare global {
       user?: {
         id: string;
         sub: string;
-        firstName:string;
-        lastName:string;
+        firstName: string;
+        lastName: string;
         email: string;
         accountType?: AccountType;
         businessId?: string;
@@ -24,10 +24,10 @@ declare global {
 export class AuthMiddleware {
   constructor(private tokenService: TokenService) {}
 
+  // In your AuthMiddleware class, update the authenticate method
   authenticate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
-
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
         throw new UnauthorizedError("Authentication required");
       }
@@ -35,9 +35,12 @@ export class AuthMiddleware {
       const token = authHeader.split(" ")[1];
       const payload = await this.tokenService.verifyAccessToken(token);
 
-      req.user = payload as any;
+      // Ensure we have the user ID in the payload
+      if (!payload.sub) {
+        throw new UnauthorizedError("Invalid token: missing user ID");
+      }
 
-      console.log("=========== REQ.USER ===========", req.user);
+      req.user = payload as any;
       next();
     } catch (err) {
       next(err);
@@ -51,9 +54,7 @@ export class AuthMiddleware {
       }
 
       const hasRequiredRole = roles.some((role) =>
-        (
-          req.user as any
-        ).roles.includes(role)
+        (req.user as any).roles.includes(role)
       );
       if (!hasRequiredRole) {
         throw new ForbiddenError("Insufficient permissions");

@@ -16,6 +16,7 @@ import {
   OAuthBusinesRequest,
   OAuthLoginRequest,
   MappedUser,
+  ChangePasswordInput,
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
@@ -442,4 +443,61 @@ export class AuthService {
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
+
+  // Add this method to your AuthService class
+async changePassword(userId: string, input: ChangePasswordInput): Promise<{ message: string }> {
+  try {
+    // Get user with password hash
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true, passwordChangedAt: true }
+    });
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedError("User not found or password not set");
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await this.securityUtils.verifyPassword(
+      input.currentPassword,
+      user.passwordHash
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedError("Current password is incorrect");
+    }
+
+    // Check if new password is same as current
+    const isNewPasswordSame = await this.securityUtils.verifyPassword(
+      input.newPassword,
+      user.passwordHash
+    );
+
+    if (isNewPasswordSame) {
+      throw new ConflictError("New password must be different from current password");
+    }
+
+    // Hash the new password
+    const newPasswordHash = await this.securityUtils.hashPassword(input.newPassword);
+
+    // Update user password
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: newPasswordHash,
+        passwordChangedAt: new Date()
+      }
+    });
+
+    // Revoke all refresh tokens for security
+    await this.prisma.refreshToken.updateMany({
+      where: { userId },
+      data: { revokedAt: new Date() }
+    });
+
+    return { message: "Password changed successfully" };
+  } catch (error) {
+    throw new UnauthorizedError(`Error changing password: ${error}`);
+  }
+}
 }

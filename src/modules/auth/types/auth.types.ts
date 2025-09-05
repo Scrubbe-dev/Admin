@@ -143,3 +143,8 @@ export type ResetPasswordInput = {
   token: string;
   password: string;
 };
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};

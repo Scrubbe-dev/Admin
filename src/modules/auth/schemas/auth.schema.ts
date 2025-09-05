@@ -157,6 +157,7 @@ export const authSchemas = {
   verifyOTP: verifyOTPSchema,
 };
 
+
 // Type exports
 export type RegisterDevRequest = z.infer<typeof registerDevSchema>;
 export type OAuthLoginRequest = z.infer<typeof loginWithOauthSchema>;

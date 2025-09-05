@@ -886,6 +886,60 @@ export function createAuthRouter(
    */
   router.post("/logout", authController.logout);
 
+  // Add this route to your createAuthRouter function
+  /**
+   * @swagger
+   * /api/v1/auth/change-password:
+   *   post:
+   *     summary: Change user password
+   *     description: Allows an authenticated user to change their password
+   *     tags: [Authentication]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - currentPassword
+   *               - newPassword
+   *             properties:
+   *               currentPassword:
+   *                 type: string
+   *                 description: User's current password
+   *                 example: "CurrentPassword123!"
+   *               newPassword:
+   *                 type: string
+   *                 description: New password to set
+   *                 example: "NewSecurePassword456!"
+   *     responses:
+   *       200:
+   *         description: Password changed successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Password changed successfully"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       401:
+   *         description: Unauthorized (invalid current password or not authenticated)
+   *       409:
+   *         description: Conflict (new password same as current)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post(
+    "/change-password",
+    authMiddleware.authenticate,
+    authController.changePassword
+  );
+
   /**
    * @swagger
    * /api/v1/auth/me:

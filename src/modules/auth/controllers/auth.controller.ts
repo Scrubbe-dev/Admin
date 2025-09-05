@@ -10,6 +10,7 @@ import {
   OAuthRequest,
   OAuthBusinesRequest,
   OAuthLoginRequest,
+  ChangePasswordInput,
 } from "../types/auth.types";
 import { validateRequest } from "../utils/validators";
 import {
@@ -21,7 +22,9 @@ import {
   registerDevByOauth,
   registerBusinessByOauth,
   loginWithOauthSchema,
+  changePasswordSchema,
 } from "../schemas/auth.schema";
+import { UnauthorizedError } from "../error";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -182,4 +185,28 @@ export class AuthController {
       next(error);
     }
   };
+
+  // Add this method to your AuthController class
+changePassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Validate request body
+    const input = await validateRequest<ChangePasswordInput>(
+      changePasswordSchema,
+      req.body
+    );
+
+    // Get user ID from authenticated request
+    const userId = req.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedError("User not authenticated");
+    }
+
+    // Call service method
+    const result = await this.authService.changePassword(userId, input);
+    
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 }

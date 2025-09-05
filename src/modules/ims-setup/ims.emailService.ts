@@ -6,7 +6,8 @@ import * as Handlebars from 'handlebars';
 import { emailConfig } from '../../config/nodemailer.config';
 import { getTemplatePath } from './utils/path.utils';
 import {imsTemplatesFiles} from './newtemplates/emails/alldata'
-
+import {config} from 'dotenv';
+config();
 
 
 export class IMSEmailService {
