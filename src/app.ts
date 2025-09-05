@@ -75,11 +75,7 @@ const prisma = new PrismaClient();
 
 const cleanupService = new CleanupService(prisma);
 
-// Run cleanup job every hour
-cron.schedule('0 * * * *', async () => {
-  console.log('Running token cleanup job...');
-  await cleanupService.cleanupExpiredTokens();
-});
+
 const server = http.createServer(app);
 const io = new Server(server, {
   // path: "/api/v1/incident-ticket/conversation",
@@ -185,6 +181,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
 });
+// Run cleanup job every hour
 app.use(limiter);
 
 // Routes
@@ -221,13 +218,17 @@ app.use("/api/v1", imsRouter); // New  IMS management route
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 
 // app.use((err: Error, req: express.Request, res: express.Response) => {
-//   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-//   res.status(statusCode).json({
-//     success: false,
-//     error: 'Internal server error'
-//   });
-// });
-
+  //   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  //   res.status(statusCode).json({
+    //     success: false,
+    //     error: 'Internal server error'
+    //   });
+    // });
+    
+  cron.schedule('0 * * * *', async () => {
+    console.log('Running token cleanup job...');
+    await cleanupService.cleanupExpiredTokens();
+  });
 app.use(
   (
     err: Error,
