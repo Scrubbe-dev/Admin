@@ -57,17 +57,29 @@ import intelRouter from "./modules/intel/intel.route";
 import escalateRouter from "./modules/escalate/escalate.route";
 import playbookRouter from "./modules/playbook/playbook.route";
 import imsRouter from "./modules/ims-setup/ims.router";
+// In your main application file (e.g., index.ts or app.ts)
+
+import cron from 'node-cron';
+import { CleanupService } from './modules/auth/services/cleanup.service';
+
 
 dotenvConfig();
 
 // SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 /**
  * ========================= ALWAYS RUN BUILD SCRIPT BEFORE PUSHING TO PROD =========================
- */
+*/
 
 const app = express();
 const prisma = new PrismaClient();
 
+const cleanupService = new CleanupService(prisma);
+
+// Run cleanup job every hour
+cron.schedule('0 * * * *', async () => {
+  console.log('Running token cleanup job...');
+  await cleanupService.cleanupExpiredTokens();
+});
 const server = http.createServer(app);
 const io = new Server(server, {
   // path: "/api/v1/incident-ticket/conversation",

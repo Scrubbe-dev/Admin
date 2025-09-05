@@ -125,6 +125,9 @@ importers:
       node:
         specifier: ^22.18.0
         version: 22.18.0
+      node-cron:
+        specifier: ^4.2.1
+        version: 4.2.1
       nodemailer:
         specifier: ^6.10.1
         version: 6.10.1
@@ -2633,6 +2636,10 @@ packages:
 
   node-bin-setup@1.1.4:
     resolution: {integrity: sha512-vWNHOne0ZUavArqPP5LJta50+S8R261Fr5SvGul37HbEDcowvLjwdvd0ZeSr0r2lTSrPxl6okq9QUw8BFGiAxA==}
+
+  node-cron@4.2.1:
+    resolution: {integrity: sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==}
+    engines: {node: '>=6.0.0'}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -6412,6 +6419,8 @@ snapshots:
   node-addon-api@5.1.0: {}
 
   node-bin-setup@1.1.4: {}
+
+  node-cron@4.2.1: {}
 
   node-domexception@1.0.0: {}
 

@@ -135,6 +135,15 @@ export type RefreshTokenInput = {
   refreshToken: string;
 };
 
+
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+
+
+// Add to existing types
 export type ForgotPasswordInput = {
   email: string;
 };
@@ -144,7 +153,6 @@ export type ResetPasswordInput = {
   password: string;
 };
 
-export type ChangePasswordInput = {
-  currentPassword: string;
-  newPassword: string;
+export type ValidateResetTokenInput = {
+  token: string;
 };

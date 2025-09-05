@@ -17,6 +17,9 @@ import {
   OAuthLoginRequest,
   MappedUser,
   ChangePasswordInput,
+  ValidateResetTokenInput,
+  ResetPasswordInput,
+  ForgotPasswordInput,
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
@@ -443,6 +446,158 @@ export class AuthService {
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   }
+
+  // In AuthService class
+
+async forgotPassword(input: ForgotPasswordInput): Promise<{ message: string }> {
+  try {
+    // Find user by email
+    const user = await this.prisma.user.findUnique({
+      where: { email: input.email },
+    });
+
+    // Always return the same message regardless of whether the user exists
+    // to prevent email enumeration attacks
+    if (!user) {
+      return { message: "If your email is registered, you will receive a password reset link" };
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return { message: "If your email is registered, you will receive a password reset link" };
+    }
+
+    // Check if user registered with OAuth (no password set)
+    if (user.registerdWithOauth || !user.passwordHash) {
+      return { message: "If your email is registered, you will receive a password reset link" };
+    }
+
+    // Generate a secure random token
+    const token = this.securityUtils.generateRandomToken(32);
+    
+    // Calculate expiration time (1 hour from now)
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Store the reset token in the database
+    await this.prisma.resetToken.create({
+      data: {
+        userId: user.id,
+        email: user.email,
+        token,
+        type: 'RESET_LINK',
+        expiresAt,
+      },
+    });
+
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(user.email, token);
+
+    return { message: "If your email is registered, you will receive a password reset link" };
+  } catch (error) {
+    // Log the error but return a generic message to prevent information leakage
+    console.error(`Error in forgotPassword: ${error}`);
+    return { message: "If your email is registered, you will receive a password reset link" };
+  }
+}
+
+async resetPassword(input: ResetPasswordInput): Promise<{ message: string }> {
+  try {
+    // Find the reset token
+    const resetToken = await this.prisma.resetToken.findFirst({
+      where: { token: input.token },
+      include: { user: true },
+    });
+
+    // Check if token exists
+    if (!resetToken) {
+      throw new UnauthorizedError("Invalid or expired reset token");
+    }
+
+    // Check if token is expired
+    if (resetToken.expiresAt < new Date()) {
+      throw new UnauthorizedError("Reset token has expired");
+    }
+
+    // Check if token has already been used
+    if (resetToken.usedAt) {
+      throw new UnauthorizedError("Reset token has already been used");
+    }
+
+    // Check token type
+    if (resetToken.type !== 'RESET_LINK') {
+      throw new UnauthorizedError("Invalid token type");
+    }
+
+    // Check if user exists and is active
+    if (!resetToken.id || !resetToken) {
+      throw new UnauthorizedError("User account is not active");
+    }
+
+    // Hash the new password
+    const newPasswordHash = await this.securityUtils.hashPassword(input.password);
+
+    // Update user password
+    await this.prisma.user.update({
+      where: { id: resetToken.userId },
+      data: {
+        passwordHash: newPasswordHash,
+        passwordChangedAt: new Date(),
+      },
+    });
+
+    // Mark the token as used
+    await this.prisma.resetToken.update({
+      where: { id: resetToken.id },
+      data: { usedAt: new Date() },
+    });
+
+    // Revoke all refresh tokens for security
+    await this.prisma.refreshToken.updateMany({
+      where: { userId: resetToken.userId },
+      data: { revokedAt: new Date() },
+    });
+
+    // Send password change confirmation email
+    await this.emailService.sendPasswordChangedConfirmation(resetToken?.email);
+
+    return { message: "Password has been reset successfully" };
+  } catch (error) {
+    throw new UnauthorizedError(`Error resetting password: ${error}`);
+  }
+}
+
+async validateResetToken(input: ValidateResetTokenInput): Promise<{ valid: boolean; message?: string }> {
+  try {
+    // Find the reset token
+    const resetToken = await this.prisma.resetToken.findFirst({
+      where: { token: input.token },
+    });
+
+    // Check if token exists
+    if (!resetToken) {
+      return { valid: false, message: "Invalid reset token" };
+    }
+
+    // Check if token is expired
+    if (resetToken.expiresAt < new Date()) {
+      return { valid: false, message: "Reset token has expired" };
+    }
+
+    // Check if token has already been used
+    if (resetToken.usedAt) {
+      return { valid: false, message: "Reset token has already been used" };
+    }
+
+    // Check token type
+    if (resetToken.type !== 'RESET_LINK') {
+      return { valid: false, message: "Invalid token type" };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, message: "Error validating reset token" };
+  }
+};
 
   // Add this method to your AuthService class
 async changePassword(userId: string, input: ChangePasswordInput): Promise<{ message: string }> {

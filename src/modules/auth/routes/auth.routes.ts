@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
 import { AuthMiddleware } from "../middleware/auth.middleware";
+import { RateLimiterMiddleware } from "../middleware/rateLimit.middleware";
 
 export function createAuthRouter(
   authController: AuthController,
@@ -885,6 +886,143 @@ export function createAuthRouter(
    *         description: Internal server error
    */
   router.post("/logout", authController.logout);
+
+  // In createAuthRouter function
+
+  /**
+   * @swagger
+   * /api/v1/auth/forgot-password:
+   *   post:
+   *     summary: Request a password reset
+   *     description: Sends a password reset link to the user's email if the email is registered
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 example: "user@example.com"
+   *     responses:
+   *       200:
+   *         description: If the email is registered, a reset link will be sent
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "If your email is registered, you will receive a password reset link"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       429:
+   *         description: Too many requests (rate limited)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post(
+    "/forgot-password",
+    RateLimiterMiddleware.createForgotPasswordLimiter(),
+    authController.forgotPassword
+  );
+
+  /**
+   * @swagger
+   * /api/v1/auth/reset-password:
+   *   post:
+   *     summary: Reset user password
+   *     description: Resets the user's password using a valid reset token
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - token
+   *               - password
+   *             properties:
+   *               token:
+   *                 type: string
+   *                 description: The reset token received via email
+   *                 example: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+   *               password:
+   *                 type: string
+   *                 format: password
+   *                 description: New password (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)
+   *                 example: "NewSecurePassword123!"
+   *     responses:
+   *       200:
+   *         description: Password reset successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Password has been reset successfully"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       401:
+   *         description: Unauthorized (invalid or expired token)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post(
+    "/reset-password",
+    RateLimiterMiddleware.createResetPasswordLimiter(),
+    authController.resetPassword
+  );
+
+  /**
+   * @swagger
+   * /api/v1/auth/validate-reset-token:
+   *   post:
+   *     summary: Validate a password reset token
+   *     description: Checks if a password reset token is valid and not expired
+   *     tags: [Authentication]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - token
+   *             properties:
+   *               token:
+   *                 type: string
+   *                 description: The reset token to validate
+   *                 example: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+   *     responses:
+   *       200:
+   *         description: Token validation result
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 valid:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Token is valid"
+   *       400:
+   *         description: Bad request (invalid input)
+   *       500:
+   *         description: Internal server error
+   */
+  router.post("/validate-reset-token", authController.validateResetToken);
 
   // Add this route to your createAuthRouter function
   /**

@@ -145,6 +145,12 @@ export const verifyOTPSchema = z.object({
   code: z.string().min(4, "OTP code is required"),
 });
 
+
+export const validateResetTokenSchema = z.object({
+  token: z.string().min(1, "Reset token is required"),
+});
+
+
 // Export all schemas
 export const authSchemas = {
   register: registerDevSchema,
@@ -152,10 +158,13 @@ export const authSchemas = {
   refreshToken: refreshTokenSchema,
   forgotPassword: forgotPasswordSchema,
   resetPassword: resetPasswordSchema,
+  validateResetTokenSchema: validateResetTokenSchema,
   verifyEmail: verifyEmailSchema,
   changePassword: changePasswordSchema,
   verifyOTP: verifyOTPSchema,
 };
+
+
 
 
 // Type exports
@@ -167,6 +176,7 @@ export type RegisterBusinessRequest = z.infer<typeof registerBusinessSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ValidateResetTokenInput = z.infer<typeof validateResetTokenSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

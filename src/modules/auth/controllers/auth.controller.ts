@@ -11,6 +11,9 @@ import {
   OAuthBusinesRequest,
   OAuthLoginRequest,
   ChangePasswordInput,
+  ValidateResetTokenInput,
+  ResetPasswordInput,
+  ForgotPasswordInput,
 } from "../types/auth.types";
 import { validateRequest } from "../utils/validators";
 import {
@@ -23,6 +26,9 @@ import {
   registerBusinessByOauth,
   loginWithOauthSchema,
   changePasswordSchema,
+  validateResetTokenSchema,
+  resetPasswordSchema,
+  forgotPasswordSchema,
 } from "../schemas/auth.schema";
 import { UnauthorizedError } from "../error";
 
@@ -185,6 +191,47 @@ export class AuthController {
       next(error);
     }
   };
+
+  // In AuthController class
+
+forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const input = await validateRequest<ForgotPasswordInput>(
+      forgotPasswordSchema,
+      req.body
+    );
+    const result = await this.authService.forgotPassword(input);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const input = await validateRequest<ResetPasswordInput>(
+      resetPasswordSchema,
+      req.body
+    );
+    const result = await this.authService.resetPassword(input);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+validateResetToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const input = await validateRequest<ValidateResetTokenInput>(
+      validateResetTokenSchema,
+      req.body
+    );
+    const result = await this.authService.validateResetToken(input);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
   // Add this method to your AuthController class
 changePassword = async (req: Request, res: Response, next: NextFunction) => {
