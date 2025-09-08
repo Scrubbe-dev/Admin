@@ -1,4 +1,4 @@
-import * as sgMail from "@sendgrid/mail";
+import sgMail from "@sendgrid/mail";
 import { SendGridConfig } from "../../../config/sendgrid.config";
 import {
   EmailService,
