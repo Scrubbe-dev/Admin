@@ -82,6 +82,7 @@
     "qs": "^6.14.0",
     "rate-limiter-flexible": "^7.0.0",
     "redis": "^4.7.0",
+    "resend": "^6.0.3",
     "satelize": "^0.2.0",
     "simple-node-logger": "^21.8.12",
     "slugify": "^1.6.6",

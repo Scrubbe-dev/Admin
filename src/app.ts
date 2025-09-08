@@ -20,6 +20,7 @@ import { SecurityUtils } from "./modules/auth/utils/security.utils";
 import { AuthMiddleware } from "./modules/auth/middleware/auth.middleware";
 import { AuthController } from "./modules/auth/controllers/auth.controller";
 // import { EmailServices } from './modules/password-reset/email.services';
+import { ResendEmailService } from './modules/auth/services/resend.service'
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 
@@ -58,8 +59,10 @@ import intelRouter from "./modules/intel/intel.route";
 import escalateRouter from "./modules/escalate/escalate.route";
 import playbookRouter from "./modules/playbook/playbook.route";
 import imsRouter from "./modules/ims-setup/ims.router";
-import {sendGridConfig} from "./config/sendgrid.config"
+// import {sendGridConfig} from "./config/sendgrid.config"
+import { resendConfig } from "./config/resend.config"
 // In your main application file (e.g., index.ts or app.ts)
+
 
 import cron from 'node-cron';
 import { CleanupService } from './modules/auth/services/cleanup.service';
@@ -125,8 +128,8 @@ const tokenService = new TokenService(
   config.refreshTokenExpiresInDays
 );
 // BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
-const emailService = new SendGridEmailService(sendGridConfig); // verification token service
-const emailServices = new EmailServices();
+const emailService = new ResendEmailService(resendConfig); // verification token service
+// const emailServices = new EmailServices();
 const authService = new AuthService(
   prisma,
   tokenService,
@@ -140,7 +143,7 @@ console.log(__dirname, "CURRENT DIRECTORY NAME");
 // const PasswordEmailServices =  new EmailService
 const passwordResetService = new PasswordResetService(
   prisma,
-  emailServices,
+  emailService,
   logger
 );
 const passwordResetMiddleware = new PasswordResetMiddleware(

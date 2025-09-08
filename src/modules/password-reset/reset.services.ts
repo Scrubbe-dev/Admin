@@ -8,14 +8,14 @@ import {
   TokenVerificationResult,
   PasswordResetResult
 } from './reset.types';
-import { EmailServices } from './email.services';
+import { EmailService } from '../auth/types/resend.types';
 import { Logger } from './utils/logger';
 import * as bcrypt from 'bcrypt'; // Import bcrypt for better password hashing
 import { SecureCodeGenerator } from './utils/secure-code-generator';
 
 export class PasswordResetService {
   private prisma: PrismaClient;
-  private emailService: EmailServices;
+  private emailService: EmailService;
   private logger: Logger;
   
   // Configuration constants
@@ -25,7 +25,7 @@ export class PasswordResetService {
   private readonly BCRYPT_SALT_ROUNDS = 12;
   private readonly TOKEN_SALT = process.env.TOKEN_SALT || 'default-salt-change-in-production'; // Should be set in environment variables
   
-  constructor(prisma: PrismaClient, emailService: EmailServices, logger: Logger) {
+  constructor(prisma: PrismaClient, emailService: EmailService, logger: Logger) {
     this.prisma = prisma;
     this.emailService = emailService;
     this.logger = logger;
@@ -189,7 +189,6 @@ export class PasswordResetService {
       // Generate a reset link token
       const resetLinkToken = await this.generateResetLinkToken(user.id, user.email);
       
-      // Send the reset link via email
       await this.emailService.sendPasswordResetLink(user.email, resetLinkToken);
       
       this.logger.info(`Password reset link sent to: ${email}`);
