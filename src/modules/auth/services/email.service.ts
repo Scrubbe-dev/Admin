@@ -8,7 +8,7 @@ export class EmailService {
   
   constructor() {
     // Create transporter without logger/debug properties
-    this.transporter = nodemailer.createTransport(emailConfig as any);
+    this.transporter = nodemailer.createTransport(emailConfig);
     
     // Enable debug logging through environment variable
     if (process.env.NODE_ENV === 'development') {
