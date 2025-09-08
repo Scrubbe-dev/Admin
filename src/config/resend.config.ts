@@ -11,7 +11,7 @@ export interface ResendConfig {
 }
 
 export const resendConfig: ResendConfig = {
-  apiKey: process.env.RESEND_API_KEY || "",
+  apiKey: process.env.RESEND_API_KEY || "re_VTGkqs9c_4hkcbYZQ1DhaH285FdqvHUfS",
   from: {
     email: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
     name: process.env.RESEND_FROM_NAME || "Scrubbe",
