@@ -28,7 +28,7 @@ export class PasswordResetRoutes {
     // Step 1: Request password reset (send verification code)
     this.router.post(
       '/request',
-      this.middleware.rateLimit('request') as any,
+      // this.middleware.rateLimit('request') as any,
       this.middleware.validateSchema(RequestResetSchema) as any,
       this.controller.requestReset.bind(this.controller) as any
     );
