@@ -23,7 +23,7 @@ import {
 } from "../types/auth.types";
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
-import { EmailService } from "./email.service";
+import { EmailService } from "../types/sendgrid.types";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 import { InviteUtil } from "../../invite/invite.util";
 import { AuthMapper } from "../mapper/auth.mapper";

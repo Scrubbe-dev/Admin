@@ -34,7 +34,8 @@ import { PasswordResetMiddleware } from "./modules/password-reset/reset.middlewa
 import { PasswordResetRoutes } from "./modules/password-reset/reset.route";
 import { Logger } from "./modules/password-reset/utils/logger";
 import { RateLimiterService } from "./modules/password-reset/utils/rate-limiter";
-import { EmailService } from "./modules/auth/services/email.service";
+// import { EmailService } from "./modules/auth/services/email.service";
+import { SendGridEmailService } from './modules/auth/services/sendgrid-email.service'
 import { errorHandler } from "./middleware/error.middleware";
 import businessRouter from "./modules/business-profile/business.router";
 import ezraRouter from "./modules/ezra-chat/ezra.route";
@@ -57,6 +58,7 @@ import intelRouter from "./modules/intel/intel.route";
 import escalateRouter from "./modules/escalate/escalate.route";
 import playbookRouter from "./modules/playbook/playbook.route";
 import imsRouter from "./modules/ims-setup/ims.router";
+import {sendGridConfig} from "./config/sendgrid.config"
 // In your main application file (e.g., index.ts or app.ts)
 
 import cron from 'node-cron';
@@ -123,7 +125,7 @@ const tokenService = new TokenService(
   config.refreshTokenExpiresInDays
 );
 // BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
-const emailService = new EmailService(); // verification token service
+const emailService = new SendGridEmailService(sendGridConfig); // verification token service
 const emailServices = new EmailServices();
 const authService = new AuthService(
   prisma,
