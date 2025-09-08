@@ -1,21 +1,44 @@
-import Mailgun from "mailgun.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 export const emailConfig = {
-  service: process.env.EMAIL_SERVICE!! || "Gmail", // e.g., 'Gmail', 'SendGrid'
-  host: process.env.EMAIL_HOST!! || "smtp.gmail.com",
-  port: parseInt(process.env.EMAIL_PORT!! || "587", 10),
-  secure: process.env.EMAIL_SECURE === "true", // true for 465, false for other ports
+  service: process.env.EMAIL_SERVICE || "Gmail",
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.EMAIL_PORT || "465", 10), // Changed to 465 (SSL)
+  secure: process.env.EMAIL_SECURE === "true" || true, // Changed to true for SSL
   auth: {
-    user: process.env.EMAIL_USER!!,
-    pass: process.env.EMAIL_PASSWORD!!,
+    user: process.env.EMAIL_USER || "",
+    pass: process.env.EMAIL_PASSWORD || "",
   },
-  from: `"Scrubbe" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+  from: `"Scrubbe" <${process.env.EMAIL_FROM || process.env.EMAIL_USER || ""}>`,
   tls: {
-    rejectUnauthorized: process.env.NODE_ENV!! === "production",
+    // Do not fail on invalid certs
+    rejectUnauthorized: process.env.NODE_ENV === "production",
+    // Enable TLS 1.2 and 1.3
+    minVersion: "TLSv1.2",
   },
+  // Add additional connection options
+  connectionTimeout: 10000,
+  greetingTimeout: 5000,
+  socketTimeout: 10000,
 };
+
+// Validate email configuration
+if (!emailConfig.auth.user || !emailConfig.auth.pass) {
+  console.error("Email configuration is incomplete. Please check EMAIL_USER and EMAIL_PASSWORD environment variables.");
+  throw new Error("Email configuration is incomplete");
+}
+
+// Log configuration (without sensitive data)
+console.log("Email configuration:", {
+  service: emailConfig.service,
+  host: emailConfig.host,
+  port: emailConfig.port,
+  secure: emailConfig.secure,
+  tls: emailConfig.tls,
+});
+
+
 
 // const emailConfigMailGun = new Mailgun(FormData);
 // export const mailGunConfig = emailConfigMailGun.client({

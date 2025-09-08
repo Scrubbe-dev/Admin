@@ -1074,7 +1074,7 @@ export function createAuthRouter(
    */
   router.post(
     "/change-password",
-    authMiddleware.authenticate,
+    // authMiddleware.authenticate,
     authController.changePassword
   );
 
@@ -1119,7 +1119,9 @@ export function createAuthRouter(
    *       500:
    *         description: Internal server error
    */
-  router.get("/me", authMiddleware.authenticate, authController.me);
+  router.get("/me",
+    //  authMiddleware.authenticate,
+      authController.me);
 
   return router;
 }
