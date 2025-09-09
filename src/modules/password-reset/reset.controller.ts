@@ -9,10 +9,11 @@ import { PasswordResetService } from './reset.services';
 import { Logger } from './utils/logger';
 import { PrismaClient } from '@prisma/client';
 import { ResendEmailService } from '../auth/services/resend.service';
+import { createEmailService } from '../auth/services/nodemailer.factory';
 import prisma from '../../lib/prisma'
 import {resendConfig} from '../../config/resend.config'
 // Create service instances
-const emailService = new ResendEmailService(resendConfig);
+const emailService = createEmailService()
 const logger = new Logger();
 const passwordResetService = new PasswordResetService(prisma, emailService, logger);
 

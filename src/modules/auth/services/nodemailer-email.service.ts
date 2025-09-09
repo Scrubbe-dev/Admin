@@ -1,17 +1,19 @@
-import { Resend } from "resend";
-import { ResendConfig } from "../../../config/resend.config";
+import nodemailer from "nodemailer";
+import { NodemailerConfig } from "../../../config/nodemailers.config";
 import {
   EmailService,
   CustomEmailOptions,
   EmailAttachment,
-} from "../types/resend.types";
+} from "../types/nodemailer.types";
 
-export class ResendEmailService implements EmailService {
-  private config: ResendConfig;
-  private resend!: Resend;
+export class NodemailerEmailService implements EmailService {
+  private config: NodemailerConfig;
+  private transporter!: nodemailer.Transporter;
   private isInitialized: boolean = false;
+  private lastEmailSent: number = 0; // Timestamp of last sent email
+  private pendingEmails: Array<() => Promise<void>> = [];
 
-  constructor(config: ResendConfig) {
+  constructor(config: NodemailerConfig) {
     this.config = config;
     this.initialize();
   }
@@ -19,12 +21,21 @@ export class ResendEmailService implements EmailService {
   private initialize(): void {
     if (this.isInitialized) return;
     try {
-      this.resend = new Resend(this.config.apiKey);
+      this.transporter = nodemailer.createTransport({
+        service: this.config.service,
+        host: this.config.host,
+        port: this.config.port,
+        secure: this.config.secure,
+        auth: {
+          user: this.config.auth.user,
+          pass: this.config.auth.pass,
+        },
+      });
       this.isInitialized = true;
-      console.log("✅ Resend email service initialized successfully");
+      console.log("✅ Nodemailer email service initialized successfully");
     } catch (error) {
-      console.error("❌ Failed to initialize Resend email service:", error);
-      throw new Error(`Resend initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+      console.error("❌ Failed to initialize Nodemailer email service:", error);
+      throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
@@ -32,40 +43,68 @@ export class ResendEmailService implements EmailService {
     if (!this.isInitialized) {
       this.initialize();
     }
+
+    // Check cooldown
+    const now = Date.now();
+    const timeSinceLastEmail = now - this.lastEmailSent;
+    
+    if (timeSinceLastEmail < this.config.cooldownPeriod) {
+      // Queue the email for later
+      return new Promise<void>((resolve, reject) => {
+        this.pendingEmails.push(async () => {
+          try {
+            await this.sendEmail(options);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
+        
+        // Set a timer to process the queue after cooldown
+        setTimeout(() => this.processQueue(), this.config.cooldownPeriod - timeSinceLastEmail);
+      });
+    }
+
     try {
-      const fromAddress = `${this.config.from.name} <${this.config.from.email}>`;
+      const fromAddress = `"${this.config.from.name}" <${this.config.from.email}>`;
       
-      const emailOptions: any = {
+      const mailOptions: nodemailer.SendMailOptions = {
         from: fromAddress,
-        to: Array.isArray(options.to) ? options.to : [options.to],
+        to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
         subject: options.subject,
         html: options.html,
-        // text: options.text,
-        // replyTo: options.replyTo || this.config.replyTo,
+        text: options.text,
+        replyTo: options.replyTo || this.config.replyTo,
       };
 
       // Add attachments if provided
       if (options.attachments && options.attachments.length > 0) {
-        emailOptions.attachments = options.attachments.map((att: { filename: any; content: any; }) => ({
+        mailOptions.attachments = options.attachments.map((att) => ({
           filename: att.filename,
           content: att.content,
         }));
       }
 
-      const { data, error } = await this.resend.emails.send(emailOptions);
-      if (error) {
-        throw new Error(`Resend API error: ${error.message}`);
-      }
+      const info = await this.transporter.sendMail(mailOptions);
+      this.lastEmailSent = Date.now();
       console.log(`✅ Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(", ") : options.to}`);
+      console.log(`Message ID: ${info.messageId}`);
+      
+      // Process any pending emails
+      if (this.pendingEmails.length > 0) {
+        setTimeout(() => this.processQueue(), this.config.cooldownPeriod);
+      }
     } catch (error) {
       console.error(`❌ Failed to send email to ${Array.isArray(options.to) ? options.to.join(", ") : options.to}:`, error);
       
       // Provide more helpful error messages
       if (error instanceof Error) {
-        if (error.message.includes("unauthorized") || error.message.includes("invalid_api_key")) {
-          throw new Error("Resend authentication failed. Please check your API key.");
-        } else if (error.message.includes("from_domain")) {
-          throw new Error("Sender domain not verified in Resend. Please verify your domain.");
+        if (error.message.includes("Invalid login") || error.message.includes("User is locked out")) {
+          throw new Error("Gmail authentication failed. Please check your credentials or app password.");
+        } else if (error.message.includes("Message size exceeded")) {
+          throw new Error("Email size exceeded. Please reduce attachments or content.");
+        } else if (error.message.includes("No recipients defined")) {
+          throw new Error("No valid recipients specified.");
         }
       }
       
@@ -73,6 +112,25 @@ export class ResendEmailService implements EmailService {
     }
   }
 
+  private async processQueue(): Promise<void> {
+    if (this.pendingEmails.length === 0) return;
+    
+    const emailToSend = this.pendingEmails.shift();
+    if (emailToSend) {
+      try {
+        await emailToSend();
+      } catch (error) {
+        console.error("Error processing queued email:", error);
+      }
+      
+      // Process next email if any
+      if (this.pendingEmails.length > 0) {
+        setTimeout(() => this.processQueue(), this.config.cooldownPeriod);
+      }
+    }
+  }
+
+  // Implementation of all EmailService methods
   async sendVerificationEmail(email: string, code: string): Promise<void> {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -212,7 +270,6 @@ export class ResendEmailService implements EmailService {
     await this.sendEmail(options);
   }
 
-  // Password reset specific methods needed by PasswordResetService
   async sendPasswordResetCode(email: string, code: string): Promise<void> {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -262,7 +319,6 @@ export class ResendEmailService implements EmailService {
   }
 
   async sendPasswordResetConfirmation(email: string): Promise<void> {
-    // This is the same as sendPasswordChangedConfirmation, so we'll reuse that method
     await this.sendPasswordChangedConfirmation(email);
   }
 }

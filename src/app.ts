@@ -66,6 +66,8 @@ import { resendConfig } from "./config/resend.config"
 
 import cron from 'node-cron';
 import { CleanupService } from './modules/auth/services/cleanup.service';
+import sendMailerRouter from "./modules/mocktest/resend";
+import { createEmailService } from "./modules/auth/services/nodemailer.factory";
 
 
 dotenvConfig();
@@ -128,7 +130,8 @@ const tokenService = new TokenService(
   config.refreshTokenExpiresInDays
 );
 // BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
-const emailService = new ResendEmailService(resendConfig); // verification token service
+// const emailService = new ResendEmailService(resendConfig); // verification token service
+const emailService = createEmailService();
 // const emailServices = new EmailServices();
 const authService = new AuthService(
   prisma,
@@ -202,7 +205,7 @@ app.use("/api/v1", intelRouter); // New  intel file generation route
 app.use("/api/v1", escalateRouter); // New  escalate management route
 app.use("/api/v1", playbookRouter); // New  playbook management route
 app.use("/api/v1", imsRouter); // New  IMS management route
-
+app.use("/api/v1", sendMailerRouter); // New  IMS management route
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 

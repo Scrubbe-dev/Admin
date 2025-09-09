@@ -8,7 +8,9 @@ import {
   TokenVerificationResult,
   PasswordResetResult
 } from './reset.types';
-import { EmailService } from '../auth/types/resend.types';
+// import { EmailService } from '../auth/types/resend.types';
+// import { createEmailService } from '../auth/services/nodemailer.factory';
+import { EmailService } from '../auth/types/nodemailer.types';
 import { Logger } from './utils/logger';
 import * as bcrypt from 'bcrypt'; // Import bcrypt for better password hashing
 import { SecureCodeGenerator } from './utils/secure-code-generator';

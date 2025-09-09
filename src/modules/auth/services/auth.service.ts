@@ -24,7 +24,7 @@ import {
 import { TokenService } from "./token.service";
 import { SecurityUtils } from "../utils/security.utils";
 // import { EmailService } from "../types/sendgrid.types";
-import {EmailService } from "../types/resend.types"
+import {EmailService } from "../types/nodemailer.types"
 import { ConflictError, UnauthorizedError, NotFoundError } from "../error";
 import { InviteUtil } from "../../invite/invite.util";
 import { AuthMapper } from "../mapper/auth.mapper";
