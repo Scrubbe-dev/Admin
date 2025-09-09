@@ -190,7 +190,7 @@ const passwordResetRouter = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 passwordResetRouter.post(
-  '/request',
+  '/password-reset/request',
    PasswordResetController.requestReset
 );
 /**
@@ -230,7 +230,7 @@ passwordResetRouter.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 passwordResetRouter.post(
-  '/verify-code',
+  '/password-reset/verify-code',
    PasswordResetController.verifyCode
 );
 /**
@@ -270,7 +270,7 @@ passwordResetRouter.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 passwordResetRouter.post(
-  '/verify-token',
+  '/password-reset/verify-token',
    PasswordResetController.verifyToken
 );
 /**
@@ -310,7 +310,7 @@ passwordResetRouter.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 passwordResetRouter.post(
-  '/reset-password',
+  '/password-reset/reset-password',
    PasswordResetController.resetPassword
 );
 /**
@@ -356,5 +356,5 @@ passwordResetRouter.post(
  *                   type: string
  *                   example: "Database connection error"
  */
-passwordResetRouter.get('/health', PasswordResetController.healthCheck);
+passwordResetRouter.get('/password-reset/health', PasswordResetController.healthCheck);
 export default passwordResetRouter;
