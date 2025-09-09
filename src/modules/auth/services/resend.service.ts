@@ -8,7 +8,7 @@ import {
 
 export class ResendEmailService implements EmailService {
   private config: ResendConfig;
-  private resend: Resend = new Resend();
+  private resend!: Resend;
   private isInitialized: boolean = false;
 
   constructor(config: ResendConfig) {
