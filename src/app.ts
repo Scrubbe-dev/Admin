@@ -32,7 +32,6 @@ import adminRouter from "./modules/admin-auth/admin.route";
 import { PasswordResetService } from "./modules/password-reset/reset.services";
 import { PasswordResetController } from "./modules/password-reset/reset.controller";
 import { PasswordResetMiddleware } from "./modules/password-reset/reset.middleware";
-import { PasswordResetRoutes } from "./modules/password-reset/reset.route";
 import { Logger } from "./modules/password-reset/utils/logger";
 import { RateLimiterService } from "./modules/password-reset/utils/rate-limiter";
 // import { EmailService } from "./modules/auth/services/email.service";
@@ -59,6 +58,7 @@ import intelRouter from "./modules/intel/intel.route";
 import escalateRouter from "./modules/escalate/escalate.route";
 import playbookRouter from "./modules/playbook/playbook.route";
 import imsRouter from "./modules/ims-setup/ims.router";
+import passwordResetRouter from "./modules/password-reset/reset.route";
 // import {sendGridConfig} from "./config/sendgrid.config"
 import { resendConfig } from "./config/resend.config"
 // In your main application file (e.g., index.ts or app.ts)
@@ -139,26 +139,10 @@ const authService = new AuthService(
 const authMiddleware = new AuthMiddleware(tokenService);
 const authController = new AuthController(authService);
 console.log(__dirname, "CURRENT DIRECTORY NAME");
-// Initialize password reset services
-// const PasswordEmailServices =  new EmailService
-const passwordResetService = new PasswordResetService(
-  prisma,
-  emailService,
-  logger
-);
-const passwordResetMiddleware = new PasswordResetMiddleware(
-  passwordResetService,
-  logger,
-  rateLimiter
-);
-const passwordResetController = new PasswordResetController(
-  passwordResetService,
-  logger
-);
-const passwordResetRoutes = new PasswordResetRoutes(
-  passwordResetController,
-  passwordResetMiddleware
-);
+
+
+
+
 
 // Middleware
 app.use(
@@ -210,7 +194,7 @@ app.use("/api/v1", integrationRouter) // New Integration route
 app.use("/api/v1", analysisRouter);
 app.use("/api/v1", systemRouter);
 app.use("/api/v1", fraudDictation);
-app.use("/api/v1", passwordResetRoutes.getRouter());
+app.use('/api/v1', passwordResetRouter);
 app.use("/api/v1", pdfRoutes); // New  pdf file generation route
 app.use("/api/v1", ticketRoutes); // New  ticket management route
 
