@@ -4,6 +4,7 @@ import {
   EmailService,
   CustomEmailOptions,
   EmailAttachment,
+  TicketStatusChangeData,
 } from "../types/nodemailer.types";
 
 export class NodemailerEmailService implements EmailService {
@@ -223,8 +224,8 @@ export class NodemailerEmailService implements EmailService {
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
+    const resetLink = `${process.env.FRONTEND_URL}/auth/forget-password?token=${resetToken}`;
+    const resetIncidentLint  = `${process.env.INCIDENT_FRONTEND_URL}/auth/forget-password?token=${resetToken}`
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Password Reset Request</h2>
@@ -233,11 +234,21 @@ export class NodemailerEmailService implements EmailService {
         <p>To reset your password, click the button below:</p>
         <div style="margin: 30px 0;">
           <a href="${resetLink}" style="background-color: #4A90E2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-            Reset Password
+            Reset Password on Scrubbe Dev
+          </a>
+        </div>
+        <div style="margin: 30px 0;">
+               Or
+        </div>
+
+        <div style="margin: 30px 0;">
+          <a href="${resetIncidentLint}" style="background-color: #4A90E2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Reset Password on incident Scrubbe
           </a>
         </div>
         <p>Alternatively, you can copy and paste the following link into your browser:</p>
         <p style="word-break: break-all; color: #666;">${resetLink}</p>
+        <p style="word-break: break-all; color: #666;">${resetIncidentLint}</p>
         <p>This link will expire in 1 hour for security reasons.</p>
         <p>If you have any questions, please contact our support team.</p>
         <p>Thank you,<br>The ${process.env.APP_NAME || "Scrubbe"} Team</p>
@@ -321,4 +332,37 @@ export class NodemailerEmailService implements EmailService {
   async sendPasswordResetConfirmation(email: string): Promise<void> {
     await this.sendPasswordChangedConfirmation(email);
   }
+
+  async sendTicketStatusChangeEmail(data: TicketStatusChangeData): Promise<void> {
+  const { ticketId, previousStatus, newStatus, assigneeName, assigneeEmail, ticketTitle, ticketDescription } = data;
+  
+  const html = `
+    [Scrubbe IMS] Ticket #${ticketId} has been moved to ${newStatus}
+
+    Hello ${assigneeName},
+
+    The state of ticket #${ticketId} — ${ticketTitle} has been updated.
+      • Previous State: ${previousStatus}
+      • New State: ${newStatus}
+      • Changed On: ${new Date().toISOString()}
+
+    Description:
+    ${ticketDescription}
+
+    Next Step: Please review the updated state and take the necessary action.
+
+    You can view the full ticket here: View Ticket in Scrubbe IMS
+
+    Thank you for keeping incidents on track.
+    —
+    Scrubbe IMS
+    Incident Management & Fraud Monitoring Made Simple .
+  `;
+
+  await this.sendEmail({
+    to: assigneeEmail,
+    subject: `[Scrubbe IMS] Ticket #${ticketId} has been moved to ${newStatus}`,
+    html
+  });
+}
 }
