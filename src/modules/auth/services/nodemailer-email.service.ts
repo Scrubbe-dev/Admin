@@ -224,8 +224,8 @@ export class NodemailerEmailService implements EmailService {
   }
 
   async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-    const resetLink = `${process.env.FRONTEND_URL}/auth/forget-password?token=${resetToken}`;
-    const resetIncidentLint  = `${process.env.INCIDENT_FRONTEND_URL}/auth/forget-password?token=${resetToken}`
+    const resetLink = `${process.env.FRONTEND_URL}/auth/forgot-password?token=${resetToken}`;
+    const resetIncidentLint  = `${process.env.INCIDENT_FRONTEND_URL}/auth/forgot-password?token=${resetToken}`
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Password Reset Request</h2>
@@ -303,8 +303,8 @@ export class NodemailerEmailService implements EmailService {
   }
 
   async sendPasswordResetLink(email: string, resetLinkToken: string): Promise<void> {
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetLinkToken}`;
-    
+    const resetLink = `${process.env.FRONTEND_URL}/auth/forgot-password?token=${resetLinkToken}`;
+    const resetIncidentLint  = `${process.env.INCIDENT_FRONTEND_URL}/auth/forgot-password?token=${resetLinkToken}`
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Password Reset Link</h2>
@@ -312,11 +312,21 @@ export class NodemailerEmailService implements EmailService {
         <p>Your verification code was successful. Please click the button below to reset your password:</p>
         <div style="margin: 30px 0;">
           <a href="${resetLink}" style="background-color: #4A90E2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
-            Reset Password
+            Reset Password on Scrubbe Dev
+          </a>
+        </div>
+        <div style="margin: 30px 0;">
+               Or
+        </div>
+
+        <div style="margin: 30px 0;">
+          <a href="${resetIncidentLint}" style="background-color: #4A90E2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Reset Password on incident Scrubbe
           </a>
         </div>
         <p>Alternatively, you can copy and paste the following link into your browser:</p>
         <p style="word-break: break-all; color: #666;">${resetLink}</p>
+        <p style="word-break: break-all; color: #666;">${resetIncidentLint}</p>
         <p>This link will expire in 24 hours for security reasons.</p>
         <p>If you have any questions, please contact our support team.</p>
         <p>Thank you,<br>The ${process.env.APP_NAME || "Scrubbe"} Team</p>
