@@ -6,9 +6,10 @@ import {
 } from "./business.types";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { EmailService } from "../auth/services/email.service";
+// import { EmailService } from "../auth/services/email.service";
 import { Prisma } from "@prisma/client";
 import { ConflictError, ForbiddenError } from "../auth/error";
+import { createEmailService } from "../auth/services/nodemailer.factory";
 
 dotenv.config();
 
@@ -131,9 +132,10 @@ export class BusinessUtil {
 
       const inviteLink = await this.generateInviteLink(invite);
 
-      const emailService = new EmailService();
+      // const emailService = new EmailService();
 
-      await emailService.sendInviteEmail(invite, inviteLink);
+      // await emailService.sendInviteEmail(invite, inviteLink);
+      await  createEmailService().sendInviteEmail(invite,inviteLink)
     } catch (error) {
       throw new Error(
         `Error occured while sending email: ${
@@ -144,7 +146,7 @@ export class BusinessUtil {
   };
 
   generateInviteLink = async (invite: InviteMembers) => {
-    const baseUrl = "https://www.scrubbe.com/invite";
+    const baseUrl = "https://www.scrubbe.com/auth/invite";
 
     const payload = {
       email: invite.inviteEmail,

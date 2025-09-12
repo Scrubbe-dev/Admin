@@ -10,13 +10,11 @@ import { BusinessUtil } from "./business.util";
 import { ConflictError } from "../auth/error";
 import { BusinessMapper } from "./business.mapper";
 import { InviteUtil } from "../invite/invite.util";
-import { EmailService } from "../auth/types/nodemailer.types";
-import { createEmailService } from "../auth/services/nodemailer.factory";
 
 export class BusinessService {
   constructor(
     private prisma: PrismaClient,
-    private businessUtil: BusinessUtil = new BusinessUtil(),
+    private businessUtil: BusinessUtil = new BusinessUtil()
   ) {}
 
   async businessSetUp(
@@ -127,17 +125,8 @@ export class BusinessService {
           sentById: businessId,
         },
       });
-      const sendEmail = {
-            invites:{
-                 firstName:request.firstName,
-                 lastName:request.lastName,
-                 inviteEmail:request.inviteEmail
-            },
-            inviteLink:""
-      }
-      
-      await createEmailService().sendInviteEmail(sendEmail.invites,sendEmail.inviteLink)
 
+      await this.businessUtil.sendInviteEmail(request);
 
       return {
         message: `Invite sent to ${request.inviteEmail} sucessfully!`,
