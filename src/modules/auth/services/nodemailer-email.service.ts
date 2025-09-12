@@ -60,7 +60,7 @@ export class NodemailerEmailService implements EmailService {
             reject(error);
           }
         });
-        
+         
         // Set a timer to process the queue after cooldown
         setTimeout(() => this.processQueue(), this.config.cooldownPeriod - timeSinceLastEmail);
       });
