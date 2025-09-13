@@ -69,6 +69,7 @@ import { CleanupService } from './modules/auth/services/cleanup.service';
 import sendMailerRouter from "./modules/mocktest/resend";
 import { createEmailService } from "./modules/auth/services/nodemailer.factory";
 import incidentStatusEmailrouter from "./modules/incidentStatus/incidentstatus.routes";
+import postmortemRouter from "./modules/postmortem/postmortem.route";
 
 
 dotenvConfig();
@@ -207,7 +208,8 @@ app.use("/api/v1", escalateRouter); // New  escalate management route
 app.use("/api/v1", playbookRouter); // New  playbook management route
 app.use("/api/v1", imsRouter); // New  IMS management route
 app.use("/api/v1", sendMailerRouter); // New  IMS management route
-app.use("/api/v1",incidentStatusEmailrouter)
+app.use("/api/v1",incidentStatusEmailrouter) // New incidentStats route 
+app.use("/api/v1",postmortemRouter) // New Postmortum route
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 

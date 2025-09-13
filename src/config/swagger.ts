@@ -47,7 +47,8 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/playbook/playbook.route.ts",
     "./src/modules/ims-setup/ims.router.ts",
     "./src/modules/password-reset/reset.route.ts",
-    "./src/modules/incidentStatus/incidentstatus.routes.ts"
+    "./src/modules/incidentStatus/incidentstatus.routes.ts",
+    "./src/modules/postmortem/postmortem.route.ts"
   ],
 };
 
