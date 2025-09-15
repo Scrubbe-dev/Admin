@@ -7,6 +7,7 @@ import { AccountType } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { UnauthorizedError } from "../auth/error";
 
+
 export class BusinessController {
   private businessService: BusinessService;
 
@@ -59,15 +60,18 @@ export class BusinessController {
   async sendInvite(req: Request, res: Response, next: NextFunction) {
     try {
       const userdata = await this.getAuthTokenData(req,res)
+      console.log(userdata,"===============USERDATA======================")
       const request = await validateRequest<InviteMembers>(
         inviteMembersSchema,
         req.body
       );
-
+    console.log(request,"=========================REQUEST==============")
       const response = await this.businessService.sendInvite(
         userdata?.businessId as string,
-        request
+        request,
+        userdata as any
       );
+     console.log(response,"=========================RESPONSE==============")
 
       res.json(response);
     } catch (error) {
@@ -75,15 +79,19 @@ export class BusinessController {
     }
   }
 
-  async decodeInvite(req: Request, res: Response, next: NextFunction) {
+// controller.ts
+async decodeInvite(req: Request, res: Response, next: NextFunction) {
     try {
-      const request = await validateRequest<DecodeInvite>(decodeInviteSchema, req.body);
-      const response:SignedPayload = await this.businessService.decodeInvite(request.token) as SignedPayload;
-      res.json(response);
+        const request = await validateRequest<DecodeInvite>(decodeInviteSchema, req.body);
+        const response: SignedPayload = await this.businessService.decodeInvite(request.token);
+        res.json({ ...response, message: "======SENT DATA FROM API========" });
     } catch (error) {
-      next(error);
+        next(error);
     }
-  }
+}
+
+
+
   async acceptInvite(req: Request, res: Response, next: NextFunction) {
       try {
         const request = await validateRequest(acceptInviteSchema, req.body);

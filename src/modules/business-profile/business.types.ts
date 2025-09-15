@@ -1,4 +1,4 @@
-import { Priority, Role } from "@prisma/client";
+import { AccountType, Priority, Role } from "@prisma/client";
 
 export interface BusinessSetUpRequest {
   companyName: string;
@@ -108,4 +108,16 @@ export interface AcceptInviteRequest {
   email: string;
   password: string;
   businessId: string;
+}
+
+
+export interface IUserdata {
+    id: string;
+    sub: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    accountType?: AccountType ;
+    businessId?: string;
+    scopes?: string[];
 }

@@ -8,11 +8,9 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 // import { EmailService } from "../auth/services/email.service";
 import { AccountType, Prisma } from "@prisma/client";
-import { ConflictError, ForbiddenError, UnauthorizedError } from "../auth/error";
+import { ConflictError } from "../auth/error";
 import { createEmailService } from "../auth/services/nodemailer.factory";
 import bcrypt from "bcryptjs";
-import { Request , Response } from "express";
-
 dotenv.config();
 
 export class BusinessUtil {
@@ -134,7 +132,7 @@ export class BusinessUtil {
 
   sendInviteEmail = async (invite: InviteMembers) => {
     try {
-      console.log(`Sending invite email to: ${invite.inviteEmail}`);
+      console.log(`Sending invite email to: ${invite.inviteEmail}-------- ${invite}`);
 
       const inviteLink = await this.generateInviteLink(invite);
 
@@ -173,25 +171,24 @@ export class BusinessUtil {
   // };
 
   decodeInviteToken = async (token: string): Promise<SignedPayload> => {
-    return jwt.verify(token, process.env.JWT_SECRET!)  as SignedPayload
+    return  jwt.verify(token, process.env.JWT_SECRET!)  as SignedPayload
   };
 
 
- generateInviteToken(invite: any): string {
+generateInviteToken(invite: any): string {
     const payload: SignedPayload = {
-      inviteId: invite.id,
-      email: invite.email,
-      role: invite.role,
-      accessPermissions: invite.accessPermissions,
-      level: invite.level,
-      workspaceName: invite.sentById, // Business name from sentById
-      businessId: invite.sentById
+        email: invite.inviteEmail, // Use inviteEmail
+        firstName: invite.firstName,
+        lastName: invite.lastName,
+        role: invite.role,
+        accessPermissions: invite.accessPermissions,
+        workspaceName: invite.workspaceName, // Business name
+        businessId: invite.businessId
     };
-
     return jwt.sign(payload, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
+        expiresIn: "7d",
     });
-  }
+}
 
   async verifyInviteToken(token: string): Promise<SignedPayload> {
     return jwt.verify(token, process.env.JWT_SECRET!) as SignedPayload;
@@ -200,7 +197,7 @@ export class BusinessUtil {
   private async generateInviteLink(invite: any): Promise<string> {
     const baseUrl = "https://www.scrubbe.com/auth/invite";
     const token = this.generateInviteToken(invite);
-    const inviteLink = `${baseUrl}?token=${encodeURIComponent(token)}`;
+    const inviteLink = `${baseUrl}?token=${token}`;
     return inviteLink;
   }
 }

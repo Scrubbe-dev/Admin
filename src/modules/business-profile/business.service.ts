@@ -4,6 +4,7 @@ import {
   BusinessSetUpRequest,
   DecodeInviteTokenResult,
   InviteMembers,
+  IUserdata,
 } from "./business.types";
 import { Request } from "express";
 import { BusinessUtil } from "./business.util";
@@ -12,6 +13,7 @@ import { BusinessMapper } from "./business.mapper";
 import { InviteUtil } from "../invite/invite.util";
 
 export class BusinessService {
+  private invitedata = null;
   constructor(
     private prisma: PrismaClient,
     private businessUtil: BusinessUtil = new BusinessUtil()
@@ -107,8 +109,9 @@ export class BusinessService {
 
 
 
-  async sendInvite(businessId: string, request: InviteMembers) {
+  async sendInvite(businessId: string, request: InviteMembers ,userdata:IUserdata) {
     try {
+
       const invites = await prisma.invites.findUnique({
         where: {
           email: request.inviteEmail,
@@ -116,7 +119,6 @@ export class BusinessService {
       });
 
       if (invites) throw new ConflictError("User have already been invited");
-
       await prisma.invites.create({
         data: {
           firstName: request.firstName,
@@ -128,7 +130,35 @@ export class BusinessService {
         },
       });
 
-      await this.businessUtil.sendInviteEmail(request);
+
+
+  // inviteId?: string;
+  // email: string;
+  // firstName?: string;
+  // lastName?: string;
+  // role?: Role;
+  // accessPermissions?: AccessPermissions[];
+  // level?: string;
+  // workspaceName?: string;
+  // businessId?: string;
+
+  const businessData = await prisma.business.findFirst({
+     where:{id:userdata.businessId}
+  })
+
+  if(!businessData) throw new ConflictError("Business does not exist");
+
+    const newInvite = {
+           firstName: userdata.firstName,
+           lastName: userdata.lastName,
+           inviteEmail: request.inviteEmail,
+           role: request.role,
+           businessId:userdata.businessId,
+           workspaceName:businessData?.name,
+           accessPermissions: request.accessPermissions
+    }
+
+      await this.businessUtil.sendInviteEmail(newInvite);
 
       return {
         message: `Invite sent to ${request.inviteEmail} sucessfully!`,
@@ -177,7 +207,7 @@ export class BusinessService {
         };
       } else {
         // Create new user
-        const newUser = await this.prisma.user.create({
+         await this.prisma.user.create({
           data: {
             email: request.email,
             firstName: request.firstName,
@@ -202,14 +232,7 @@ export class BusinessService {
     try {
       const decodedToken = await this.businessUtil.decodeInviteToken(token);
       
-      return {
-        inviteEmail: decodedToken.email,
-        role: decodedToken.role,
-        accessPermissions: decodedToken.accessPermissions,
-        level: decodedToken.level,
-        workspaceName: decodedToken.workspaceName,
-        businessId: decodedToken.businessId
-      };
+      return decodedToken
     } catch (error) {
       throw new ConflictError("Invalid or expired token");
     }
