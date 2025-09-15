@@ -10,7 +10,6 @@ import { BusinessUtil } from "./business.util";
 import { ConflictError } from "../auth/error";
 import { BusinessMapper } from "./business.mapper";
 import { InviteUtil } from "../invite/invite.util";
-import bcrypt from "bcryptjs/umd/types";
 
 export class BusinessService {
   constructor(

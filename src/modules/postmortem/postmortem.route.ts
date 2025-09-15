@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { PostmortemController } from './postmortem.controller';
-
 const postmortemRouter = Router();
 
 /**
@@ -157,7 +156,7 @@ const postmortemRouter = Router();
  *           type: string
  *           enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED, ON_HOLD, ACKNOWLEDGED, INVESTIGATION, MITIGATED]
  *           example: "RESOLVED"
- *      - name: priority
+ *       - name: priority
  *         in: query
  *         required: false
  *         description: Filter by incident priority
@@ -219,5 +218,4 @@ const postmortemRouter = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 postmortemRouter.get('/postmortems', PostmortemController.getPostmortems);
-
 export default postmortemRouter;

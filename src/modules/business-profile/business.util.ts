@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 import { Prisma } from "@prisma/client";
 import { ConflictError, ForbiddenError } from "../auth/error";
 import { createEmailService } from "../auth/services/nodemailer.factory";
-import bcrypt from "bcryptjs/umd/types";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
