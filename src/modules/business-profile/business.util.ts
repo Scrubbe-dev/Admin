@@ -172,30 +172,8 @@ export class BusinessUtil {
   // };
 
   decodeInviteToken = async (token: string): Promise<SignedPayload> => {
-    return jwt.verify(token, process.env.JWT_SECRET!) as {
-      email: string;
-      firstName: string;
-      lastName: string;
-    };
+    return jwt.verify(token, process.env.JWT_SECRET!)  as SignedPayload
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
  generateInviteToken(invite: any): string {

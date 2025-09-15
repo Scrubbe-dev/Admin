@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { BusinessService } from "./business.service";
-import { BusinessSetUpRequest, DecodeInvite, InviteMembers } from "./business.types";
+import { BusinessSetUpRequest, DecodeInvite, InviteMembers, SignedPayload } from "./business.types";
 import { validateRequest } from "../auth/utils/validators";
 import { acceptInviteSchema, businessSetUpSchema, decodeInviteSchema, inviteMembersSchema } from "./business.schema";
 
@@ -75,7 +75,7 @@ export class BusinessController {
   async decodeInvite(req: Request, res: Response, next: NextFunction) {
     try {
       const request = await validateRequest<DecodeInvite>(decodeInviteSchema, req.body);
-      const response = await this.businessService.decodeInvite(request.token);
+      const response:SignedPayload = await this.businessService.decodeInvite(request.token) as SignedPayload;
       res.json(response);
     } catch (error) {
       next(error);

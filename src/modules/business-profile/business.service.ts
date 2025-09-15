@@ -200,7 +200,7 @@ export class BusinessService {
 
    async decodeInvite(token: string): Promise<any> {
     try {
-      const decodedToken = await this.businessUtil.verifyInviteToken(token);
+      const decodedToken = await this.businessUtil.decodeInviteToken(token);
       
       return {
         inviteEmail: decodedToken.email,

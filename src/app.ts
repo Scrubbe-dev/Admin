@@ -221,7 +221,7 @@ app.use("/api/v1",postmortemRouter) // New Postmortum route
     //   });
     // });
     
-  cron.schedule('0 * * * *', async () => {
+  cron.schedule('0 */6 * * *', async () => {
     console.log('Running token cleanup job...');
     await cleanupService.cleanupExpiredTokens();
   });
