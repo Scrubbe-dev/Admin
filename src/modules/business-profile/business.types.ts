@@ -62,19 +62,50 @@ export enum NotificationChannels {
   SMS = "SMS",
 }
 
-export interface SignedPayload {
-  email: string;
-  firstName: string;
-  lastName: string;
-}
+// export interface SignedPayload {
+//   inviteId?:string;
+//   email: string;
+//   firstName?: string;
+//   lastName?: string;
+//   role?:string;
+//   accessPermissions?:string;
+//   level?: string,
+//   workspaceName?: string, // Business name from sentById
+//   businessId?: string
+// }
 
 export interface DecodeInviteTokenResult {
   existingUser: boolean;
   inviteData: SignedPayload;
 }
 
+export interface DecodeInvite{
+  token: string;
+}
+
 export interface Members {
   firstname: string | null;
   lastname: string | null;
   email: string | null;
+}
+
+
+export interface SignedPayload {
+  inviteId?: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role?: Role;
+  accessPermissions?: AccessPermissions[];
+  level?: string;
+  workspaceName?: string;
+  businessId?: string;
+}
+
+export interface AcceptInviteRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  businessId: string;
 }

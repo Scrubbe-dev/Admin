@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { BusinessService } from "./business.service";
-import { BusinessSetUpRequest, InviteMembers } from "./business.types";
+import { BusinessSetUpRequest, DecodeInvite, InviteMembers } from "./business.types";
 import { validateRequest } from "../auth/utils/validators";
-import { businessSetUpSchema, inviteMembersSchema } from "./business.schema";
+import { acceptInviteSchema, businessSetUpSchema, decodeInviteSchema, inviteMembersSchema } from "./business.schema";
 
 export class BusinessController {
   private businessService: BusinessService;
@@ -71,4 +71,26 @@ export class BusinessController {
       next(error);
     }
   }
-}
+
+  async decodeInvite(req: Request, res: Response, next: NextFunction) {
+    try {
+      const request = await validateRequest<DecodeInvite>(decodeInviteSchema, req.body);
+      const response = await this.businessService.decodeInvite(request.token);
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async acceptInvite(req: Request, res: Response, next: NextFunction) {
+      try {
+        const request = await validateRequest(acceptInviteSchema, req.body);
+        
+        const response = await this.businessService.acceptInvite(request);
+        res.json(response);
+      } catch (error) {
+        next(error);
+      }
+    }
+};
+
+

@@ -140,65 +140,6 @@ businessRouter.put(
 
 /**
  * @swagger
- * /api/v1/business/decode_invite:
- *   post:
- *     summary: Decode and validate a business invite token
- *     description: >
- *       Validates an invite link by decoding the signed token and checks if the invitee already exists in the system,
- *       and then, returns the invite data. This endpoint ensures that only valid and non expired tokens are accepted,
- *       allowing the frontend to pre fill user details during invite acceptance flow.
- *
- *     tags: [Business]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - token
- *             properties:
- *               token:
- *                 type: string
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                 description: Signed invite token from the invite email link
- *     responses:
- *       200:
- *         description: Invite token successfully decoded and validated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 existingUser:
- *                   type: boolean
- *                   example: true
- *                   description: Indicates whether the email in the invite already exists as a registered user
- *                 inviteData:
- *                   type: object
- *                   properties:
- *                     email:
- *                       type: string
- *                       example: "example@gmail.com"
- *                     firstName:
- *                       type: string
- *                       example: "Emmanuel"
- *                     lastName:
- *                       type: string
- *                       example: "Ofoneta"
- *       400:
- *         description: Bad request (invalid token format)
- *       409:
- *         description: Conflict (token invalid or expired)
- *       500:
- *         description: Internal server error
- */
-businessRouter.post("/decode_invite", (req, res, next) => {
-  businessController.validateInvite(req, res, next);
-});
-
-/**
- * @swagger
  * /api/v1/business/get_members:
  *   get:
  *     summary: Retrieve all members of a business account
@@ -247,7 +188,7 @@ businessRouter.get(
 
 /**
  * @swagger
- * /api/v1/business/send_invite:
+ * /api/v1/business/send-invite:
  *   post:
  *     summary: Send an invitation to join a business account
  *     description: >
@@ -262,29 +203,29 @@ businessRouter.get(
  *           schema:
  *             type: object
  *             properties:
- *               firstName:
- *                 type: string
- *                 example: "Jane"
- *               lastName:
- *                 type: string
- *                 example: "Doe"
- *               inviteEmail:
- *                 type: string
- *                 format: email
- *                 example: "jane.doe@example.com"
- *               role:
- *                 type: string
- *                 enum: [ADMIN]
- *                 example: "ADMIN"
- *               accessPermissions:
- *                 type: array
- *                 items:
- *                   type: string
- *                   enum: [MANAGE_USERS]
- *                 example: ["MANAGE_USERS"]
+ *               value:
+ *                 type: object
+ *                 properties:
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: "jane.doe@example.com"
+ *                   role:
+ *                     type: string
+ *                     enum: [ADMIN, MANAGER, ANALYST, VIEWER]
+ *                     example: "ADMIN"
+ *                   accessPermissions:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       enum: [VIEW_DASHBOARD, MODIFY_DASHBOARD, EXECUTE_ACTIONS, MANAGE_USERS]
+ *                     example: ["VIEW_DASHBOARD", "MANAGE_USERS"]
+ *                   level:
+ *                     type: string
+ *                     example: "Senior"
  *     responses:
  *       200:
- *         description: Invitation sent successfully
+ *         description: Invite sent successfully
  *         content:
  *           application/json:
  *             schema:
@@ -303,7 +244,7 @@ businessRouter.get(
  *         description: Failed to send invitation
  */
 businessRouter.post(
-  "/send_invite",
+  "/send-invite",
   authMiddleware.authenticate,
   mustBeAMember,
   businessAccountOnly,
@@ -311,5 +252,146 @@ businessRouter.post(
     businessController.sendInvite(req, res, next);
   }
 );
+
+/**
+ * @swagger
+ * /api/v1/business/decode-invite:
+ *   post:
+ *     summary: Decode and validate a business invite token
+ *     description: >
+ *       Validates an invite link by decoding the signed token and checks if the invitee already exists in the system,
+ *       and then, returns the invite data. This endpoint ensures that only valid and non expired tokens are accepted,
+ *       allowing the frontend to pre fill user details during invite acceptance flow.
+ *     tags: [Business]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 description: Signed invite token from the invite email link
+ *     responses:
+ *       200:
+ *         description: Invite token successfully decoded and validated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 inviteEmail:
+ *                   type: string
+ *                   example: "example@gmail.com"
+ *                 role:
+ *                   type: string
+ *                   enum: [ADMIN, MANAGER, ANALYST, VIEWER]
+ *                 accessPermissions:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     enum: [VIEW_DASHBOARD, MODIFY_DASHBOARD, EXECUTE_ACTIONS, MANAGE_USERS]
+ *                 level:
+ *                   type: string
+ *                   example: "Senior"
+ *                 workspaceName:
+ *                   type: string
+ *                   example: "Flutter Wave"
+ *                 businessId:
+ *                   type: string
+ *                   example: "b12345678-90ab-cdef-ghij-klmnopqrst"
+ *       400:
+ *         description: Bad request (invalid token format)
+ *       409:
+ *         description: Conflict (token invalid or expired)
+ *       500:
+ *         description: Internal server error
+ */
+businessRouter.post(
+  "/decode-invite",
+  (req, res, next) => {
+    businessController.decodeInvite(req, res, next);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/business/accept-invite:
+ *   post:
+ *     summary: Accept an invitation to join a business
+ *     description: >
+ *       Allows a user to accept an invitation by providing their personal details and setting a password.
+ *       If the user doesn't exist, a new account will be created and linked to the business.
+ *     tags: [Business]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *                 example: "John"
+ *               lastName:
+ *                 type: string
+ *                 example: "Doe"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "john.doe@example.com"
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: "securepassword123"
+ *               businessId:
+ *                 type: string
+ *                 example: "b12345678-90ab-cdef-ghij-klmnopqrst"
+ *     responses:
+ *       200:
+ *         description: Invite accepted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Existing user added to business successfully"
+ *       201:
+ *         description: New user created and added to business successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "New user created and added to business successfully"
+ *       400:
+ *         description: Invalid request body or validation error
+ *       401:
+ *         description: Unauthorized – user must be authenticated
+ *       403:
+ *         description: Forbidden – only business accounts can access this route
+ *       500:
+ *         description: Failed to accept invitation
+ */
+businessRouter.post(
+  "/accept-invite",
+  authMiddleware.authenticate,
+  mustBeAMember,
+  businessAccountOnly,
+  (req, res, next) => {
+    businessController.acceptInvite(req, res, next);
+  }
+);
+
 
 export default businessRouter;

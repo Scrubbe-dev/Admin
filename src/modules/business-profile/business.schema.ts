@@ -70,3 +70,18 @@ export const businessSetUpSchema = z.object({
 
   dashboardPreference: dashboardPreferenceSchema.optional(),
 });
+
+
+export const decodeInviteSchema = z.object({
+  token: z.string().min(1, "Token is required")
+});
+
+// business.schema.ts
+export const acceptInviteSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+  businessId: z.string().min(1, "Business ID is required")
+});
+

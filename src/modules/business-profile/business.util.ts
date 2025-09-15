@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import { Prisma } from "@prisma/client";
 import { ConflictError, ForbiddenError } from "../auth/error";
 import { createEmailService } from "../auth/services/nodemailer.factory";
+import bcrypt from "bcryptjs/umd/types";
 
 dotenv.config();
 
@@ -84,6 +85,10 @@ export class BusinessUtil {
     }
   }
 
+
+  async hashPassword(password: string,saltRounds: number = 12): Promise<string> {
+      return bcrypt.hash(password, saltRounds);
+    }
   async createTeamInvites(
     tx: Prisma.TransactionClient,
     businessId: string,
@@ -145,26 +150,26 @@ export class BusinessUtil {
     }
   };
 
-  generateInviteLink = async (invite: InviteMembers) => {
-    const baseUrl = "https://www.scrubbe.com/auth/invite";
+  // generateInviteLink = async (invite: InviteMembers) => {
+  //   const baseUrl = "https://www.scrubbe.com/auth/invite";
 
-    const payload = {
-      email: invite.inviteEmail,
-      firstName: invite.firstName,
-      lastName: invite.lastName,
-    };
+  //   const payload = {
+  //     email: invite.inviteEmail,
+  //     firstName: invite.firstName,
+  //     lastName: invite.lastName,
+  //   };
 
-    const token = this.generateInviteToken(payload);
-    const inviteLink = `${baseUrl}?token=${token}`;
+  //   const token = this.generateInviteToken(payload);
+  //   const inviteLink = `${baseUrl}?token=${token}`;
 
-    return inviteLink;
-  };
+  //   return inviteLink;
+  // };
 
-  generateInviteToken = (payload: SignedPayload): string => {
-    return jwt.sign(payload, process.env.JWT_SECRET!, {
-      expiresIn: "7d",
-    });
-  };
+  // generateInviteToken = (payload: SignedPayload): string => {
+  //   return jwt.sign(payload, process.env.JWT_SECRET!, {
+  //     expiresIn: "7d",
+  //   });
+  // };
 
   decodeInviteToken = async (token: string): Promise<SignedPayload> => {
     return jwt.verify(token, process.env.JWT_SECRET!) as {
@@ -173,4 +178,52 @@ export class BusinessUtil {
       lastName: string;
     };
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ generateInviteToken(invite: any): string {
+    const payload: SignedPayload = {
+      inviteId: invite.id,
+      email: invite.email,
+      role: invite.role,
+      accessPermissions: invite.accessPermissions,
+      level: invite.level,
+      workspaceName: invite.sentById, // Business name from sentById
+      businessId: invite.sentById
+    };
+
+    return jwt.sign(payload, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    });
+  }
+
+  async verifyInviteToken(token: string): Promise<SignedPayload> {
+    return jwt.verify(token, process.env.JWT_SECRET!) as SignedPayload;
+  }
+
+  private async generateInviteLink(invite: any): Promise<string> {
+    const baseUrl = "https://www.scrubbe.com/auth/invite";
+    const token = this.generateInviteToken(invite);
+    const inviteLink = `${baseUrl}?token=${encodeURIComponent(token)}`;
+    return inviteLink;
+  }
+
+
 }

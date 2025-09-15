@@ -1,6 +1,8 @@
 import { Business, Invites, User } from "@prisma/client";
 import prisma from "../../prisma-clients/client";
 import { ConflictError } from "../auth/error";
+import { SignedPayload } from "../business-profile/business.types";
+import  jwt  from "jsonwebtoken";
 
 interface AcceptNewInvite {
   acceptedNewInvite: boolean;
@@ -126,4 +128,35 @@ export class InviteUtil {
       );
     }
   }
+
+  
+  
+   generateInviteToken(invite: any): string {
+      const payload: SignedPayload = {
+        inviteId: invite.id,
+        email: invite.email,
+        role: invite.role,
+        accessPermissions: invite.accessPermissions,
+        level: invite.level,
+        workspaceName: invite.sentById, // Business name from sentById
+        businessId: invite.sentById
+      };
+  
+      return jwt.sign(payload, process.env.JWT_SECRET!, {
+        expiresIn: "7d",
+      });
+    }
+  
+    async verifyInviteToken(token: string): Promise<SignedPayload> {
+      return jwt.verify(token, process.env.JWT_SECRET!) as SignedPayload;
+    }
+  
+    private async generateInviteLink(invite: any): Promise<string> {
+      const baseUrl = "https://www.scrubbe.com/auth/invite";
+      const token = this.generateInviteToken(invite);
+      const inviteLink = `${baseUrl}?token=${encodeURIComponent(token)}`;
+      return inviteLink;
+    }
+  
+  
 }

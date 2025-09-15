@@ -10,6 +10,7 @@ import { BusinessUtil } from "./business.util";
 import { ConflictError } from "../auth/error";
 import { BusinessMapper } from "./business.mapper";
 import { InviteUtil } from "../invite/invite.util";
+import bcrypt from "bcryptjs/umd/types";
 
 export class BusinessService {
   constructor(
@@ -105,6 +106,8 @@ export class BusinessService {
     }
   }
 
+
+
   async sendInvite(businessId: string, request: InviteMembers) {
     try {
       const invites = await prisma.invites.findUnique({
@@ -134,6 +137,82 @@ export class BusinessService {
     } catch (error) {
       console.error(`Error inviting member: ${error}`);
       throw new Error(`${error instanceof Error && error.message}`);
+    }
+  }
+
+  async acceptInvite(request: any) {
+    try {
+      // Find the invite
+      const invite = await this.prisma.invites.findUnique({
+        where: { email: request.email }
+      });
+
+      if (!invite) {
+        throw new ConflictError("Invalid invite token");
+      }
+
+      // Verify the token
+      const decodedToken = await this.businessUtil.verifyInviteToken(request.token);
+      
+      // Check if token matches the invite
+      if (decodedToken.email !== invite.email) {
+        throw new ConflictError("Token does not match invite");
+      }
+
+      // Check if user already exists
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: request.email }
+      });
+
+      if (existingUser) {
+        // Link existing user to business
+        await this.prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            business: request.businessId
+          }
+        });
+        
+        return {
+          message: "Existing user added to business successfully"
+        };
+      } else {
+        // Create new user
+        const newUser = await this.prisma.user.create({
+          data: {
+            email: request.email,
+            firstName: request.firstName,
+            lastName: request.lastName,
+            passwordHash: await this.businessUtil.hashPassword(request.password),
+            business: request.businessId
+          }
+        });
+
+        return {
+          message: "New user created and added to business successfully"
+        };
+      }
+    } catch (error) {
+      console.error(`Error accepting invite: ${error}`);
+      throw new Error(`${error instanceof Error && error.message}`);
+    }
+  }
+
+
+   async decodeInvite(token: string): Promise<any> {
+    try {
+      const decodedToken = await this.businessUtil.verifyInviteToken(token);
+      
+      return {
+        inviteEmail: decodedToken.email,
+        role: decodedToken.role,
+        accessPermissions: decodedToken.accessPermissions,
+        level: decodedToken.level,
+        workspaceName: decodedToken.workspaceName,
+        businessId: decodedToken.businessId
+      };
+    } catch (error) {
+      throw new ConflictError("Invalid or expired token");
     }
   }
 }
