@@ -7,10 +7,11 @@ import {
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 // import { EmailService } from "../auth/services/email.service";
-import { Prisma } from "@prisma/client";
-import { ConflictError, ForbiddenError } from "../auth/error";
+import { AccountType, Prisma } from "@prisma/client";
+import { ConflictError, ForbiddenError, UnauthorizedError } from "../auth/error";
 import { createEmailService } from "../auth/services/nodemailer.factory";
 import bcrypt from "bcryptjs";
+import { Request , Response } from "express";
 
 dotenv.config();
 
@@ -202,6 +203,5 @@ export class BusinessUtil {
     const inviteLink = `${baseUrl}?token=${encodeURIComponent(token)}`;
     return inviteLink;
   }
-
-
 }
+

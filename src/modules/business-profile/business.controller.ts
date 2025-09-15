@@ -3,6 +3,9 @@ import { BusinessService } from "./business.service";
 import { BusinessSetUpRequest, DecodeInvite, InviteMembers, SignedPayload } from "./business.types";
 import { validateRequest } from "../auth/utils/validators";
 import { acceptInviteSchema, businessSetUpSchema, decodeInviteSchema, inviteMembersSchema } from "./business.schema";
+import { AccountType } from "@prisma/client";
+import jwt from "jsonwebtoken";
+import { UnauthorizedError } from "../auth/error";
 
 export class BusinessController {
   private businessService: BusinessService;
@@ -55,14 +58,14 @@ export class BusinessController {
 
   async sendInvite(req: Request, res: Response, next: NextFunction) {
     try {
-      const businessId = req.user?.businessId!;
+      const userdata = await this.getAuthTokenData(req,res)
       const request = await validateRequest<InviteMembers>(
         inviteMembersSchema,
         req.body
       );
 
       const response = await this.businessService.sendInvite(
-        businessId,
+        userdata?.businessId as string,
         request
       );
 
@@ -91,6 +94,35 @@ export class BusinessController {
         next(error);
       }
     }
+
+
+    async getAuthTokenData(req:Request , res:Response){
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        throw new UnauthorizedError("Authentication required");
+      }
+
+      const token = authHeader.split(" ")[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {id: string;
+            sub: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            accountType?: AccountType;
+            businessId?: string;
+            scopes?: string[] };
+      return decoded;
+  }catch(err){
+    console.log(err, "================  Error during authentication ======================")
+  }
+}
+
 };
 
 
+
+
+
+
+  
