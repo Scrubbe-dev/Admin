@@ -121,3 +121,12 @@ export interface IUserdata {
     businessId?: string;
     scopes?: string[];
 }
+
+
+export type AcceptInviteTypes = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  businessId: string;
+};

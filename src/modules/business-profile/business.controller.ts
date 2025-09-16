@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { BusinessService } from "./business.service";
-import { BusinessSetUpRequest, DecodeInvite, InviteMembers, SignedPayload } from "./business.types";
+import { AcceptInviteTypes, BusinessSetUpRequest, DecodeInvite, InviteMembers, SignedPayload } from "./business.types";
 import { validateRequest } from "../auth/utils/validators";
 import { acceptInviteSchema, businessSetUpSchema, decodeInviteSchema, inviteMembersSchema } from "./business.schema";
 import { AccountType } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import { UnauthorizedError } from "../auth/error";
+import { ConflictError, UnauthorizedError } from "../auth/error";
 
 
 export class BusinessController {
@@ -94,12 +94,12 @@ async decodeInvite(req: Request, res: Response, next: NextFunction) {
 
   async acceptInvite(req: Request, res: Response, next: NextFunction) {
       try {
-        const request = await validateRequest(acceptInviteSchema, req.body);
+        const request = await validateRequest<AcceptInviteTypes>(acceptInviteSchema, req.body);
         
         const response = await this.businessService.acceptInvite(request);
         res.json(response);
       } catch (error) {
-        next(error);
+            throw new ConflictError("Failed to register invite");
       }
     }
 

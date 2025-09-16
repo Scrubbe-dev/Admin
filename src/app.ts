@@ -179,10 +179,10 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
+app.use("/api/v1/business/", businessRouter);
 app.use("/api/v1", waitingRouter);
 app.use("/api/v1", adminRouter);
 app.use("/api/v1/auth/", createAuthRouter(authController, authMiddleware));
-app.use("/api/v1/business/", businessRouter);
 app.use("/api/v1/ezra/", ezraRouter);
 app.use("/api/v1/data-visual/", dataVisualRouter);
 app.use("/api/v1/fingerprint/", fingerprintRouter);

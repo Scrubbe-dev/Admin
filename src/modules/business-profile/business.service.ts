@@ -1,6 +1,7 @@
 import prisma from "../../prisma-clients/client";
 import { Invites, Prisma, PrismaClient, User } from "@prisma/client";
 import {
+  AcceptInviteTypes,
   BusinessSetUpRequest,
   DecodeInviteTokenResult,
   InviteMembers,
@@ -169,7 +170,7 @@ export class BusinessService {
     }
   }
 
-  async acceptInvite(request: any) {
+  async acceptInvite(request: AcceptInviteTypes) {
     try {
       // Find the invite
       const invite = await this.prisma.invites.findUnique({
@@ -181,12 +182,12 @@ export class BusinessService {
       }
 
       // Verify the token
-      const decodedToken = await this.businessUtil.verifyInviteToken(request.token);
+      // const decodedToken = await this.businessUtil.verifyInviteToken(request.token);
       
       // Check if token matches the invite
-      if (decodedToken.email !== invite.email) {
-        throw new ConflictError("Token does not match invite");
-      }
+      // if (decodedToken.email !== invite.email) {
+      //   throw new ConflictError("Token does not match invite");
+      // }
 
       // Check if user already exists
       const existingUser = await this.prisma.user.findUnique({
@@ -198,7 +199,9 @@ export class BusinessService {
         await this.prisma.user.update({
           where: { id: existingUser.id },
           data: {
-            business: request.businessId
+            business: {
+              connect: {id:request.businessId as string}
+            }
           }
         });
         
@@ -213,7 +216,9 @@ export class BusinessService {
             firstName: request.firstName,
             lastName: request.lastName,
             passwordHash: await this.businessUtil.hashPassword(request.password),
-            business: request.businessId
+            business:{
+              connect:{id: request.businessId}
+            }
           }
         });
 
