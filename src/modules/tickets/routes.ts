@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { TicketController } from "./controller";
 import { TokenService } from "../auth/services/token.service";
-import { mustBeAMember } from "../business-profile/business.middleware";
+// import { mustBeAMember } from "../business-profile/business.middleware";
 import { AuthMiddleware } from "../auth/middleware/auth.middleware";
 
 const ticketRouter = Router();
@@ -120,7 +120,7 @@ const authMiddleware = new AuthMiddleware(tokenService);
 ticketRouter.get(
   "/tickets/:ticketId",
   authMiddleware.authenticate,
-  mustBeAMember,
+  // mustBeAMember,
   (req: Request<{ ticketId: string }>, res: Response, next: NextFunction) => {
     TicketController.getTicketDetail(req, res).catch(next);
   }
@@ -204,7 +204,7 @@ import { TicketParams } from "./types";
 
 ticketRouter.get("/tickets/history/:ticketId",
   authMiddleware.authenticate,
-  mustBeAMember,
+  // mustBeAMember,
    (req: Request<{ ticketId: string }>, res: Response, next: NextFunction) => {
   TicketController.getTicketHistory(req, res).catch(next);
 });
