@@ -1,59 +1,76 @@
+// services.ts
 import { PrismaClient } from '@prisma/client';
 import { PostmortemFilters, PostmortemResponse } from './postmortem.types';
-import prisma from '../../lib/prisma'
+import prisma from '../../lib/prisma';
 
 export class PostmortemService {
   static async getPostmortems(
     filters: PostmortemFilters
-  ): Promise<PostmortemResponse[] | any> {
-    const whereClause: any = {};
+  ): Promise<PostmortemResponse[]> {
+    try {
+      // Validate date formats
+      if (filters.startDate && isNaN(filters.startDate.getTime())) {
+        throw new Error('Invalid start date format');
+      }
 
-        // Add validation before processing filters
-    if (filters.startDate && isNaN(Date.parse(filters.startDate.toString()))) {
-      throw new Error('Invalid start date format');
-    }
+      if (filters.endDate && isNaN(filters.endDate.getTime())) {
+        throw new Error('Invalid end date format');
+      }
 
-    if (filters.endDate && isNaN(Date.parse(filters.endDate.toString()))) {
-      throw new Error('Invalid end date format');
-    }
+      // Build the where clause
+      const whereClause: any = {};
 
-    // Direct field filters
-    if (filters.incidentId) {
-      whereClause.incidentTicketId = filters.incidentId;
-    }
+      // Filter by incident ID
+      if (filters.incidentId) {
+        whereClause.incidentTicketId = filters.incidentId;
+      }
 
-    // Nested relation filters
-    if (filters.status || filters.priority) {
-      whereClause.incidentTicket = {
-        incident: {
-          ...(filters.status && { status: filters.status }),
-          ...(filters.priority && { priority: filters.priority })
+      // Filter by date range
+      if (filters.startDate || filters.endDate) {
+        whereClause.createdAt = {};
+        if (filters.startDate) {
+          whereClause.createdAt.gte = filters.startDate;
         }
-      };
-    }
-
-    // Date range filter
-    if (filters.startDate || filters.endDate) {
-      whereClause.createdAt = {};
-      if (filters.startDate) {
-        whereClause.createdAt.gte = filters.startDate;
+        if (filters.endDate) {
+          // Set the end date to the end of the day
+          const endOfDay = new Date(filters.endDate);
+          endOfDay.setHours(23, 59, 59, 999);
+          whereClause.createdAt.lte = endOfDay;
+        }
       }
-      if (filters.endDate) {
-        whereClause.createdAt.lte = filters.endDate;
-      }
-    }
 
-    return await prisma.resolveIncident.findMany({
-      where: whereClause,
-      include: {
-        incidentTicket: {
-          include: {
-            Incident: true
+      // Prepare the incident filters - Fixed nested relation
+      if (filters.status || filters.priority) {
+        // Create a nested filter for the incident relation
+        whereClause.incidentTicket = {
+          Incident: { // Use the exact relation name from your schema
+            ...(filters.status && { status: filters.status }),
+            ...(filters.priority && { priority: filters.priority })
           }
-        }
-      },
-      take: 5000, // Limit results
-      skip: 0  
-    });
+        };
+      }
+
+      // Execute the query with pagination
+      const postmortems = await prisma.resolveIncident.findMany({
+        where: whereClause,
+        include: {
+          incidentTicket: {
+            include: {
+              Incident: true // Use the exact relation name from your schema
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 100, // Limit results per page
+        skip: filters.page ? (filters.page - 1) * 100 : 0
+      });
+
+      return postmortems;
+    } catch (error) {
+      console.error('Error in PostmortemService.getPostmortems:', error);
+      throw error; // Re-throw to handle at the controller level
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response ,Request } from 'express';
 import { PostmortemController } from './postmortem.controller';
 const postmortemRouter = Router();
 
@@ -217,5 +217,5 @@ const postmortemRouter = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-postmortemRouter.get('/postmortems', PostmortemController.getPostmortems);
+postmortemRouter.get('/postmortems',(req:Request, res:Response)=> PostmortemController.getPostmortems(req,res));
 export default postmortemRouter;
