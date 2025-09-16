@@ -1,10 +1,11 @@
+// postmortem.types.ts
 import { Prisma } from '@prisma/client';
 
 // Define the exact include structure based on your Prisma schema
 export type PostmortemInclude = {
   incidentTicket: {
     include: {
-      Incident: true; // Use the exact relation name from your schema
+      Incident: true; // Use the actual field name from your schema
     };
   };
 };
@@ -15,8 +16,8 @@ export type PostmortemResponse = Prisma.ResolveIncidentGetPayload<{
 
 export interface PostmortemFilters {
   incidentId?: string;
-  status?: string; // Using string since we'll validate against enum values
-  priority?: string; // Using string since we'll validate against enum values
+  status?: string;
+  priority?: string;
   startDate?: Date;
   endDate?: Date;
   page?: number;

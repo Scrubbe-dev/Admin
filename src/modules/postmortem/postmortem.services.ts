@@ -39,13 +39,15 @@ export class PostmortemService {
         }
       }
 
-      // Prepare the incident filters - Fixed nested relation
+      // Prepare the incident filters - Fixed for list relation
       if (filters.status || filters.priority) {
         // Create a nested filter for the incident relation
         whereClause.incidentTicket = {
-          Incident: { // Use the exact relation name from your schema
-            ...(filters.status && { status: filters.status }),
-            ...(filters.priority && { priority: filters.priority })
+          incident: { // Use the actual field name from your schema
+            some: { // Use 'some' for list relations
+              ...(filters.status && { status: filters.status }),
+              ...(filters.priority && { priority: filters.priority })
+            }
           }
         };
       }
@@ -56,21 +58,21 @@ export class PostmortemService {
         include: {
           incidentTicket: {
             include: {
-              Incident: true // Use the exact relation name from your schema
+              Incident: true // Use the actual field name from your schema
             }
           }
         },
         orderBy: {
           createdAt: 'desc'
         },
-        take: 100, // Limit results per page
+        take: 100,
         skip: filters.page ? (filters.page - 1) * 100 : 0
       });
 
       return postmortems;
     } catch (error) {
       console.error('Error in PostmortemService.getPostmortems:', error);
-      throw error; // Re-throw to handle at the controller level
+      throw error;
     }
   }
 }
