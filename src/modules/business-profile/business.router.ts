@@ -385,9 +385,9 @@ businessRouter.post(
  */
 businessRouter.post(
   "/accept-invite",
-  authMiddleware.authenticate,
-  mustBeAMember,
-  businessAccountOnly,
+  // authMiddleware.authenticate,
+  // mustBeAMember,
+  // businessAccountOnly,
   (req, res, next) => {
     businessController.acceptInvite(req, res, next);
   }
