@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { PostmortemFilters, PostmortemResponse } from './postmortem.types';
 import prisma from '../../lib/prisma';
 
+// services.ts - Alternative implementation for filtering by related Incident
 export class PostmortemService {
   static async getPostmortems(
     filters: PostmortemFilters
@@ -39,12 +40,11 @@ export class PostmortemService {
         }
       }
 
-      // Prepare the incident filters - Fixed for list relation
+      // Filter by related Incident's status and priority
       if (filters.status || filters.priority) {
-        // Create a nested filter for the incident relation
         whereClause.incidentTicket = {
-          incident: { // Use the actual field name from your schema
-            some: { // Use 'some' for list relations
+          Incident: {
+            some: {
               ...(filters.status && { status: filters.status }),
               ...(filters.priority && { priority: filters.priority })
             }
@@ -58,7 +58,7 @@ export class PostmortemService {
         include: {
           incidentTicket: {
             include: {
-              Incident: true // Use the actual field name from your schema
+              Incident: true
             }
           }
         },
