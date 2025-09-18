@@ -123,6 +123,67 @@ model ApiKey {
   user        User              @relation(fields: [userId], references: [id])
 }
 
+
+
+model Plan {
+  id          String      @id @default(cuid())
+  name        String
+  type        PlanType
+  price       Float
+  currency    String      @default("usd")
+  interval    Interval
+  description String?
+  features    String[]    // JSON array of features
+  stripePriceId String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                String            @id @default(cuid())
+  customerId        String
+  customer          Customer          @relation(fields: [customerId], references: [id])
+  planId            String
+  plan              Plan              @relation(fields: [planId], references: [id])
+  status            SubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd Boolean           @default(false)
+  quantity          Int
+  trialEnd          DateTime?
+  metadata          Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+enum PlanType {
+  STARTER
+  GROWTH
+  PRO
+  ENTERPRISE
+}
+
+enum Interval {
+  MONTH
+  YEAR
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+}
+
+
+
+
+
 model Business {
   id   String  @id @default(uuid())
   name String?
@@ -565,20 +626,20 @@ model ProjectConfiguration {
 }
 
 model Customer {
-  id           String          @id @default(uuid())
-  name         String
-  contactEmail String          @unique
-  tenantId     String          @unique
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  isActive     Boolean         @default(true)
+  id           String    @id @default(uuid())
+  name         String?
+  contactEmail String    @unique
+  tenantId     String    @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  isActive     Boolean   @default(true)
+  stripeCustomerId String? // Add this field
+
   contracts    Contract[]
   incidents    Incident[]
   events       SecurityEvent[]
   users        User[]          @relation("CustomerToUser")
-
-  @@index([tenantId])
-  @@index([contactEmail])
+  subscriptions Subscription[] // Add this relation if not already present
 }
 
 model IncidentComment {
