@@ -125,6 +125,14 @@ model ApiKey {
 
 
 
+
+
+
+
+
+
+// Payment pricing plan section start
+
 model Plan {
   id          String      @id @default(cuid())
   name        String
@@ -179,6 +187,19 @@ enum SubscriptionStatus {
   INCOMPLETE_EXPIRED
   TRIALING
 }
+
+
+// Payment pricing plan section end
+
+
+
+
+
+
+
+
+
+
 
 
 

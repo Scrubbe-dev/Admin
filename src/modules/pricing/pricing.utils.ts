@@ -6,29 +6,51 @@ export const STRIPE_PLANS: Record<PlanType, Record<BillingCycle, Omit<Plan, 'id'
     [BillingCycle.MONTHLY]: {
       name: 'Starter',
       type: PlanType.STARTER,
-      price: 0,
+      price: 15,
       billingCycle: BillingCycle.MONTHLY,
       currency: 'usd',
       description: 'Perfect for individuals and small teams getting started',
+      pricingDuration:"14-day free trial",
+      isPopular: false,
       features: [
-        'Up to 3 users',
-        'Basic incident management',
-        'Email notifications',
-        'Community support'
+        {
+        Description:"For small teams getting started with incident management.",
+        Price: "$0/month",
+        Users: "Up to 10 users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration: "Basic GitHub and GitLab",
+        "Dashboards & Reporting": "Basic",
+        "SLA Tracking": "❌",
+        "MSP Clients": "1 single tenant",
+        "Access Control": "❌",
+        Support: "Community",
+        Action: "Get started for free",
+      },
       ]
     },
     [BillingCycle.YEARLY]: {
       name: 'Starter',
       type: PlanType.STARTER,
-      price: 0,
+      price: 153,
       billingCycle: BillingCycle.YEARLY,
       currency: 'usd',
       description: 'Perfect for individuals and small teams getting started',
+      pricingDuration:" $153/agent/year (save 15%)",
+      isPopular: false,
       features: [
-        'Up to 3 users',
-        'Basic incident management',
-        'Email notifications',
-        'Community support'
+        {
+        Description:"For small teams getting started with incident management.",
+        Price: "$0/month",
+        Users: "Up to 10 users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration: "Basic GitHub and GitLab",
+        "Dashboards & Reporting": "Basic",
+        "SLA Tracking": "❌",
+        "MSP Clients": "1 single tenant",
+        "Access Control": "❌",
+        Support: "Community",
+        Action: "Get started for free",
+      },
       ]
     }
   },
@@ -36,31 +58,50 @@ export const STRIPE_PLANS: Record<PlanType, Record<BillingCycle, Omit<Plan, 'id'
     [BillingCycle.MONTHLY]: {
       name: 'Growth',
       type: PlanType.GROWTH,
-      price: 9,
+      price: 35,
       billingCycle: BillingCycle.MONTHLY,
       currency: 'usd',
       description: 'For growing teams that need more power',
+      isPopular: false,
       features: [
-        'Up to 20 users',
-        'Advanced incident management',
-        'Email & Slack notifications',
-        'Priority support',
-        'Basic analytics'
+       {
+        Description: "For scaling startups and SMBs that need structure.",
+        Price: "$9/user/month",
+        Users: "Up to 50 users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration: "Full: Slack, GitHub, GitLab, Zoom, Google Meet",
+        "Dashboards & Reporting": "Basic",
+        "SLA Tracking": "MTTR and MTTA",
+        "MSP Clients": "Up to 5",
+        "Access Control": "❌",
+        Support: "Email (24-hour response)",
+        Action: "Start 14 days free trial",
+      },
       ]
     },
     [BillingCycle.YEARLY]: {
       name: 'Growth',
       type: PlanType.GROWTH,
-      price: 90,
+      price: 357,
       billingCycle: BillingCycle.YEARLY,
       currency: 'usd',
       description: 'For growing teams that need more power',
+      pricingDuration:"$357/agent/year (save 15%)",
+      isPopular: false,
       features: [
-        'Up to 20 users',
-        'Advanced incident management',
-        'Email & Slack notifications',
-        'Priority support',
-        'Basic analytics'
+       {
+        Description: "For scaling startups and SMBs that need structure.",
+        Price: "$9/user/month",
+        Users: "Up to 50 users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration: "Full: Slack, GitHub, GitLab, Zoom, Google Meet",
+        "Dashboards & Reporting": "Basic",
+        "SLA Tracking": "MTTR and MTTA",
+        "MSP Clients": "Up to 5",
+        "Access Control": "❌",
+        Support: "Email (24-hour response)",
+        Action: "Start 14 days free trial",
+      },
       ]
     }
   },
@@ -68,33 +109,52 @@ export const STRIPE_PLANS: Record<PlanType, Record<BillingCycle, Omit<Plan, 'id'
     [BillingCycle.MONTHLY]: {
       name: 'Pro',
       type: PlanType.PRO,
-      price: 19,
+      price: 85,
       billingCycle: BillingCycle.MONTHLY,
       currency: 'usd',
       description: 'For businesses that need advanced features',
+      isPopular: true,
       features: [
-        'Unlimited users',
-        'Advanced incident management',
-        'All notification channels',
-        '24/7 dedicated support',
-        'Advanced analytics & reporting',
-        'API access'
+       {
+        Description: "For MSPs and mission-critical businesses.",
+        Price: "$19/user/month",
+        Users: "Unlimited users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration:
+          "Full: Slack, GitHub, GitLab, Zoom, Google Meet, Custom API/Webhooks",
+        "Dashboards & Reporting": "Advanced with fraud and incidents", // Corrected from "Advanced with fraud reports"
+        "SLA Tracking": "Enforcement with auto escalations, 99.9% uptime",
+        "MSP Clients": "Unlimited",
+        "Access Control": "Role-based",
+        Support: "Priority email and chat",
+        Action: "Start 14 days free trial",
+      },
       ]
     },
     [BillingCycle.YEARLY]: {
       name: 'Pro',
       type: PlanType.PRO,
-      price: 190,
+      price: 867,
       billingCycle: BillingCycle.YEARLY,
       currency: 'usd',
       description: 'For businesses that need advanced features',
+      pricingDuration:"$867/agent/year (save 15%)",
+      isPopular: true,
       features: [
-        'Unlimited users',
-        'Advanced incident management',
-        'All notification channels',
-        '24/7 dedicated support',
-        'Advanced analytics & reporting',
-        'API access'
+       {
+        Description: "For MSPs and mission-critical businesses.",
+        Price: "$19/user/month",
+        Users: "Unlimited users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration:
+          "Full: Slack, GitHub, GitLab, Zoom, Google Meet, Custom API/Webhooks",
+        "Dashboards & Reporting": "Advanced with fraud and incidents", // Corrected from "Advanced with fraud reports"
+        "SLA Tracking": "Enforcement with auto escalations, 99.9% uptime",
+        "MSP Clients": "Unlimited",
+        "Access Control": "Role-based",
+        Support: "Priority email and chat",
+        Action: "Start 14 days free trial",
+      },
       ]
     }
   },
@@ -102,33 +162,55 @@ export const STRIPE_PLANS: Record<PlanType, Record<BillingCycle, Omit<Plan, 'id'
     [BillingCycle.MONTHLY]: {
       name: 'Enterprise',
       type: PlanType.ENTERPRISE,
-      price: 9,
+      price: 0,
       billingCycle: BillingCycle.MONTHLY,
       currency: 'usd',
       description: 'Custom solution for large organizations',
+      pricingDuration:"Custom Pricing",
+      isPopular: false,
       features: [
-        'Unlimited users',
-        'Everything in Pro',
-        'Custom integrations',
-        'Dedicated account manager',
-        'Custom SLA',
-        'On-premise deployment option'
+       {
+        Description:
+          "For banks, telcos, governments, and large organizations with compliance needs.",
+        Price: "Custom from $9/user/month",
+        Users: "Unlimited users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration:
+          "Full: Slack, GitHub, GitLab, Zoom, Google Meet, Custom API/Webhooks, SSO (Azure AD, Okta, AWS Cognito)",
+        "Dashboards & Reporting": "Advanced with compliance (PCI, ISO, SOC2)",
+        "SLA Tracking": "Enforcement with auto escalations, 99.9% uptime",
+        "MSP Clients": "Unlimited",
+        "Access Control": "Role-based",
+        Support: "24/7 phone, dedicated manager",
+        Action: "Start 14 days free trial",
+      },
       ]
     },
     [BillingCycle.YEARLY]: {
       name: 'Enterprise',
       type: PlanType.ENTERPRISE,
-      price: 90,
+      price: 0,
       billingCycle: BillingCycle.YEARLY,
       currency: 'usd',
       description: 'Custom solution for large organizations',
+      pricingDuration:"Custom pricing",
+      isPopular: false,
       features: [
-        'Unlimited users',
-        'Everything in Pro',
-        'Custom integrations',
-        'Dedicated account manager',
-        'Custom SLA',
-        'On-premise deployment option'
+       {
+        Description:
+          "For banks, telcos, governments, and large organizations with compliance needs.",
+        Price: "Custom from $9/user/month",
+        Users: "Unlimited users",
+        Incidents: "Unlimited incidents with postmortems",
+        Integration:
+          "Full: Slack, GitHub, GitLab, Zoom, Google Meet, Custom API/Webhooks, SSO (Azure AD, Okta, AWS Cognito)",
+        "Dashboards & Reporting": "Advanced with compliance (PCI, ISO, SOC2)",
+        "SLA Tracking": "Enforcement with auto escalations, 99.9% uptime",
+        "MSP Clients": "Unlimited",
+        "Access Control": "Role-based",
+        Support: "24/7 phone, dedicated manager",
+        Action: "Start 14 days free trial",
+      },
       ]
     }
   }

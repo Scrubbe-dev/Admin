@@ -20,9 +20,11 @@ export interface Plan {
   billingCycle: BillingCycle;
   currency: string;
   description: string;
-  features: string[];
+  features: Record<string,string>[];
   stripePriceId: string;
   metadata?: Record<string, any>;
+  pricingDuration?:string;
+  isPopular:  boolean;
 }
 
 export interface Subscription {
