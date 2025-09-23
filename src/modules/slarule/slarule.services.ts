@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SLABreachType } from '@prisma/client';
 import { SLADeadlines, SLABreach } from './slarule.types';
 import { calculateSLADeadlines } from './slarule.utils';
 
@@ -62,7 +62,7 @@ export class SLAService {
       // Mark breach in database
       await prisma.incidentTicket.update({
         where: { id: incident.id },
-        data: { slaBreachType: 'ack' }
+        data: { slaBreachType: SLABreachType.ACK }
       });
     }
 
@@ -82,7 +82,7 @@ export class SLAService {
       // Mark breach in database
       await prisma.incidentTicket.update({
         where: { id: incident.id },
-        data: { slaBreachType: 'resolve' }
+        data: { slaBreachType: SLABreachType.RESOLVE }
       });
     }
 
@@ -93,23 +93,38 @@ export class SLAService {
   async sendNearBreachNotifications(minutesBefore: number = 5): Promise<void> {
     const now = new Date();
     
-    Response near-breaches
+    // Response near-breaches
     const responseNearBreaches = await prisma.incidentTicket.findMany({
       where: {
-        slaTargetAck: { gt: now },
+        // slaTargetAck: { gt: now },
         slaTargetAck: { lte: new Date(now.getTime() + minutesBefore * 60000) },
         AND: [{ firstAcknowledgedAt: null }, { slaBreachType: null }]
       }
     });
 
-    Resolution near-breaches
+    // Resolution near-breaches
+    // const resolutionNearBreaches = await prisma.incidentTicket.findMany({
+    //   where: {
+    //     slaTargetResolve: { gt: now },
+    //     slaTargetResolve: { lte: new Date(now.getTime() + minutesBefore * 60000) },
+    //     AND: [{ resolvedAt: null }, { slaBreachType: null },{ lte: new Date(now.getTime() + minutesBefore * 60000) }]
+    //   }
+    // });
+
     const resolutionNearBreaches = await prisma.incidentTicket.findMany({
-      where: {
-        slaTargetResolve: { gt: now },
-        slaTargetResolve: { lte: new Date(now.getTime() + minutesBefore * 60000) },
-        AND: [{ resolvedAt: null }, { slaBreachType: null }]
-      }
-    });
+  where: {
+    AND: [
+      { 
+        slaTargetResolve: { 
+          gt: now,
+          lte: new Date(now.getTime() + minutesBefore * 60000)
+        }
+      },
+      { resolvedAt: null },
+      { slaBreachType: null }
+    ]
+  }
+});
 
     // In real implementation, integrate with notification service
     console.log(`Sending notifications for ${responseNearBreaches.length} response near-breaches`);

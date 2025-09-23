@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, SLABreachType } from '@prisma/client';
 import { SLADeadlines, SLABreach, SLARule } from '../slarule/slarule.types';
 import { calculateSLADeadlines, getSLARule } from './auto-slarules.utils';
 import { createEmailService } from '../auth/services/nodemailer.factory';
@@ -110,7 +110,7 @@ export class SLAService {
         where: { id: incident.id },
         data: { 
           slaResponseBreachNotified: true,
-          slaBreachType: 'ack'
+          slaBreachType: SLABreachType.ACK
         }
       });
     }
@@ -153,7 +153,7 @@ export class SLAService {
         where: { id: incident.id },
         data: { 
           slaResolveBreachNotified: true,
-          slaBreachType: 'resolve'
+          slaBreachType: SLABreachType.RESOLVE
         }
       });
     }

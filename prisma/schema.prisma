@@ -459,6 +459,7 @@ model IncidentTicket {
   firstAcknowledgedAt DateTime?
   resolvedAt          DateTime?
   closedAt            DateTime?
+  slaBreachType       SLABreachType?
 
   // SLA Monitoring fields
   slaResponseHalfNotified Boolean @default(false)
