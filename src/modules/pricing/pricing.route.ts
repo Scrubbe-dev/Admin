@@ -1,8 +1,18 @@
 import { Router , Request , Response } from 'express';
 import { PricingController } from './pricing.controller';
+import { AuthMiddleware } from "../auth/middleware/auth.middleware";
+import { TokenService } from "../auth/services/token.service";
 
 const pricingRouter = Router();
 const pricingController = new PricingController();
+
+const tokenService = new TokenService(
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+
+const authMiddleware = new AuthMiddleware(tokenService);
 
 /**
  * @swagger
@@ -355,7 +365,9 @@ pricingRouter.get('/plans',async (req:Request,res:Response)=>{
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/subscriptions',(req:Request, res:Response)=>{
+pricingRouter.post('/subscriptions',
+    authMiddleware.authenticate,
+    (req:Request, res:Response)=>{
      pricingController.createSubscription(req,res)
     });
 
@@ -407,7 +419,9 @@ pricingRouter.post('/subscriptions',(req:Request, res:Response)=>{
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.put('/subscriptions', (req:Request,res:Response)=>{
+pricingRouter.put('/subscriptions',
+    authMiddleware.authenticate,
+     (req:Request,res:Response)=>{
     pricingController.updateSubscription(req,res)
 });
 
@@ -459,7 +473,9 @@ pricingRouter.put('/subscriptions', (req:Request,res:Response)=>{
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/subscriptions/cancel', (req:Request,res:Response)=>{
+pricingRouter.post('/subscriptions/cancel', 
+    authMiddleware.authenticate,
+    (req:Request,res:Response)=>{
     pricingController.cancelSubscription(req,res)
 });
 
@@ -515,7 +531,9 @@ pricingRouter.post('/subscriptions/cancel', (req:Request,res:Response)=>{
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/customers/:customerId/subscriptions',(req:Request,res:Response)=>{ 
+pricingRouter.get('/customers/:customerId/subscriptions',
+    authMiddleware.authenticate,
+    (req:Request,res:Response)=>{ 
     pricingController.getCustomerSubscriptions(req,res)
 });
 
@@ -567,7 +585,9 @@ pricingRouter.get('/customers/:customerId/subscriptions',(req:Request,res:Respon
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/portal',async (req:Request,res:Response)=>{
+pricingRouter.post('/portal',
+    authMiddleware.authenticate,
+    (req:Request,res:Response)=>{
      pricingController.createPortalSession(req,res)
     });
 
@@ -623,7 +643,9 @@ pricingRouter.post('/portal',async (req:Request,res:Response)=>{
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/customers/:customerId/invoices', (req:Request,res:Response)=>{
+pricingRouter.get('/customers/:customerId/invoices', 
+    authMiddleware.authenticate,
+    (req:Request,res:Response)=>{
      pricingController.getCustomerInvoices(req,res)
     });
 
@@ -679,7 +701,9 @@ pricingRouter.get('/customers/:customerId/invoices', (req:Request,res:Response)=
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/customers/:customerId/payment-methods', (req:Request,res:Response)=>{
+pricingRouter.get('/customers/:customerId/payment-methods',
+     authMiddleware.authenticate,
+     (req:Request,res:Response)=>{
      pricingController.getCustomerPaymentMethods(req,res)
     });
 
