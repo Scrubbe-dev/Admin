@@ -1035,6 +1035,9 @@ private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       mode: 'subscription',
       success_url: `${request.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: request.cancelUrl,
+      automatic_tax:{
+            enabled:false
+      },
       subscription_data: {
         metadata: {
           planType: request.planType,
