@@ -1,5 +1,5 @@
-import { Router , Request , Response } from 'express';
-import { PricingController } from './pricing.controller';
+import { Router, Request, Response } from "express";
+import { PricingController } from "./pricing.controller";
 import { AuthMiddleware } from "../auth/middleware/auth.middleware";
 import { TokenService } from "../auth/services/token.service";
 
@@ -319,8 +319,8 @@ const authMiddleware = new AuthMiddleware(tokenService);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/plans',async (req:Request,res:Response)=>{
-    pricingController.getPlans(req,res)
+pricingRouter.get("/plans", async (req: Request, res: Response) => {
+  pricingController.getPlans(req, res);
 });
 
 /**
@@ -365,11 +365,13 @@ pricingRouter.get('/plans',async (req:Request,res:Response)=>{
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/subscriptions',
-    authMiddleware.authenticate,
-    (req:Request, res:Response)=>{
-     pricingController.createSubscription(req,res)
-    });
+pricingRouter.post(
+  "/subscriptions",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.createSubscription(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -419,11 +421,13 @@ pricingRouter.post('/subscriptions',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.put('/subscriptions',
-    authMiddleware.authenticate,
-     (req:Request,res:Response)=>{
-    pricingController.updateSubscription(req,res)
-});
+pricingRouter.put(
+  "/subscriptions",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.updateSubscription(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -473,11 +477,13 @@ pricingRouter.put('/subscriptions',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/subscriptions/cancel', 
-    authMiddleware.authenticate,
-    (req:Request,res:Response)=>{
-    pricingController.cancelSubscription(req,res)
-});
+pricingRouter.post(
+  "/subscriptions/cancel",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.cancelSubscription(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -531,11 +537,13 @@ pricingRouter.post('/subscriptions/cancel',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/customers/:customerId/subscriptions',
-    authMiddleware.authenticate,
-    (req:Request,res:Response)=>{ 
-    pricingController.getCustomerSubscriptions(req,res)
-});
+pricingRouter.get(
+  "/customers/:customerId/subscriptions",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.getCustomerSubscriptions(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -585,11 +593,13 @@ pricingRouter.get('/customers/:customerId/subscriptions',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/portal',
-    authMiddleware.authenticate,
-    (req:Request,res:Response)=>{
-     pricingController.createPortalSession(req,res)
-    });
+pricingRouter.post(
+  "/portal",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.createPortalSession(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -643,11 +653,13 @@ pricingRouter.post('/portal',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/customers/:customerId/invoices', 
-    authMiddleware.authenticate,
-    (req:Request,res:Response)=>{
-     pricingController.getCustomerInvoices(req,res)
-    });
+pricingRouter.get(
+  "/customers/:customerId/invoices",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.getCustomerInvoices(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -701,11 +713,13 @@ pricingRouter.get('/customers/:customerId/invoices',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.get('/customers/:customerId/payment-methods',
-     authMiddleware.authenticate,
-     (req:Request,res:Response)=>{
-     pricingController.getCustomerPaymentMethods(req,res)
-    });
+pricingRouter.get(
+  "/customers/:customerId/payment-methods",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.getCustomerPaymentMethods(req, res);
+  }
+);
 
 /**
  * @swagger
@@ -748,8 +762,175 @@ pricingRouter.get('/customers/:customerId/payment-methods',
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-pricingRouter.post('/webhook', (req:Request,res:Response)=>{
-    pricingController.handleWebhook(req,res)
+pricingRouter.post("/webhook", (req: Request, res: Response) => {
+  pricingController.handleWebhook(req, res);
 });
+
+// Add these routes to your pricing.routes.ts file
+
+/**
+ * @swagger
+ * /api/v1/pricing/checkout/create-session:
+ *   post:
+ *     summary: Create checkout session for subscription
+ *     description: Create a Stripe Checkout session for subscription payment
+ *     tags:
+ *       - Pricing
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - planType
+ *               - billingCycle
+ *               - quantity
+ *               - successUrl
+ *               - cancelUrl
+ *             properties:
+ *               planType:
+ *                 type: string
+ *                 enum: [starter, growth, pro, enterprise]
+ *                 example: "growth"
+ *               billingCycle:
+ *                 type: string
+ *                 enum: [month, year]
+ *                 example: "month"
+ *               quantity:
+ *                 type: integer
+ *                 example: 5
+ *               trialDays:
+ *                 type: integer
+ *                 example: 14
+ *               successUrl:
+ *                 type: string
+ *                 example: "https://yourdomain.com/success"
+ *               cancelUrl:
+ *                 type: string
+ *                 example: "https://yourdomain.com/cancel"
+ *     responses:
+ *       200:
+ *         description: Successfully created checkout session
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     sessionId:
+ *                       type: string
+ *                       example: "cs_1ABC123def456"
+ *                     url:
+ *                       type: string
+ *                       example: "https://checkout.stripe.com/pay/cs_1ABC123def456"
+ */
+pricingRouter.post(
+  "/checkout/create-session",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.createCheckoutSession(req, res);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/pricing/checkout/success:
+ *   get:
+ *     summary: Handle successful checkout
+ *     description: Process successful checkout and create subscription in database
+ *     tags:
+ *       - Pricing
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: session_id
+ *         in: query
+ *         required: true
+ *         description: Checkout session ID
+ *         schema:
+ *           type: string
+ *           example: "cs_1ABC123def456"
+ *     responses:
+ *       200:
+ *         description: Successfully processed checkout
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   $ref: '#/components/schemas/Subscription'
+ */
+pricingRouter.get(
+  "/checkout/success",
+  authMiddleware.authenticate,
+  (req: Request, res: Response) => {
+    pricingController.handleCheckoutSuccess(req, res);
+  }
+);
+
+/**
+ * @swagger
+ * /api/v1/pricing/checkout/session/{sessionId}:
+ *   get:
+ *     summary: Get checkout session details
+ *     description: Retrieve details of a specific checkout session
+ *     tags:
+ *       - Pricing
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: sessionId
+ *         in: path
+ *         required: true
+ *         description: Checkout session ID
+ *         schema:
+ *           type: string
+ *           example: "cs_1ABC123def456"
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved session details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "success"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "cs_1ABC123def456"
+ *                     status:
+ *                       type: string
+ *                       example: "complete"
+ *                     customer:
+ *                       type: string
+ *                       example: "cus_1ABC123XYZ456"
+ *                     subscription:
+ *                       type: string
+ *                       example: "sub_1ABC123def456"
+ */
+pricingRouter.get(
+  "/checkout/session/:sessionId",
+  authMiddleware.authenticate,
+  async (req: Request, res: Response) => {
+    pricingController.handleCheckoutSession(req, res);
+  }
+);
 
 export default pricingRouter;

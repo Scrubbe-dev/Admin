@@ -367,4 +367,143 @@ export class PricingController {
       });
     }
   }
+
+
+async handleCheckoutSession(req: Request, res: Response) {
+    try {
+      const { sessionId } = req.params;
+      
+      if (!sessionId) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Missing sessionId parameter'
+        });
+      }
+      
+      const result = await pricingService.getCheckoutSession(sessionId);
+      
+      if (!result.success) {
+        return res.status(result.statusCode).json({
+          status: 'error',
+          message: result.error?.message || 'Failed to get checkout session',
+          code: result.error?.code
+        });
+      }
+      
+      return res.status(result.statusCode).json({
+        status: 'success',
+        data: result.data
+      });
+    } catch (error) {
+      console.error('Get checkout session error:', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error'
+      });
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async createCheckoutSession(req: Request, res: Response) {
+  try {
+    const { planType, billingCycle, quantity, trialDays, successUrl, cancelUrl } = req.body;
+    const user = req.user as any;
+    
+    if (!planType || !billingCycle || !quantity || !successUrl || !cancelUrl) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required fields: planType, billingCycle, quantity, successUrl, cancelUrl'
+      });
+    }
+    
+    const request = {
+      planType,
+      billingCycle,
+      quantity,
+      trialDays,
+      successUrl,
+      cancelUrl
+    };
+    
+    const result = await pricingService.createCheckoutSession(
+      user.email,
+      user.name,
+      request
+    );
+    
+    if (!result.success) {
+      return res.status(result.statusCode).json({
+        status: 'error',
+        message: result.error?.message || 'Failed to create checkout session',
+        code: result.error?.code
+      });
+    }
+    
+    return res.status(result.statusCode).json({
+      status: 'success',
+      data: result.data
+    });
+  } catch (error) {
+    console.error('Create checkout session error:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+}
+
+// Handle successful checkout completion
+async handleCheckoutSuccess(req: Request, res: Response) {
+  try {
+    const { session_id } = req.query;
+    
+    if (!session_id) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing session_id parameter'
+      });
+    }
+    
+    const result = await pricingService.handleCheckoutSuccess(session_id as string);
+    
+    if (!result.success) {
+      return res.status(result.statusCode).json({
+        status: 'error',
+        message: result.error?.message || 'Failed to process checkout success',
+        code: result.error?.code
+      });
+    }
+    
+    return res.status(result.statusCode).json({
+      status: 'success',
+      data: result.data
+    });
+  } catch (error) {
+    console.error('Handle checkout success error:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+}
+
+
+
+
+
+
+
 }

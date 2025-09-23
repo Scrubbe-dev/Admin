@@ -13,7 +13,9 @@ import {
   PortalSessionResponse,
   PricingServiceResponse,
   Invoice,
-  PaymentMethod
+  PaymentMethod,
+  CheckoutSessionResponse,
+  CreateCheckoutSessionRequest
 } from './pricing.types';
 import { 
   getPlanByTypeAndCycle, 
@@ -636,50 +638,86 @@ export class PricingService {
   }
 
   // Handle Stripe webhooks
-  async handleWebhook(event: any): Promise<PricingServiceResponse<void>> {
-    try {
-      switch (event.type) {
-        case 'customer.subscription.created':
-        case 'customer.subscription.updated':
-          await this.handleSubscriptionUpdated(event.data.object);
-          break;
-        case 'customer.subscription.deleted':
-          await this.handleSubscriptionDeleted(event.data.object);
-          break;
-        case 'invoice.payment_succeeded':
-          await this.handleInvoicePaymentSucceeded(event.data.object);
-          break;
-        case 'invoice.payment_failed':
-          await this.handleInvoicePaymentFailed(event.data.object);
-          break;
-        case 'customer.updated':
-          await this.handleCustomerUpdated(event.data.object);
-          break;
-        default:
-          console.log(`Unhandled event type: ${event.type}`);
-      }
+async handleWebhook(event: any): Promise<PricingServiceResponse<void>> {
+  try {
+    console.log(`Processing webhook event: ${event.type}`);
+    
+    switch (event.type) {
+      // Checkout session events
+      case 'checkout.session.completed':
+        await this.handleCheckoutSessionCompleted(event.data.object);
+        break;
+      case 'checkout.session.expired':
+        await this.handleCheckoutSessionExpired(event.data.object);
+        break;
       
-      return {
-        success: true,
-        statusCode: 200
-      };
-    } catch (error) {
-      console.error('Webhook handling error:', error);
-      return {
-        success: false,
-        error: {
-          message: 'Webhook handling failed',
-          details: error
-        },
-        statusCode: 500
-      };
+      // Subscription events
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+        await this.handleSubscriptionUpdated(event.data.object);
+        break;
+      case 'customer.subscription.deleted':
+        await this.handleSubscriptionDeleted(event.data.object);
+        break;
+      
+      // Invoice events
+      case 'invoice.payment_succeeded':
+        await this.handleInvoicePaymentSucceeded(event.data.object);
+        break;
+      case 'invoice.payment_failed':
+        await this.handleInvoicePaymentFailed(event.data.object);
+        break;
+      
+      // Customer events
+      case 'customer.updated':
+        await this.handleCustomerUpdated(event.data.object);
+        break;
+      
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
     }
+    
+    return {
+      success: true,
+      statusCode: 200
+    };
+  } catch (error) {
+    console.error('Webhook handling error:', error);
+    return {
+      success: false,
+      error: {
+        message: 'Webhook handling failed',
+        details: error
+      },
+      statusCode: 500
+    };
   }
+}
 
-  // Handle subscription updated webhook
-  private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-    // Find subscription in our DB
-    const dbSubscription = await prisma.subscription.findFirst({
+
+
+
+
+private async handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  console.log(`Processing completed checkout session: ${session.id}`);
+  
+  try {
+    // Get subscription from the session
+    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+    const metadata = session.metadata || {};
+    
+    // Find customer in our database
+    const customer = await prisma.customer.findFirst({
+      where: { stripeCustomerId: session.customer as string }
+    });
+    
+    if (!customer) {
+      console.error(`Customer not found for checkout session: ${session.id}`);
+      return;
+    }
+    
+    // Check if subscription already exists
+    const existingSubscription = await prisma.subscription.findFirst({
       where: {
         metadata: {
           path: ['stripeSubscriptionId'],
@@ -688,28 +726,132 @@ export class PricingService {
       }
     });
     
-    if (dbSubscription) {
-      // Get current metadata
-      const currentMetadata = typeof dbSubscription.metadata === 'object' ? dbSubscription.metadata : {};
-      
-      // Update subscription in our DB
-      await prisma.subscription.update({
-        where: { id: dbSubscription.id },
-        data: {
-          status: subscription.status.toUpperCase() as any, // Convert to uppercase for Prisma enum
-          currentPeriodStart: new Date(subscription.start_date * 1000),
-          currentPeriodEnd: new Date(Number(subscription.ended_at) * 1000),
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          quantity: subscription.items.data[0].quantity,
-          trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-          metadata: {
-            ...currentMetadata,
-            ...subscription.metadata
-          }
-        }
-      });
+    if (existingSubscription) {
+      console.log(`Subscription already exists: ${subscription.id}`);
+      return;
     }
+    
+    // Create subscription in our database
+    const dbSubscription = await prisma.subscription.create({
+      data: {
+        customerId: customer.id,
+        planId: `${metadata.planType}-${metadata.billingCycle}`,
+        status: subscription.status.toUpperCase() as any,
+        currentPeriodStart: new Date(subscription.start_date * 1000),
+        currentPeriodEnd: new Date(Number(subscription.ended_at) * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        quantity: parseInt(metadata.quantity || '1'),
+        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        metadata: {
+          stripeSubscriptionId: subscription.id,
+          stripeCheckoutSessionId: session.id,
+          planType: metadata.planType,
+          billingCycle: metadata.billingCycle,
+          createdViaCheckout: true,
+          checkoutCompletedAt: new Date().toISOString()
+        }
+      }
+    });
+    
+    console.log(`Created subscription in database: ${dbSubscription.id}`);
+    
+    // TODO: Send welcome email, update user permissions, etc.
+    
+  } catch (error) {
+    console.error('Error handling checkout session completed:', error);
+    throw error;
   }
+}
+
+// Handle checkout session expired
+private async handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
+  console.log(`Checkout session expired: ${session.id}`);
+  
+  // TODO: You might want to log this for analytics or send a follow-up email
+  // For now, just log it
+  const metadata = session.metadata || {};
+  console.log(`Expired checkout for plan: ${metadata.planType}-${metadata.billingCycle}`);
+}
+
+// Update the existing subscription handlers to handle checkout-created subscriptions
+
+// Handle subscription updated webhook (updated)
+private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  console.log(`Processing subscription update: ${subscription.id}`);
+  
+  // Find subscription in our DB
+  const dbSubscription = await prisma.subscription.findFirst({
+    where: {
+      metadata: {
+        path: ['stripeSubscriptionId'],
+        equals: subscription.id
+      }
+    }
+  });
+  
+  if (dbSubscription) {
+    // Get current metadata
+    const currentMetadata = typeof dbSubscription.metadata === 'object' ? dbSubscription.metadata : {};
+    
+    // Update subscription in our DB
+    await prisma.subscription.update({
+      where: { id: dbSubscription.id },
+      data: {
+        status: subscription.status.toUpperCase() as any,
+        currentPeriodStart: new Date(subscription.start_date * 1000),
+        currentPeriodEnd: new Date(Number(subscription.ended_at) * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        quantity: subscription.items.data[0]?.quantity || dbSubscription.quantity,
+        trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+        metadata: {
+          ...currentMetadata,
+          ...subscription.metadata,
+          lastUpdatedAt: new Date().toISOString()
+        }
+      }
+    });
+    
+    console.log(`Updated subscription in database: ${dbSubscription.id}`);
+  } else {
+    console.log(`Subscription not found in database: ${subscription.id}`);
+  }
+}
+
+
+  // Handle subscription updated webhook
+  // private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  //   // Find subscription in our DB
+  //   const dbSubscription = await prisma.subscription.findFirst({
+  //     where: {
+  //       metadata: {
+  //         path: ['stripeSubscriptionId'],
+  //         equals: subscription.id
+  //       }
+  //     }
+  //   });
+    
+  //   if (dbSubscription) {
+  //     // Get current metadata
+  //     const currentMetadata = typeof dbSubscription.metadata === 'object' ? dbSubscription.metadata : {};
+      
+  //     // Update subscription in our DB
+  //     await prisma.subscription.update({
+  //       where: { id: dbSubscription.id },
+  //       data: {
+  //         status: subscription.status.toUpperCase() as any, // Convert to uppercase for Prisma enum
+  //         currentPeriodStart: new Date(subscription.start_date * 1000),
+  //         currentPeriodEnd: new Date(Number(subscription.ended_at) * 1000),
+  //         cancelAtPeriodEnd: subscription.cancel_at_period_end,
+  //         quantity: subscription.items.data[0].quantity,
+  //         trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+  //         metadata: {
+  //           ...currentMetadata,
+  //           ...subscription.metadata
+  //         }
+  //       }
+  //     });
+  //   }
+  // }
 
   // Handle subscription deleted webhook
   private async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -815,4 +957,259 @@ export class PricingService {
       });
     }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  async createCheckoutSession(
+  userEmail: string,
+  userName: string,
+  request: CreateCheckoutSessionRequest
+): Promise<PricingServiceResponse<CheckoutSessionResponse>> {
+  try {
+    // Get or create Stripe customer
+    const customer = await this.getOrCreateStripeCustomer(userEmail, userName);
+    
+    // Get plan details and Stripe price
+    const plan = getPlanByTypeAndCycle(request.planType, request.billingCycle);
+    const stripePrice = await this.getOrCreateStripePrice(request.planType, request.billingCycle);
+    
+    // Create checkout session
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      customer: customer.id,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: stripePrice.id,
+          quantity: request.quantity,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${request.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: request.cancelUrl,
+      subscription_data: {
+        metadata: {
+          planType: request.planType,
+          billingCycle: request.billingCycle,
+          userEmail: userEmail,
+          userName: userName || '',
+        },
+      },
+      metadata: {
+        planType: request.planType,
+        billingCycle: request.billingCycle,
+        userEmail: userEmail,
+        quantity: request.quantity.toString(),
+      },
+    };
+
+    // Add trial if specified
+    if (request.trialDays && request.trialDays > 0) {
+      sessionParams.subscription_data = {
+        ...sessionParams.subscription_data,
+        trial_period_days: request.trialDays,
+      };
+    }
+
+    // Add customer tax collection if needed
+    sessionParams.automatic_tax = { enabled: true };
+    sessionParams.tax_id_collection = { enabled: true };
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    return {
+      success: true,
+      data: {
+        sessionId: session.id,
+        url: session.url!,
+      },
+      statusCode: 200,
+    };
+  } catch (error) {
+    const stripeError = handleStripeError(error as any);
+    return {
+      success: false,
+      error: stripeError,
+      statusCode: stripeError.statusCode,
+    };
+  }
+}
+
+// Handle successful checkout completion
+async handleCheckoutSuccess(sessionId: string): Promise<PricingServiceResponse<Subscription>> {
+  try {
+    // Retrieve the checkout session
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription'],
+    });
+
+    if (!session.subscription) {
+      return {
+        success: false,
+        error: {
+          message: 'No subscription found in checkout session',
+          code: 'subscription_not_found',
+        },
+        statusCode: 404,
+      };
+    }
+
+    const stripeSubscription = session.subscription as Stripe.Subscription;
+    const metadata = session.metadata || {};
+
+    // Find customer in our database
+    const customer = await prisma.customer.findFirst({
+      where: { stripeCustomerId: session.customer as string },
+    });
+
+    if (!customer) {
+      return {
+        success: false,
+        error: {
+          message: 'Customer not found in database',
+          code: 'customer_not_found',
+        },
+        statusCode: 404,
+      };
+    }
+
+    // Check if subscription already exists in our database
+    let dbSubscription = await prisma.subscription.findFirst({
+      where: {
+        metadata: {
+          path: ['stripeSubscriptionId'],
+          equals: stripeSubscription.id,
+        },
+      },
+    });
+
+    if (!dbSubscription) {
+      // Create subscription in our database
+      dbSubscription = await prisma.subscription.create({
+        data: {
+          customerId: customer.id,
+          planId: `${metadata.planType}-${metadata.billingCycle}`,
+          status: stripeSubscription.status.toUpperCase() as any,
+          currentPeriodStart: new Date(stripeSubscription.start_date * 1000),
+          currentPeriodEnd: new Date(Number(stripeSubscription.ended_at) * 1000),
+          cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+          quantity: parseInt(metadata.quantity || '1'),
+          trialEnd: stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000) : null,
+          metadata: {
+            stripeSubscriptionId: stripeSubscription.id,
+            stripeCheckoutSessionId: sessionId,
+            planType: metadata.planType,
+            billingCycle: metadata.billingCycle,
+            createdViaCheckout: true,
+          },
+        },
+      });
+    }
+
+    // Map to our Subscription type
+    const subscription: Subscription = {
+      id: dbSubscription.id,
+      customerId: dbSubscription.customerId,
+      planId: dbSubscription.planId,
+      status: dbSubscription.status as any,
+      currentPeriodStart: dbSubscription.currentPeriodStart,
+      currentPeriodEnd: dbSubscription.currentPeriodEnd,
+      cancelAtPeriodEnd: dbSubscription.cancelAtPeriodEnd,
+      quantity: dbSubscription.quantity,
+      trialEnd: dbSubscription.trialEnd || undefined,
+      metadata: dbSubscription.metadata as any,
+    };
+
+    return {
+      success: true,
+      data: subscription,
+      statusCode: 200,
+    };
+  } catch (error) {
+    const stripeError = handleStripeError(error as any);
+    return {
+      success: false,
+      error: stripeError,
+      statusCode: stripeError.statusCode,
+    };
+  }
+}
+
+// Get checkout session details
+async getCheckoutSession(sessionId: string): Promise<PricingServiceResponse<any>> {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items', 'subscription'],
+    });
+
+    return {
+      success: true,
+      data: {
+        id: session.id,
+        status: session.status,
+        customer: session.customer,
+        subscription: session.subscription,
+        amount_total: session.amount_total,
+        currency: session.currency,
+        metadata: session.metadata,
+      },
+      statusCode: 200,
+    };
+  } catch (error) {
+    const stripeError = handleStripeError(error as any);
+    return {
+      success: false,
+      error: stripeError,
+      statusCode: stripeError.statusCode,
+    };
+  }
+}
 }

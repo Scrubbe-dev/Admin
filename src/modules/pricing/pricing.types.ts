@@ -123,3 +123,19 @@ export interface PricingServiceResponse<T = any> {
   };
   statusCode: number;
 }
+
+
+
+export interface CreateCheckoutSessionRequest {
+  planType: PlanType;
+  billingCycle: BillingCycle;
+  quantity: number;
+  trialDays?: number;
+  successUrl: string;
+  cancelUrl: string;
+}
+
+export interface CheckoutSessionResponse {
+  sessionId: string;
+  url: string;
+}
