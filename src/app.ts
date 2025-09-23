@@ -71,6 +71,7 @@ import { createEmailService } from "./modules/auth/services/nodemailer.factory";
 import incidentStatusEmailrouter from "./modules/incidentStatus/incidentstatus.routes";
 import postmortemRouter from "./modules/postmortem/postmortem.route";
 import pricingRouter from "./modules/pricing/pricing.route";
+import { SLACronService } from "./modules/auto-sla/auto-cron.service";
 
 
 dotenvConfig();
@@ -84,6 +85,15 @@ const app = express();
 const prisma = new PrismaClient();
 
 const cleanupService = new CleanupService(prisma);
+
+
+// Initialize SLA monitoring when app starts
+const slaCronService = new SLACronService();
+
+
+
+
+
 
 
 const server = http.createServer(app);
@@ -241,6 +251,21 @@ app.use(
 // app.listen(env.PORT, () => {
 //   console.log(`Server running on port ${env.PORT}`);
 // });
+
+
+
+// For graceful shutdown
+process.on('SIGINT', () => {
+  console.log('Shutting down SLA monitoring...');
+  slaCronService.stop();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('Shutting down SLA monitoring...');
+  slaCronService.stop();
+  process.exit(0);
+});
 
 server.listen(env.PORT, () => {
   console.log(`Server running on port ${env.PORT}`);

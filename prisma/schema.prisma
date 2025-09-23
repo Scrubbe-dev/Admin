@@ -459,6 +459,15 @@ model IncidentTicket {
   firstAcknowledgedAt DateTime?
   resolvedAt          DateTime?
   closedAt            DateTime?
+
+  // SLA Monitoring fields
+  slaResponseHalfNotified Boolean @default(false)
+  slaResolveHalfNotified Boolean @default(false)
+  slaResponseBreachNotified Boolean @default(false)
+  slaResolveBreachNotified Boolean @default(false)
+  slaSeverity String? // Store the severity for SLA calculations
+  slaResponseTimeMinutes Int? // Store the response time in minutes
+  slaResolveTimeMinutes Int? // Store the resolve time in minutes
   sLABreachAuditLog   SLABreachAuditLog[]
 
   recommendedActions DetermineAction[]

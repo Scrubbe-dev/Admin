@@ -29,62 +29,62 @@ export class SLAService {
     const now = new Date();
     
     // Find incidents with response SLA breaches
-    // const responseBreaches = await prisma.incidentTicket.findMany({
-    //   where: {
-    //     slaTargetAck: { lt: now },
-    //     AND: [{ firstAcknowledgedAt: null }, { slaBreachType: null }]
-    //   }
-    // });
+    const responseBreaches = await prisma.incidentTicket.findMany({
+      where: {
+        slaTargetAck: { lt: now },
+        AND: [{ firstAcknowledgedAt: null }, { slaBreachType: null }]
+      }
+    });
 
     // Find incidents with resolution SLA breaches
-    // const resolutionBreaches = await prisma.incidentTicket.findMany({
-    //   where: {
-    //     slaTargetResolve: { lt: now },
-    //     AND: [{ resolvedAt: null }, { slaBreachType: null }]
-    //   }
-    // });
+    const resolutionBreaches = await prisma.incidentTicket.findMany({
+      where: {
+        slaTargetResolve: { lt: now },
+        AND: [{ resolvedAt: null }, { slaBreachType: null }]
+      }
+    });
 
     const breaches: SLABreach[] = [];
 
     // Process response breaches
-    // for (const incident of responseBreaches) {
-    //   const duration = Math.round(
-    //     (now.getTime() - incident.slaTargetAck!.getTime()) / 60000
-    //   );
+    for (const incident of responseBreaches) {
+      const duration = Math.round(
+        (now.getTime() - incident.slaTargetAck!.getTime()) / 60000
+      );
       
-    //   breaches.push({
-    //     incidentId: incident.id,
-    //     slaType: 'ack',
-    //     breachedAt: now,
-    //     durationMinutes: duration
-    //   });
+      breaches.push({
+        incidentId: incident.id,
+        slaType: 'ack',
+        breachedAt: now,
+        durationMinutes: duration
+      });
 
-    //   // Mark breach in database
-    //   // await prisma.incidentTicket.update({
-    //   //   where: { id: incident.id },
-    //   //   data: { slaBreachType: 'ack' }
-    //   // });
-    // }
+      // Mark breach in database
+      await prisma.incidentTicket.update({
+        where: { id: incident.id },
+        data: { slaBreachType: 'ack' }
+      });
+    }
 
     // Process resolution breaches
-    // for (const incident of resolutionBreaches) {
-    //   const duration = Math.round(
-    //     (now.getTime() - incident.slaTargetResolve!.getTime()) / 60000
-    //   );
+    for (const incident of resolutionBreaches) {
+      const duration = Math.round(
+        (now.getTime() - incident.slaTargetResolve!.getTime()) / 60000
+      );
       
-    //   breaches.push({
-    //     incidentId: incident.id,
-    //     slaType: 'resolve',
-    //     breachedAt: now,
-    //     durationMinutes: duration
-    //   });
+      breaches.push({
+        incidentId: incident.id,
+        slaType: 'resolve',
+        breachedAt: now,
+        durationMinutes: duration
+      });
 
-    //   // Mark breach in database
-    //   // await prisma.incidentTicket.update({
-    //   //   where: { id: incident.id },
-    //   //   data: { slaBreachType: 'resolve' }
-    //   // });
-    // }
+      // Mark breach in database
+      await prisma.incidentTicket.update({
+        where: { id: incident.id },
+        data: { slaBreachType: 'resolve' }
+      });
+    }
 
     return breaches;
   }
@@ -93,26 +93,26 @@ export class SLAService {
   async sendNearBreachNotifications(minutesBefore: number = 5): Promise<void> {
     const now = new Date();
     
-    // Response near-breaches
-    // const responseNearBreaches = await prisma.incidentTicket.findMany({
-    //   where: {
-    //     slaTargetAck: { gt: now },
-    //     slaTargetAck: { lte: new Date(now.getTime() + minutesBefore * 60000) },
-    //     AND: [{ firstAcknowledgedAt: null }, { slaBreachType: null }]
-    //   }
-    // });
+    Response near-breaches
+    const responseNearBreaches = await prisma.incidentTicket.findMany({
+      where: {
+        slaTargetAck: { gt: now },
+        slaTargetAck: { lte: new Date(now.getTime() + minutesBefore * 60000) },
+        AND: [{ firstAcknowledgedAt: null }, { slaBreachType: null }]
+      }
+    });
 
-    // Resolution near-breaches
-    // const resolutionNearBreaches = await prisma.incidentTicket.findMany({
-    //   where: {
-    //     slaTargetResolve: { gt: now },
-    //     slaTargetResolve: { lte: new Date(now.getTime() + minutesBefore * 60000) },
-    //     AND: [{ resolvedAt: null }, { slaBreachType: null }]
-    //   }
-    // });
+    Resolution near-breaches
+    const resolutionNearBreaches = await prisma.incidentTicket.findMany({
+      where: {
+        slaTargetResolve: { gt: now },
+        slaTargetResolve: { lte: new Date(now.getTime() + minutesBefore * 60000) },
+        AND: [{ resolvedAt: null }, { slaBreachType: null }]
+      }
+    });
 
     // In real implementation, integrate with notification service
-    // console.log(`Sending notifications for ${responseNearBreaches.length} response near-breaches`);
-    // console.log(`Sending notifications for ${resolutionNearBreaches.length} resolution near-breaches`);
+    console.log(`Sending notifications for ${responseNearBreaches.length} response near-breaches`);
+    console.log(`Sending notifications for ${resolutionNearBreaches.length} resolution near-breaches`);
   }
 }

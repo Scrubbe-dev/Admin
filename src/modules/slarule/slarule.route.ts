@@ -251,16 +251,13 @@ const slaController = new SLAController();
  *                 error:
  *                   type: string
  */
-slaRouter.post('/incidents/:id/sla/init',
-    //  authenticate, authorize(['admin', 'analyst']), 
+slaRouter.post('/incidents/:id/sla/init', 
   slaController.initializeSLA.bind(slaController));
 
 slaRouter.get('/sla/check-breaches',
-    //  authenticate, authorize(['admin']), 
   slaController.checkSLABreaches.bind(slaController));
 
 slaRouter.get('/incidents/:id/sla/status',
-    //  authenticate, 
   slaController.getSLAStatus.bind(slaController));
 
 export default slaRouter;
