@@ -45,7 +45,7 @@ githubRouter.get("/connect", authMiddleware.authenticate, (req, res, next) => {
 
 /**
  * @swagger
- * /api/v1/integrations/github/callback:
+ * /api/v1/integrations/github:
  *   get:
  *     summary: GitHub OAuth callback
  *     description: >
@@ -73,7 +73,7 @@ githubRouter.get("/connect", authMiddleware.authenticate, (req, res, next) => {
  *         description: Failed to connect GitHub
  */
 // FIX: Changed from "/callback" to "/callbacks/github" to match your redirect URI
-githubRouter.get("/callbacks/github", (req, res, next) => {
+githubRouter.get("/callback", (req, res, next) => {
   githubController.handleOAuthCallback(req, res, next);
 });
 
