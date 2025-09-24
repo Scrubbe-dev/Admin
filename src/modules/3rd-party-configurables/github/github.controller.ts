@@ -32,7 +32,8 @@ export class GithubController {
 
   async handleOAuthCallback(req: Request, res: Response, next: NextFunction) {
     try {
-      const { code, state: userId } = req.query;
+      const { code } = req.query;
+      const userId = req.user?.sub!;
 
       if (!code || !userId) {
         return res.status(400).json({
@@ -46,11 +47,11 @@ export class GithubController {
       );
 
       // FIX: Redirect to a success page or your frontend application
-      res.redirect(`${process.env.FRONTEND_URL}/integrations/github/success`);
+      res.json({ ...result, url: `${process.env.FRONTEND_URL}/integrations/github/success` });
     } catch (error) {
       // FIX: Redirect to an error page on failure
       console.error("OAuth callback error:", error);
-      res.redirect(`${process.env.FRONTEND_URL}/integrations/github/error`);
+      res.json({ url: `${process.env.FRONTEND_URL}/integrations/github/error` });
     }
   }
 

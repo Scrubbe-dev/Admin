@@ -77,7 +77,7 @@ export class GithubService {
 
       console.log("=========== SAVED INTEGRATION ===========", savedIntegration);
 
-      return { status: "success", message: "GitHub connected successfully" };
+      return { status: "success", message: "GitHub connected successfully", savedIntegration };
     } catch (error) {
       console.error("OAuth callback error:", error);
       throw error;
