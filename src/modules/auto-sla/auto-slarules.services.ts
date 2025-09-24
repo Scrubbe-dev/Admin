@@ -16,7 +16,11 @@ export class SLAService {
   async setSLADeadlines(incidentId: string, severity: string): Promise<void> {
     const incident = await prisma.incidentTicket.findUnique({
       where: { id: incidentId },
-      include: { assignedTo: true }
+      include: { 
+        assignedTo: true,
+        assignedBy: true,
+        createdBy: true // Added to include ticket creator
+      }
     });
 
     if (!incident) throw new Error('Incident not found');
@@ -35,7 +39,14 @@ export class SLAService {
         slaResponseHalfNotified: false,
         slaResolveHalfNotified: false,
         slaResponseBreachNotified: false,
-        slaResolveBreachNotified: false
+        slaResolveBreachNotified: false,
+        // Set MTTR fields
+        mttrTargetAck: deadlines.respondBy,
+        mttrTargetResolve: deadlines.resolveBy,
+        mttrResponseHalfNotified: false,
+        mttrResolveHalfNotified: false,
+        mttrResponseBreachNotified: false,
+        mttrResolveBreachNotified: false
       }
     });
   }
@@ -54,7 +65,8 @@ export class SLAService {
       },
       include: {
         assignedTo: true,
-        assignedBy: true
+        assignedBy: true,
+        createdBy: true // Added to include ticket creator
       }
     });
 
@@ -68,6 +80,12 @@ export class SLAService {
       
       // Check resolve time milestones
       await this.checkResolveTimeMilestones(incident, slaRule, now, breaches);
+      
+      // Check MTTR response time milestones
+      await this.checkMTTRResponseTimeMilestones(incident, slaRule, now, breaches);
+      
+      // Check MTTR resolve time milestones
+      await this.checkMTTRResolveTimeMilestones(incident, slaRule, now, breaches);
     }
 
     return breaches;
@@ -100,7 +118,7 @@ export class SLAService {
       
       breaches.push({
         incidentId: incident.id,
-        slaType: 'ack',
+        slaType: 'mttr_ack',
         breachedAt: now,
         durationMinutes: duration
       });
@@ -143,7 +161,7 @@ export class SLAService {
       
       breaches.push({
         incidentId: incident.id,
-        slaType: 'resolve',
+        slaType: 'mttr_resolve',
         breachedAt: now,
         durationMinutes: duration
       });
@@ -159,28 +177,141 @@ export class SLAService {
     }
   }
 
+  // New method to check MTTR response time milestones
+  private async checkMTTRResponseTimeMilestones(
+    incident: any,
+    slaRule: SLARule,
+    now: Date,
+    breaches: SLABreach[]
+  ): Promise<void> {
+    if (incident.firstAcknowledgedAt) return; // Already acknowledged
+
+    const responseDeadline = incident.mttrTargetAck || incident.slaTargetAck;
+    const halfResponseTime = slaRule.responseTimeMinutes / 2;
+    const halfResponseDeadline = new Date(incident.createdAt.getTime() + halfResponseTime * 60000);
+
+    // Check if half MTTR response time has passed
+    if (!incident.mttrResponseHalfNotified && now >= halfResponseDeadline && now < responseDeadline) {
+      await this.sendHalfTimeNotification(incident, 'mttr_response', halfResponseTime);
+      await prisma.incidentTicket.update({
+        where: { id: incident.id },
+        data: { mttrResponseHalfNotified: true }
+      });
+    }
+
+    // Check if MTTR response deadline has passed
+    if (!incident.mttrResponseBreachNotified && now >= responseDeadline) {
+      const duration = Math.round((now.getTime() - responseDeadline.getTime()) / 60000);
+      
+      breaches.push({
+        incidentId: incident.id,
+        slaType: 'mttr_ack',
+        breachedAt: now,
+        durationMinutes: duration
+      });
+
+      await this.sendBreachNotification(incident, 'mttr_response', duration);
+      await prisma.incidentTicket.update({
+        where: { id: incident.id },
+        data: { 
+          mttrResponseBreachNotified: true,
+          slaBreachType: SLABreachType.ACK
+        }
+      });
+    }
+  }
+
+  // New method to check MTTR resolve time milestones
+  private async checkMTTRResolveTimeMilestones(
+    incident: any,
+    slaRule: SLARule,
+    now: Date,
+    breaches: SLABreach[]
+  ): Promise<void> {
+    if (incident.resolvedAt) return; // Already resolved
+
+    const resolveDeadline = incident.mttrTargetResolve || incident.slaTargetResolve;
+    const halfResolveTime = slaRule.resolveTimeMinutes / 2;
+    const halfResolveDeadline = new Date(incident.createdAt.getTime() + halfResolveTime * 60000);
+
+    // Check if half MTTR resolve time has passed
+    if (!incident.mttrResolveHalfNotified && now >= halfResolveDeadline && now < resolveDeadline) {
+      await this.sendHalfTimeNotification(incident, 'mttr_resolution', halfResolveTime);
+      await prisma.incidentTicket.update({
+        where: { id: incident.id },
+        data: { mttrResolveHalfNotified: true }
+      });
+    }
+
+    // Check if MTTR resolve deadline has passed
+    if (!incident.mttrResolveBreachNotified && now >= resolveDeadline) {
+      const duration = Math.round((now.getTime() - resolveDeadline.getTime()) / 60000);
+      
+      breaches.push({
+        incidentId: incident.id,
+        slaType: 'mttr_resolve',
+        breachedAt: now,
+        durationMinutes: duration
+      });
+
+      await this.sendBreachNotification(incident, 'mttr_resolution', duration);
+      await prisma.incidentTicket.update({
+        where: { id: incident.id },
+        data: { 
+          mttrResolveBreachNotified: true,
+          slaBreachType: SLABreachType.RESOLVE
+        }
+      });
+    }
+  }
+
   private async sendHalfTimeNotification(
     incident: any, 
-    type: 'response' | 'resolution', 
+    type: 'response' | 'resolution' | 'mttr_response' | 'mttr_resolution', 
     halfTime: number
   ): Promise<void> {
-    const assigneeEmail = incident.assignedTo?.email || incident.assignedBy?.email;
-    if (!assigneeEmail) return;
+    // Get both assignee and creator emails
+    const emails = [];
+    if (incident.assignedTo?.email) emails.push(incident.assignedTo.email);
+    if (incident.createdBy?.email) emails.push(incident.createdBy.email);
+    if (incident.assignedBy?.email) emails.push(incident.assignedBy.email);
+    
+    const uniqueEmails = [...new Set(emails)];
+    if (uniqueEmails.length === 0) return;
 
     const timeUnit = halfTime >= 60 ? `${Math.round(halfTime / 60)} hours` : `${halfTime} minutes`;
-    const subject = `SLA Alert: Half ${type === 'response' ? 'Response' : 'Resolution'} Time Reached`;
+    
+    let subject, typeText;
+    switch(type) {
+      case 'response':
+        subject = `SLA Alert: Half Response Time Reached`;
+        typeText = 'Response';
+        break;
+      case 'resolution':
+        subject = `SLA Alert: Half Resolution Time Reached`;
+        typeText = 'Resolution';
+        break;
+      case 'mttr_response':
+        subject = `MTTR Alert: Half Response Time Reached`;
+        typeText = 'MTTR Response';
+        break;
+      case 'mttr_resolution':
+        subject = `MTTR Alert: Half Resolution Time Reached`;
+        typeText = 'MTTR Resolution';
+        break;
+    }
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #f39c12;">SLA Time Alert</h2>
         <p>Hello,</p>
-        <p>This is to notify you that the incident ticket <strong>#${incident.ticketId}</strong> has reached half of its ${type} time.</p>
+        <p>This is to notify you that the incident ticket <strong>#${incident.ticketId}</strong> has reached half of its ${typeText} time.</p>
         
         <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0;">
           <p><strong>Ticket Details:</strong></p>
           <p><strong>Title:</strong> ${incident.reason}</p>
           <p><strong>Priority:</strong> ${incident.priority}</p>
-          <p><strong>${type === 'response' ? 'Response' : 'Resolution'} Time:</strong> ${timeUnit} remaining</p>
+          <p><strong>${typeText} Time:</strong> ${timeUnit} remaining</p>
           <p><strong>Severity:</strong> ${incident.slaSeverity}</p>
         </div>
 
@@ -191,7 +322,7 @@ export class SLAService {
 
     try {
       await this.emailService.sendCustomEmail({
-        to: assigneeEmail,
+        to: uniqueEmails.join(','),
         subject,
         html
       });
@@ -203,23 +334,47 @@ export class SLAService {
 
   private async sendBreachNotification(
     incident: any, 
-    type: 'response' | 'resolution', 
+    type: 'response' | 'resolution' | 'mttr_response' | 'mttr_resolution', 
     breachDuration: number
   ): Promise<void> {
-    const assigneeEmail = incident.assignedTo?.email || incident.assignedBy?.email;
-    if (!assigneeEmail) return;
+    // Get both assignee and creator emails
+    const emails = [];
+    if (incident.assignedTo?.email) emails.push(incident.assignedTo.email);
+    if (incident.createdBy?.email) emails.push(incident.createdBy.email);
+    if (incident.assignedBy?.email) emails.push(incident.assignedBy.email);
+    
+    const uniqueEmails = [...new Set(emails)];
+    if (uniqueEmails.length === 0) return;
 
     const durationText = breachDuration >= 60 ? 
       `${Math.round(breachDuration / 60)} hours` : 
       `${breachDuration} minutes`;
 
-    const subject = `URGENT: SLA ${type === 'response' ? 'Response' : 'Resolution'} Breach`;
+    let subject, typeText;
+    switch(type) {
+      case 'response':
+        subject = `URGENT: SLA Response Breach`;
+        typeText = 'Response Time';
+        break;
+      case 'resolution':
+        subject = `URGENT: SLA Resolution Breach`;
+        typeText = 'Resolution Time';
+        break;
+      case 'mttr_response':
+        subject = `URGENT: MTTR Response Breach`;
+        typeText = 'MTTR Response Time';
+        break;
+      case 'mttr_resolution':
+        subject = `URGENT: MTTR Resolution Breach`;
+        typeText = 'MTTR Resolution Time';
+        break;
+    }
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #e74c3c;">SLA BREACH ALERT</h2>
         <p>Hello,</p>
-        <p>This is an urgent notification that the incident ticket <strong>#${incident.ticketId}</strong> has breached its ${type} SLA.</p>
+        <p>This is an urgent notification that the incident ticket <strong>#${incident.ticketId}</strong> has breached its ${typeText} SLA.</p>
         
         <div style="background-color: #f8d7da; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;">
           <p><strong>Breach Details:</strong></p>
@@ -228,7 +383,7 @@ export class SLAService {
           <p><strong>Priority:</strong> ${incident.priority}</p>
           <p><strong>Breach Duration:</strong> ${durationText}</p>
           <p><strong>Severity:</strong> ${incident.slaSeverity}</p>
-          <p><strong>Breach Type:</strong> ${type === 'response' ? 'Response Time' : 'Resolution Time'}</p>
+          <p><strong>Breach Type:</strong> ${typeText}</p>
         </div>
 
         <p style="color: #dc3545;"><strong>Immediate action is required to address this breach.</strong></p>
@@ -238,7 +393,7 @@ export class SLAService {
 
     try {
       await this.emailService.sendCustomEmail({
-        to: assigneeEmail,
+        to: uniqueEmails.join(','),
         subject,
         html
       });

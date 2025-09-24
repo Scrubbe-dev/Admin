@@ -18,7 +18,7 @@ export interface SLADeadlines {
 
 export interface SLABreach {
   incidentId: string;
-  slaType: 'ack' | 'resolve';
+  slaType: 'mttr_ack' | 'mttr_resolve';
   breachedAt: Date;
   durationMinutes: number;
 }

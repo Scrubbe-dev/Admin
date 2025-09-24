@@ -52,7 +52,7 @@ model User {
   escalatedIncidentsReceived EscalatedIncident[]            @relation("UserEscalatedTo")
   escalatedIncidentsMade     EscalatedIncident[]            @relation("UserEscalatedBy")
   Imssetup                   Imssetup[]
-
+  createdIncidentTickets IncidentTicket[] @relation("IncidentTicketCreator")
   @@index([apiKey])
 }
 
@@ -470,6 +470,19 @@ model IncidentTicket {
   slaResponseTimeMinutes Int? // Store the response time in minutes
   slaResolveTimeMinutes Int? // Store the resolve time in minutes
   sLABreachAuditLog   SLABreachAuditLog[]
+
+
+    // Add these fields for MTTR monitoring
+  mttrTargetAck DateTime?
+  mttrTargetResolve DateTime?
+  mttrResponseHalfNotified Boolean @default(false)
+  mttrResolveHalfNotified Boolean @default(false)
+  mttrResponseBreachNotified Boolean @default(false)
+  mttrResolveBreachNotified Boolean @default(false)
+
+  // Add this field to track ticket creator
+  createdById String?
+  createdBy User? @relation("IncidentTicketCreator", fields: [createdById], references: [id])
 
   recommendedActions DetermineAction[]
   riskScore          Int               @default(20)

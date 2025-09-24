@@ -1,4 +1,3 @@
-// slarule.controller.ts
 import { Request, Response } from 'express';
 import { SLAService } from './auto-slarules.services';
 import { formatTimeRemaining } from './auto-slarules.utils';
@@ -58,7 +57,12 @@ export class SLAController {
     try {
       const { incidentId } = req.params;
       const incident = await prisma.incidentTicket.findUnique({
-        where: { id: incidentId }
+        where: { id: incidentId },
+        include: {
+          createdBy: true,
+          assignedTo: true,
+          assignedBy: true
+        }
       });
 
       if (!incident) {
@@ -82,6 +86,21 @@ export class SLAController {
         Math.min(100, Math.max(0, ((now.getTime() - incident.createdAt.getTime()) / 
         (incident.slaTargetResolve.getTime() - incident.createdAt.getTime())) * 100)) : 0;
 
+      // MTTR status calculations
+      const mttrResponseStatus = incident.firstAcknowledgedAt ? 'met' : 
+                                incident.mttrTargetAck && incident.mttrTargetAck < now ? 'breached' : 'pending';
+      
+      const mttrResolutionStatus = incident.resolvedAt ? 'met' : 
+                                  incident.mttrTargetResolve && incident.mttrTargetResolve < now ? 'breached' : 'pending';
+
+      const mttrResponseProgress = incident.mttrTargetAck ? 
+        Math.min(100, Math.max(0, ((now.getTime() - incident.createdAt.getTime()) / 
+        (incident.mttrTargetAck.getTime() - incident.createdAt.getTime())) * 100)) : 0;
+
+      const mttrResolutionProgress = incident.mttrTargetResolve ? 
+        Math.min(100, Math.max(0, ((now.getTime() - incident.createdAt.getTime()) / 
+        (incident.mttrTargetResolve.getTime() - incident.createdAt.getTime())) * 100)) : 0;
+
       res.status(200).json({
         incidentId,
         response: {
@@ -99,6 +118,22 @@ export class SLAController {
           progress: Math.round(resolutionProgress),
           halfTimeNotified: incident.slaResolveHalfNotified,
           breachNotified: incident.slaResolveBreachNotified
+        },
+        mttrResponse: {
+          deadline: incident.mttrTargetAck?.toISOString(),
+          status: mttrResponseStatus,
+          timeLeft: formatTimeRemaining(incident.mttrTargetAck!),
+          progress: Math.round(mttrResponseProgress),
+          halfTimeNotified: incident.mttrResponseHalfNotified,
+          breachNotified: incident.mttrResponseBreachNotified
+        },
+        mttrResolution: {
+          deadline: incident.mttrTargetResolve?.toISOString(),
+          status: mttrResolutionStatus,
+          timeLeft: formatTimeRemaining(incident.mttrTargetResolve!),
+          progress: Math.round(mttrResolutionProgress),
+          halfTimeNotified: incident.mttrResolveHalfNotified,
+          breachNotified: incident.mttrResolveBreachNotified
         }
       });
     } catch (error: any) {

@@ -54,7 +54,7 @@ export class SLAService {
       
       breaches.push({
         incidentId: incident.id,
-        slaType: 'ack',
+        slaType: 'mttr_ack',
         breachedAt: now,
         durationMinutes: duration
       });
@@ -74,7 +74,7 @@ export class SLAService {
       
       breaches.push({
         incidentId: incident.id,
-        slaType: 'resolve',
+        slaType: 'mttr_resolve',
         breachedAt: now,
         durationMinutes: duration
       });
