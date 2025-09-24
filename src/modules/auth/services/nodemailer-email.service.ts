@@ -8,62 +8,37 @@ import {
 } from "../types/nodemailer.types";
 
 export class NodemailerEmailService implements EmailService {
-    private config: NodemailerConfig;
-    private transporter!: nodemailer.Transporter;
-    private isInitialized: boolean = false;
-    private lastEmailSent: number = 0;
-    private pendingEmails: Array<() => Promise<void>> = [];
+  private config: NodemailerConfig;
+  private transporter!: nodemailer.Transporter;
+  private isInitialized: boolean = false;
+  private lastEmailSent: number = 0; // Timestamp of last sent email
+  private pendingEmails: Array<() => Promise<void>> = [];
 
-    constructor(config: NodemailerConfig) {
-        this.config = config;
-        this.initialize();
+  constructor(config: NodemailerConfig) {
+    this.config = config;
+    this.initialize();
+  }
+
+  private initialize(): void {
+    if (this.isInitialized) return;
+    try {
+      this.transporter = nodemailer.createTransport({
+        service: this.config.service,
+        host: this.config.host,
+        port: this.config.port,
+        secure: this.config.secure,
+        auth: {
+          user: this.config.auth.user,
+          pass: this.config.auth.pass,
+        },
+      });
+      this.isInitialized = true;
+      console.log("✅ Nodemailer email service initialized successfully");
+    } catch (error) {
+      console.error("❌ Failed to initialize Nodemailer email service:", error);
+      throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
-
-    private initialize(): void {
-        if (this.isInitialized) return;
-        try {
-            this.transporter = nodemailer.createTransport({
-                service: this.config.service,
-                host: this.config.host,
-                port: this.config.port,
-                secure: this.config.secure,
-                auth: {
-                    user: this.config.auth.user,
-                    pass: this.config.auth.pass,
-                },
-                // Add connection timeout settings
-                connectionTimeout: 10000, // 10 seconds
-                socketTimeout: 15000, // 15 seconds
-                greetingTimeout: 5000, // 5 seconds
-                // Add retry logic for connection issues
-                maxConnections: 5,
-                maxMessages: 10,
-                // Pool configuration for better resource management
-                pool: true,
-                // Rate limiting
-                rateLimit: 10, // max 10 messages per second
-                // Debugging (enable in development)
-                debug: process.env.NODE_ENV === 'development',
-                logger: process.env.NODE_ENV === 'development'
-            });
-
-            // Verify connection on startup
-            this.transporter.verify((error) => {
-                if (error) {
-                    console.error('❌ SMTP connection verification failed:', error);
-                } else {
-                    console.log('✅ SMTP connection verified successfully');
-                }
-            });
-
-            this.isInitialized = true;
-            console.log("✅ Nodemailer email service initialized successfully");
-        } catch (error) {
-            console.error("❌ Failed to initialize Nodemailer email service:", error);
-            throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
-        }
-    }
-
+  }
 
   private async sendEmail(options: CustomEmailOptions): Promise<void> {
     if (!this.isInitialized) {
