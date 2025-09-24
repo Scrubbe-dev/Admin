@@ -45,7 +45,7 @@ githubRouter.get("/connect", authMiddleware.authenticate, (req, res, next) => {
 
 /**
  * @swagger
- * /api/v1/integrations/github:
+ * /api/v1/integrations/github/callback:
  *   get:
  *     summary: GitHub OAuth callback
  *     description: >
