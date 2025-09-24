@@ -17,9 +17,9 @@ export class GithubService {
     const redirectUrl = encodeURIComponent(githubConfig.redirectUrl); // FIX: Proper encoding
     const scopes = githubConfig.scopes;
 
-const { url } = gitAppConfig.getWebFlowAuthorizationUrl({
-  state: "stated0c4e434-078c-45f6-998d-7376d2158bd6", // FIX: Use a proper state parameter for CSRF protection
-});
+      const { url } = gitAppConfig.getWebFlowAuthorizationUrl({
+        state: "stated0c4e434-078c-45f6-998d-7376d2158bd6", // FIX: Use a proper state parameter for CSRF protection
+      });
 
 
      console.log("Generating GitHub OAuth URL with:", {
