@@ -959,56 +959,6 @@ private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   async createCheckoutSession(
   userEmail: string,
   userName: string,

@@ -72,7 +72,8 @@ githubRouter.get("/connect", authMiddleware.authenticate, (req, res, next) => {
  *       500:
  *         description: Failed to connect GitHub
  */
-githubRouter.get("/callback", (req, res, next) => {
+// FIX: Changed from "/callback" to "/callbacks/github" to match your redirect URI
+githubRouter.get("/callbacks/github", (req, res, next) => {
   githubController.handleOAuthCallback(req, res, next);
 });
 
@@ -217,5 +218,4 @@ githubRouter.post("/repos", authMiddleware.authenticate, (req, res, next) => {
 githubRouter.post("/webhook", express.json(), (req, res, next) => {
   githubController.handleWebhook(req, res, next);
 });
-
 export default githubRouter;

@@ -11,51 +11,67 @@ import { GithubRepoRequest } from "./github.schema";
 
 export class GithubService {
   constructor(private githubWebhookService: GithubWebhookService) {}
+  
   async getAuthUrl(userId: string) {
     const clientId = githubConfig.clientId;
-    const redirectUrl = githubConfig.redirectUrl;
+    const redirectUrl = encodeURIComponent(githubConfig.redirectUrl); // FIX: Proper encoding
     const scopes = githubConfig.scopes;
 
     return `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}&scope=${scopes}&state=${userId}`;
   }
 
   async handleOAuthCallback(code: string, userId: string) {
-    const tokenResp = await axios.post(
-      `https://github.com/login/oauth/access_token`,
-      {
-        client_id: githubConfig.clientId,
-        client_secret: githubConfig.clientSecret,
-        code,
-      },
-      { headers: { Accept: "application/json" } }
-    );
+    try {
+      const tokenResp = await axios.post(
+        `https://github.com/login/oauth/access_token`,
+        {
+          client_id: githubConfig.clientId,
+          client_secret: githubConfig.clientSecret,
+          code,
+        },
+        { 
+          headers: { 
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          } 
+        }
+      );
 
-    const accessToken = tokenResp.data.access_token;
-    const refreshToken = tokenResp.data.access_token;
+      if (tokenResp.data.error) {
+        throw new Error(`GitHub OAuth error: ${tokenResp.data.error_description}`);
+      }
 
-    console.log("=========== TOKEN RESPONSE ===========", tokenResp.data);
+      const accessToken = tokenResp.data.access_token;
+      const refreshToken = tokenResp.data.refresh_token; // FIX: Use refresh_token if available
 
-    const savedIntegration = await prisma.userThirdpartyIntegration.upsert({
-      where: {
-        userId_provider: {
+      console.log("=========== TOKEN RESPONSE ===========", tokenResp.data);
+
+      const savedIntegration = await prisma.userThirdpartyIntegration.upsert({
+        where: {
+          userId_provider: {
+            userId,
+            provider: BusinessNotificationChannels.GITHUB,
+          },
+        },
+        update: { accessToken, refreshToken },
+        create: {
           userId,
           provider: BusinessNotificationChannels.GITHUB,
+          accessToken,
+          refreshToken,
         },
-      },
-      update: { accessToken, refreshToken },
-      create: {
-        userId,
-        provider: BusinessNotificationChannels.GITHUB,
-        accessToken,
-        refreshToken,
-      },
-    });
+      });
 
-    console.log("=========== SAVED INTEGRATION ===========", savedIntegration);
+      console.log("=========== SAVED INTEGRATION ===========", savedIntegration);
 
-    return { status: "success", message: "GitHub connected successfully" };
+      return { status: "success", message: "GitHub connected successfully" };
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      throw error;
+    }
   }
 
+  // ... rest of your service methods remain the same
   async listUserRepos(userId: string) {
     const integration = await prisma.userThirdpartyIntegration.findFirst({
       where: { userId, provider: BusinessNotificationChannels.GITHUB },

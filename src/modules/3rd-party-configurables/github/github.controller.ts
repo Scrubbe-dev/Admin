@@ -10,9 +10,10 @@ export class GithubController {
     try {
       const userId = req.user?.sub!;
 
-      const response = await this.githubService.getAuthUrl(userId);
+      const authUrl = await this.githubService.getAuthUrl(userId);
 
-      res.json(response);
+      // FIX: Properly redirect instead of returning JSON
+      res.redirect(authUrl);
     } catch (error) {
       next(error);
     }
@@ -33,14 +34,23 @@ export class GithubController {
     try {
       const { code, state: userId } = req.query;
 
+      if (!code || !userId) {
+        return res.status(400).json({
+          error: "Missing required parameters: code and state are required",
+        });
+      }
+
       const result = await this.githubService.handleOAuthCallback(
         code as string,
         userId as string
       );
 
-      res.json(result);
+      // FIX: Redirect to a success page or your frontend application
+      res.redirect(`${process.env.FRONTEND_URL}/integrations/github/success`);
     } catch (error) {
-      next(error);
+      // FIX: Redirect to an error page on failure
+      console.error("OAuth callback error:", error);
+      res.redirect(`${process.env.FRONTEND_URL}/integrations/github/error`);
     }
   }
 
