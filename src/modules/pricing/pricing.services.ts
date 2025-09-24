@@ -985,9 +985,8 @@ private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       mode: 'subscription',
       success_url: `${request.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: request.cancelUrl,
-      automatic_tax:{
-            enabled:false
-      },
+      // Disable tax collection entirely
+      automatic_tax: { enabled: false },
       subscription_data: {
         metadata: {
           planType: request.planType,
@@ -1004,6 +1003,7 @@ private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       },
     };
 
+
     // Add trial if specified
     if (request.trialDays && request.trialDays > 0) {
       sessionParams.subscription_data = {
@@ -1013,12 +1013,12 @@ private async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     }
 
     // Add customer tax collection if needed
-    sessionParams.automatic_tax = { enabled: true };
-    sessionParams.tax_id_collection = { enabled: true };
+    // sessionParams.automatic_tax = { enabled: true };
+    // sessionParams.tax_id_collection = { enabled: true };
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    return {
+   return {
       success: true,
       data: {
         sessionId: session.id,
