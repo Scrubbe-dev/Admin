@@ -30,6 +30,33 @@ export class SLACronService {
     console.log('Automatic SLA Cron jobs initialized');
   }
 
+
+  private async runSLAChecks(): Promise<void> {
+    if (this.isRunning) {
+        console.log('SLA check already running, skipping...');
+        return;
+    }
+
+    try {
+        this.isRunning = true;
+        console.log('Starting automatic SLA checks...');
+        
+        const breaches = await this.slaService.checkSLABreaches();
+        
+        if (breaches.length > 0) {
+            console.log(`Found ${breaches.length} SLA breaches`);
+        } else {
+            console.log('No SLA breaches found');
+        }
+        
+    } catch (error) {
+        console.error('Error running SLA checks:', error);
+        // Don't re-throw to prevent cron job from stopping
+    } finally {
+        this.isRunning = false;
+    }
+}
+
   private async initializeNewIncidents(): Promise<void> {
     try {
       console.log('Scanning for new incidents without SLA...');
@@ -45,30 +72,30 @@ export class SLACronService {
     }
   }
 
-  private async runSLAChecks(): Promise<void> {
-    if (this.isRunning) {
-      console.log('SLA check already running, skipping...');
-      return;
-    }
+//   private async runSLAChecks(): Promise<void> {
+//     if (this.isRunning) {
+//       console.log('SLA check already running, skipping...');
+//       return;
+//     }
 
-    try {
-      this.isRunning = true;
-      console.log('Starting automatic SLA checks...');
+//     try {
+//       this.isRunning = true;
+//       console.log('Starting automatic SLA checks...');
       
-      const breaches = await this.slaService.checkSLABreaches();
+//       const breaches = await this.slaService.checkSLABreaches();
       
-      if (breaches.length > 0) {
-        console.log(`Found ${breaches.length} SLA breaches`);
-      } else {
-        console.log('No SLA breaches found');
-      }
+//       if (breaches.length > 0) {
+//         console.log(`Found ${breaches.length} SLA breaches`);
+//       } else {
+//         console.log('No SLA breaches found');
+//       }
       
-    } catch (error) {
-      console.error('Error running SLA checks:', error);
-    } finally {
-      this.isRunning = false;
-    }
-  }
+//     } catch (error) {
+//       console.error('Error running SLA checks:', error);
+//     } finally {
+//       this.isRunning = false;
+//     }
+//   }
 
   private async runSLAAudit(): Promise<void> {
     try {
