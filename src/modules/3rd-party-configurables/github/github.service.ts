@@ -2,7 +2,7 @@ import { Octokit } from "@octokit/rest";
 import axios from "axios";
 import prisma from "../../../prisma-clients/client";
 import { BusinessNotificationChannels } from "@prisma/client";
-import { githubConfig } from "../../../config/github.config";
+import { gitAppConfig, githubConfig } from "../../../config/github.config";
 import { NotFoundError, UnauthorizedError } from "../../auth/error";
 import { InputJsonValue } from "@prisma/client/runtime/library";
 import { GithubWebhookService } from "./github.webhook";
@@ -17,7 +17,20 @@ export class GithubService {
     const redirectUrl = encodeURIComponent(githubConfig.redirectUrl); // FIX: Proper encoding
     const scopes = githubConfig.scopes;
 
-    return `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}&scope=${scopes}&state=${userId}`;
+const { url } = gitAppConfig.getWebFlowAuthorizationUrl({
+  state: "stated0c4e434-078c-45f6-998d-7376d2158bd6", // FIX: Use a proper state parameter for CSRF protection
+});
+
+
+     console.log("Generating GitHub OAuth URL with:", {
+       url,
+       clientId,
+       redirectUrl,
+       scopes,
+       userId,
+       data: `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}&scope=${scopes}&state=${userId}`
+     });
+    return url
   }
 
   async handleOAuthCallback(code: string, userId: string) {

@@ -11,7 +11,7 @@ export class GithubController {
       const userId = req.user?.sub!;
 
       const authUrl = await this.githubService.getAuthUrl(userId);
-
+      console.log("Redirecting to GitHub OAuth URL:", authUrl);
       // FIX: Properly redirect instead of returning JSON
       res.redirect(authUrl);
     } catch (error) {

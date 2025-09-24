@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { OAuthApp, createNodeMiddleware } from "@octokit/oauth-app";
 
 dotenv.config();
 
@@ -12,3 +13,13 @@ export const githubConfig = {
   scopes: ["repo", "admin:repo_hook", "workflow"].join(" "),
   webhookEvents: ["push", "pull_request", "deployment_status", "workflow_run"],
 };
+
+
+
+export const gitAppConfig = new OAuthApp({
+  clientType: "github-app",
+  clientId: githubConfig.clientId,
+  clientSecret: githubConfig.clientSecret,
+});
+
+

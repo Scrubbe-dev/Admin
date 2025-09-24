@@ -20,6 +20,9 @@ importers:
       '@nestjs/common':
         specifier: ^11.1.0
         version: 11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@octokit/oauth-app':
+        specifier: ^8.0.1
+        version: 8.0.1
       '@octokit/rest':
         specifier: ^22.0.0
         version: 22.0.0
@@ -751,8 +754,24 @@ packages:
     resolution: {integrity: sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==}
     engines: {node: '>= 16'}
 
+  '@octokit/auth-oauth-app@9.0.1':
+    resolution: {integrity: sha512-TthWzYxuHKLAbmxdFZwFlmwVyvynpyPmjwc+2/cI3cvbT7mHtsAW9b1LvQaNnAuWL+pFnqtxdmrU8QpF633i1g==}
+    engines: {node: '>= 20'}
+
+  '@octokit/auth-oauth-device@8.0.1':
+    resolution: {integrity: sha512-TOqId/+am5yk9zor0RGibmlqn4V0h8vzjxlw/wYr3qzkQxl8aBPur384D1EyHtqvfz0syeXji4OUvKkHvxk/Gw==}
+    engines: {node: '>= 20'}
+
+  '@octokit/auth-oauth-user@6.0.0':
+    resolution: {integrity: sha512-GV9IW134PHsLhtUad21WIeP9mlJ+QNpFd6V9vuPWmaiN25HEJeEQUcS4y5oRuqCm9iWDLtfIs+9K8uczBXKr6A==}
+    engines: {node: '>= 20'}
+
   '@octokit/auth-token@6.0.0':
     resolution: {integrity: sha512-P4YJBPdPSpWTQ1NU4XYdvHvXJJDxM6YwpS0FZHRgP7YFkdVxsWcpWGy/NVqlAA7PcPCnMacXlRm1y2PFZRWL/w==}
+    engines: {node: '>= 20'}
+
+  '@octokit/auth-unauthenticated@7.0.1':
+    resolution: {integrity: sha512-qVq1vdjLLZdE8kH2vDycNNjuJRCD1q2oet1nA/GXWaYlpDxlR7rdVhX/K/oszXslXiQIiqrQf+rdhDlA99JdTQ==}
     engines: {node: '>= 20'}
 
   '@octokit/core@7.0.3':
@@ -765,6 +784,18 @@ packages:
 
   '@octokit/graphql@9.0.1':
     resolution: {integrity: sha512-j1nQNU1ZxNFx2ZtKmL4sMrs4egy5h65OMDmSbVyuCzjOcwsHq6EaYjOTGXPQxgfiN8dJ4CriYHk6zF050WEULg==}
+    engines: {node: '>= 20'}
+
+  '@octokit/oauth-app@8.0.1':
+    resolution: {integrity: sha512-QnhMYEQpnYbEPn9cae+wXL2LuPMFglmfeuDJXXsyxIXdoORwkLK8y0cHhd/5du9MbO/zdG/BXixzB7EEwU63eQ==}
+    engines: {node: '>= 20'}
+
+  '@octokit/oauth-authorization-url@8.0.0':
+    resolution: {integrity: sha512-7QoLPRh/ssEA/HuHBHdVdSgF8xNLz/Bc5m9fZkArJE5bb6NmVkDm3anKxXPmN1zh6b5WKZPRr3697xKT/yM3qQ==}
+    engines: {node: '>= 20'}
+
+  '@octokit/oauth-methods@6.0.0':
+    resolution: {integrity: sha512-Q8nFIagNLIZgM2odAraelMcDssapc+lF+y3OlcIPxyAU+knefO8KmozGqfnma1xegRDP4z5M73ABsamn72bOcA==}
     engines: {node: '>= 20'}
 
   '@octokit/openapi-types@25.1.0':
@@ -933,6 +964,9 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+
+  '@types/aws-lambda@8.10.152':
+    resolution: {integrity: sha512-soT/c2gYBnT5ygwiHPmd9a1bftj462NWVk2tKCc1PYHSIacB2UwbTS2zYG4jzag1mRDuzg/OjtxQjQ2NKRB6Rw==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -4201,7 +4235,35 @@ snapshots:
 
   '@noble/hashes@1.3.2': {}
 
+  '@octokit/auth-oauth-app@9.0.1':
+    dependencies:
+      '@octokit/auth-oauth-device': 8.0.1
+      '@octokit/auth-oauth-user': 6.0.0
+      '@octokit/request': 10.0.3
+      '@octokit/types': 14.1.0
+      universal-user-agent: 7.0.3
+
+  '@octokit/auth-oauth-device@8.0.1':
+    dependencies:
+      '@octokit/oauth-methods': 6.0.0
+      '@octokit/request': 10.0.3
+      '@octokit/types': 14.1.0
+      universal-user-agent: 7.0.3
+
+  '@octokit/auth-oauth-user@6.0.0':
+    dependencies:
+      '@octokit/auth-oauth-device': 8.0.1
+      '@octokit/oauth-methods': 6.0.0
+      '@octokit/request': 10.0.3
+      '@octokit/types': 14.1.0
+      universal-user-agent: 7.0.3
+
   '@octokit/auth-token@6.0.0': {}
+
+  '@octokit/auth-unauthenticated@7.0.1':
+    dependencies:
+      '@octokit/request-error': 7.0.0
+      '@octokit/types': 14.1.0
 
   '@octokit/core@7.0.3':
     dependencies:
@@ -4223,6 +4285,26 @@ snapshots:
       '@octokit/request': 10.0.3
       '@octokit/types': 14.1.0
       universal-user-agent: 7.0.3
+
+  '@octokit/oauth-app@8.0.1':
+    dependencies:
+      '@octokit/auth-oauth-app': 9.0.1
+      '@octokit/auth-oauth-user': 6.0.0
+      '@octokit/auth-unauthenticated': 7.0.1
+      '@octokit/core': 7.0.3
+      '@octokit/oauth-authorization-url': 8.0.0
+      '@octokit/oauth-methods': 6.0.0
+      '@types/aws-lambda': 8.10.152
+      universal-user-agent: 7.0.3
+
+  '@octokit/oauth-authorization-url@8.0.0': {}
+
+  '@octokit/oauth-methods@6.0.0':
+    dependencies:
+      '@octokit/oauth-authorization-url': 8.0.0
+      '@octokit/request': 10.0.3
+      '@octokit/request-error': 7.0.0
+      '@octokit/types': 14.1.0
 
   '@octokit/openapi-types@25.1.0': {}
 
@@ -4409,6 +4491,8 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
+
+  '@types/aws-lambda@8.10.152': {}
 
   '@types/babel__core@7.20.5':
     dependencies:
