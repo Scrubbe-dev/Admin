@@ -8,6 +8,23 @@ const slaService = new SLAService();
 const slaCronService = new SLACronService();
 
 export class SLAController {
+
+async triggerAutomaticSLA(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await slaCronService.manualSLACheck();
+      
+      res.status(200).json({
+        message: 'Automatic SLA check triggered manually',
+        success: true,
+        result
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        message: 'Failed to trigger automatic SLA check',
+        error: error.message 
+      });
+    }
+  }
   async initializeSLA(req: Request, res: Response): Promise<void> {
     try {
       const { incidentId, severity } = req.body;

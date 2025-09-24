@@ -90,6 +90,12 @@ const cleanupService = new CleanupService(prisma);
 // Initialize SLA monitoring when app starts
 const slaCronService = new SLACronService();
 
+console.log('Automatic SLA monitoring started. The system will:');
+console.log('- Scan for new incidents every 2 minutes');
+console.log('- Check SLA milestones every 5 minutes');
+console.log('- Run comprehensive audit every hour');
+
+
 
 
 

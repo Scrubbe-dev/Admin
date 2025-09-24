@@ -12,14 +12,57 @@ export class SLAService {
     this.emailService = createEmailService();
   }
 
-  // Set SLA deadlines when incident is created
+
+
+
+
+async initializeSLAForNewIncidents(): Promise<number> {
+    const newIncidents = await prisma.incidentTicket.findMany({
+      where: {
+        OR: [
+          { slaTargetAck: null },
+          { slaTargetResolve: null },
+          { slaSeverity: null }
+        ],
+        status: {
+          in: ['OPEN', 'IN_PROGRESS', 'ACKNOWLEDGED', 'INVESTIGATION']
+        }
+      },
+      include: {
+        assignedTo: true,
+        assignedBy: true,
+        createdBy: true
+      }
+    });
+
+    let initializedCount = 0;
+
+    for (const incident of newIncidents) {
+      // Determine severity based on priority if not set
+      const severity = this.determineSeverityFromPriority(incident.priority);
+      
+      try {
+        await this.setSLADeadlines(incident.id, severity);
+        initializedCount++;
+        console.log(`SLA initialized for incident ${incident.ticketId} with severity ${severity}`);
+      } catch (error) {
+        console.error(`Failed to initialize SLA for incident ${incident.ticketId}:`, error);
+      }
+    }
+
+    return initializedCount;
+  }
+
+
+
+ // Set SLA deadlines when incident is created
   async setSLADeadlines(incidentId: string, severity: string): Promise<void> {
     const incident = await prisma.incidentTicket.findUnique({
       where: { id: incidentId },
       include: { 
         assignedTo: true,
         assignedBy: true,
-        createdBy: true // Added to include ticket creator
+        createdBy: true
       }
     });
 
@@ -66,7 +109,7 @@ export class SLAService {
       include: {
         assignedTo: true,
         assignedBy: true,
-        createdBy: true // Added to include ticket creator
+        createdBy: true
       }
     });
 
@@ -90,6 +133,116 @@ export class SLAService {
 
     return breaches;
   }
+
+  private determineSeverityFromPriority(priority: string): string {
+    const priorityMap: { [key: string]: string } = {
+      'CRITICAL': 'critical',
+      'HIGH': 'high',
+      'MEDIUM': 'medium',
+      'LOW': 'low',
+      'URGENT': 'critical',
+      'NORMAL': 'medium',
+      'MINOR': 'low'
+    };
+
+    return priorityMap[priority.toUpperCase()] || 'medium';
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // Set SLA deadlines when incident is created
+//   async setSLADeadlines(incidentId: string, severity: string): Promise<void> {
+//     const incident = await prisma.incidentTicket.findUnique({
+//       where: { id: incidentId },
+//       include: { 
+//         assignedTo: true,
+//         assignedBy: true,
+//         createdBy: true // Added to include ticket creator
+//       }
+//     });
+
+//     if (!incident) throw new Error('Incident not found');
+
+//     const slaRule = getSLARule(severity);
+//     const deadlines = calculateSLADeadlines(severity, incident.createdAt);
+
+//     await prisma.incidentTicket.update({
+//       where: { id: incidentId },
+//       data: {
+//         slaTargetAck: deadlines.respondBy,
+//         slaTargetResolve: deadlines.resolveBy,
+//         slaSeverity: severity,
+//         slaResponseTimeMinutes: slaRule.responseTimeMinutes,
+//         slaResolveTimeMinutes: slaRule.resolveTimeMinutes,
+//         slaResponseHalfNotified: false,
+//         slaResolveHalfNotified: false,
+//         slaResponseBreachNotified: false,
+//         slaResolveBreachNotified: false,
+//         // Set MTTR fields
+//         mttrTargetAck: deadlines.respondBy,
+//         mttrTargetResolve: deadlines.resolveBy,
+//         mttrResponseHalfNotified: false,
+//         mttrResolveHalfNotified: false,
+//         mttrResponseBreachNotified: false,
+//         mttrResolveBreachNotified: false
+//       }
+//     });
+//   }
+
+//   // Check for SLA breaches and send notifications
+//   async checkSLABreaches(): Promise<SLABreach[]> {
+//     const now = new Date();
+//     const breaches: SLABreach[] = [];
+
+//     // Get all active incidents that need SLA monitoring
+//     const activeIncidents = await prisma.incidentTicket.findMany({
+//       where: {
+//         status: { in: ['OPEN', 'IN_PROGRESS', 'ACKNOWLEDGED', 'INVESTIGATION'] },
+//         slaTargetAck: { not: null },
+//         slaTargetResolve: { not: null }
+//       },
+//       include: {
+//         assignedTo: true,
+//         assignedBy: true,
+//         createdBy: true // Added to include ticket creator
+//       }
+//     });
+
+//     for (const incident of activeIncidents) {
+//       if (!incident.slaTargetAck || !incident.slaTargetResolve) continue;
+
+//       const slaRule = getSLARule(incident.slaSeverity || 'medium');
+      
+//       // Check response time milestones
+//       await this.checkResponseTimeMilestones(incident, slaRule, now, breaches);
+      
+//       // Check resolve time milestones
+//       await this.checkResolveTimeMilestones(incident, slaRule, now, breaches);
+      
+//       // Check MTTR response time milestones
+//       await this.checkMTTRResponseTimeMilestones(incident, slaRule, now, breaches);
+      
+//       // Check MTTR resolve time milestones
+//       await this.checkMTTRResolveTimeMilestones(incident, slaRule, now, breaches);
+//     }
+
+//     return breaches;
+//   }
 
   private async checkResponseTimeMilestones(
     incident: any,

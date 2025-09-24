@@ -1,9 +1,6 @@
-// sla.cron.service.ts
 import cron from 'node-cron';
 import { SLAService } from './auto-slarules.services';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../../lib/prisma';
 
 export class SLACronService {
   private slaService: SLAService;
@@ -15,6 +12,11 @@ export class SLACronService {
   }
 
   private initializeCronJobs(): void {
+    // Run every 2 minutes to check for new incidents and initialize SLA
+    cron.schedule('*/2 * * * *', async () => {
+      await this.initializeNewIncidents();
+    });
+
     // Run every 5 minutes to check SLA milestones
     cron.schedule('*/5 * * * *', async () => {
       await this.runSLAChecks();
@@ -25,7 +27,22 @@ export class SLACronService {
       await this.runSLAAudit();
     });
 
-    console.log('SLA Cron jobs initialized');
+    console.log('Automatic SLA Cron jobs initialized');
+  }
+
+  private async initializeNewIncidents(): Promise<void> {
+    try {
+      console.log('Scanning for new incidents without SLA...');
+      
+      const initializedCount = await this.slaService.initializeSLAForNewIncidents();
+      
+      if (initializedCount > 0) {
+        console.log(`Initialized SLA for ${initializedCount} new incidents`);
+      }
+      
+    } catch (error) {
+      console.error('Error initializing SLA for new incidents:', error);
+    }
   }
 
   private async runSLAChecks(): Promise<void> {
@@ -36,13 +53,12 @@ export class SLACronService {
 
     try {
       this.isRunning = true;
-      console.log('Starting SLA checks...');
+      console.log('Starting automatic SLA checks...');
       
       const breaches = await this.slaService.checkSLABreaches();
       
       if (breaches.length > 0) {
         console.log(`Found ${breaches.length} SLA breaches`);
-        // You can add additional breach handling logic here
       } else {
         console.log('No SLA breaches found');
       }
@@ -91,12 +107,13 @@ export class SLACronService {
 
   // Manual trigger for testing
   async manualSLACheck(): Promise<any> {
-    return await this.runSLAChecks();
+    const initialized = await this.initializeNewIncidents();
+    const breaches = await this.runSLAChecks();
+    return { initialized, breaches };
   }
 
   // Stop all cron jobs (for testing/cleanup)
   stop(): void {
-    // node-cron doesn't have a direct stop-all method, but we can track jobs
-    console.log('SLA monitoring stopped');
+    console.log('Automatic SLA monitoring stopped');
   }
 }
