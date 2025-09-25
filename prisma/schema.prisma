@@ -54,6 +54,8 @@ model User {
   Imssetup                   Imssetup[]
   createdIncidentTickets IncidentTicket[] @relation("IncidentTicketCreator")
   @@index([apiKey])
+  EndCustomerIncident EndCustomerIncident[]
+  EndCustomer EndCustomer[]
 }
 
 model ResolveIncident {
@@ -229,6 +231,8 @@ model Business {
   invites                    Invites[]
   IncidentTicketNotification IncidentTicketNotification[]
   thirdpartyIntegrations     UserThirdpartyIntegration[]
+
+  EndCustomerIncident EndCustomerIncident[]
 }
 
 model BusinessDashboard {
@@ -804,6 +808,137 @@ model TicketPlaybookRecommendation {
 
   @@unique([ticketId, playbookId])
 }
+
+
+
+
+// ====================END CUSTOMER MODELS====================
+
+model EndCustomer {
+  id           String    @id @default(uuid())
+  name         String?
+  contactEmail String    @unique
+  tenantId     String    @unique
+  passwordHash String?
+  companyUserId String
+  isVerified   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  companyUser User @relation(fields: [companyUserId], references: [id])
+  incidents   EndCustomerIncident[]
+  comments    EndCustomerIncidentComment[]
+
+  @@map("end_customers")
+}
+
+model EndCustomerIncident {
+  id               String           @id @default(uuid())
+  ticketNumber     String           @unique
+  shortDescription String
+  description      String
+  priority         Priority         @default(MEDIUM)
+  category         String
+  status           IncidentStatus   @default(OPEN)
+  customerId       String
+  companyUserId    String
+  businessId       String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  resolvedAt       DateTime?
+  closedAt         DateTime?
+
+  // SLA targets
+  slaTargetResponse DateTime?
+  slaTargetResolve  DateTime?
+
+  // Relations
+  customer    EndCustomer                @relation(fields: [customerId], references: [id])
+  companyUser User                       @relation(fields: [companyUserId], references: [id])
+  business    Business?                  @relation(fields: [businessId], references: [id])
+  comments    EndCustomerIncidentComment[]
+  attachments EndCustomerIncidentAttachment[]
+
+  @@map("end_customer_incidents")
+}
+
+model EndCustomerIncidentComment {
+  id         String                       @id @default(uuid())
+  content    String
+  isInternal Boolean                      @default(false)
+  authorType EndCustomerCommentAuthorType
+  authorId   String
+  incidentId String
+  createdAt  DateTime                     @default(now())
+  updatedAt  DateTime                     @updatedAt
+
+  // Relations
+  incident EndCustomerIncident @relation(fields: [incidentId], references: [id])
+
+  @@map("end_customer_incident_comments")
+  EndCustomer EndCustomer[]
+}
+
+model EndCustomerIncidentAttachment {
+  id           String  @id @default(uuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  incidentId   String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  incident EndCustomerIncident @relation(fields: [incidentId], references: [id])
+
+  @@map("end_customer_incident_attachments")
+}
+
+enum EndCustomerCommentAuthorType {
+  CUSTOMER
+  USER
+}
+
+
+
+
+// =================ENUMS=======================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 enum EscalationStatus {
   PENDING

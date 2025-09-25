@@ -49,7 +49,9 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/password-reset/reset.route.ts",
     "./src/modules/incidentStatus/incidentstatus.routes.ts",
     "./src/modules/postmortem/postmortem.route.ts",
-    "./src/modules/pricing/pricing.route.ts"
+    "./src/modules/pricing/pricing.route.ts",
+    "./src/modules/customer/routers/customerAuthRoute.ts",
+    "./src/modules/customer/routers/customerIncidentRoute.ts",
   ],
 };
 

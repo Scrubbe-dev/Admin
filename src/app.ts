@@ -72,6 +72,8 @@ import incidentStatusEmailrouter from "./modules/incidentStatus/incidentstatus.r
 import postmortemRouter from "./modules/postmortem/postmortem.route";
 import pricingRouter from "./modules/pricing/pricing.route";
 import { SLACronService } from "./modules/auto-sla/auto-cron.service";
+import { customerAuthRoutes } from "./modules/customer/routers/customerAuthRoute";
+import { customerIncidentRoutes } from "./modules/customer/routers/customerIncidentRoute";
 
 
 dotenvConfig();
@@ -228,6 +230,8 @@ app.use("/api/v1", sendMailerRouter); // New  IMS management route
 app.use("/api/v1",incidentStatusEmailrouter) // New incidentStats route 
 app.use("/api/v1",postmortemRouter) // New Postmortum route
 app.use("/api/v1/pricing",pricingRouter)
+app.use("/api/v1/mocktest", customerAuthRoutes); // Route for customer auth route
+app.use("/api/v1/mocktest", customerIncidentRoutes); // Route for  customer incident route
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 
