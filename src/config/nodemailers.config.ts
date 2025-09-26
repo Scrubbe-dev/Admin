@@ -15,6 +15,9 @@ export interface NodemailerConfig {
     email: string;
     name: string;
   };
+  tls?: {
+        rejectUnauthorized: boolean;
+  };
   replyTo?: string;
   cooldownPeriod: number;
   connectionTimeout?: number;
@@ -45,14 +48,14 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       socketTimeout: 30000, // 30 seconds
     };
   } else {
-    return {
+ return {
       service: 'Gmail',
       host: "smtp.gmail.com",
       port: 465,
-      secure: true,
+      secure: true, // Use SSL
       auth: {
         user: process.env.GMAIL_USER!,
-        pass: process.env.GMAIL_APP_PASSWORD!,
+        pass: process.env.GMAIL_APP_PASSWORD!, // Must be an App Password
       },
       from: {
         email: process.env.FROM_EMAIL || "scrubbe.dev@gmail.com",
@@ -62,13 +65,16 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
       connectionTimeout: 30000,
       socketTimeout: 30000,
+      // Add these for Gmail
+      tls: {
+        rejectUnauthorized: false
+      }
     };
   }
 };
 
 export const nodemailerConfig = getNodemailerConfig();
 
-// Validate configuration
 export const validateEmailConfig = (config: NodemailerConfig): void => {
   if (!config.auth.user) {
     throw new Error("Email user is missing. Please set the appropriate environment variables.");
@@ -79,4 +85,6 @@ export const validateEmailConfig = (config: NodemailerConfig): void => {
   
   console.log(`✅ Email service configured: ${config.service || 'Custom SMTP'}`);
   console.log(`📧 From: ${config.from.name} <${config.from.email}>`);
+  console.log(`🔌 Host: ${config.host}:${config.port}`);
+  console.log(`🔒 Secure: ${config.secure}`);
 };

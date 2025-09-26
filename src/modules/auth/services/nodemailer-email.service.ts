@@ -19,30 +19,53 @@ export class NodemailerEmailService implements EmailService {
     this.initialize();
   }
 
-  private initialize(): void {
+  private async initialize(): Promise<void> {
     if (this.isInitialized) return;
+    
     try {
       this.transporter = nodemailer.createTransport({
-        service: this.config.service,
         host: this.config.host,
         port: this.config.port,
         secure: this.config.secure,
+        tls: this.config.tls || {
+          rejectUnauthorized: false
+        },
         auth: {
           user: this.config.auth.user,
           pass: this.config.auth.pass,
         },
+        connectionTimeout: this.config.connectionTimeout || 30000,
+        socketTimeout: this.config.socketTimeout || 30000,
+        // Add these debugging options
+        logger: true,
+        debug: true,
       });
+
+      // Verify connection
+      await this.transporter.verify();
       this.isInitialized = true;
       console.log("✅ Nodemailer email service initialized successfully");
     } catch (error) {
       console.error("❌ Failed to initialize Nodemailer email service:", error);
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes("ECONNREFUSED")) {
+          throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings.`);
+        } else if (error.message.includes("ETIMEDOUT")) {
+          throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. Check network connectivity.`);
+        } else if (error.message.includes("Invalid login")) {
+          throw new Error("Authentication failed. Check your credentials or app password.");
+        }
+      }
+      
       throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
-  private async sendEmail(options: CustomEmailOptions): Promise<void> {
+  private async sendEmail(options: CustomEmailOptions, retryCount = 0): Promise<void> {
     if (!this.isInitialized) {
-      this.initialize();
+      await this.initialize();
     }
 
     // Check cooldown
@@ -60,8 +83,7 @@ export class NodemailerEmailService implements EmailService {
             reject(error);
           }
         });
-         
-        // Set a timer to process the queue after cooldown
+        
         setTimeout(() => this.processQueue(), this.config.cooldownPeriod - timeSinceLastEmail);
       });
     }
@@ -98,6 +120,13 @@ export class NodemailerEmailService implements EmailService {
     } catch (error) {
       console.error(`❌ Failed to send email to ${Array.isArray(options.to) ? options.to.join(", ") : options.to}:`, error);
       
+      // Retry logic
+      if (retryCount < 2) {
+        console.log(`Retrying email send (attempt ${retryCount + 1})...`);
+        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1))); // Exponential backoff
+        return this.sendEmail(options, retryCount + 1);
+      }
+      
       // Provide more helpful error messages
       if (error instanceof Error) {
         if (error.message.includes("Invalid login") || error.message.includes("User is locked out")) {
@@ -106,13 +135,15 @@ export class NodemailerEmailService implements EmailService {
           throw new Error("Email size exceeded. Please reduce attachments or content.");
         } else if (error.message.includes("No recipients defined")) {
           throw new Error("No valid recipients specified.");
+        } else if (error.message.includes("ECONNREFUSED") || error.message.includes("ETIMEDOUT")) {
+          throw new Error("Network connection error. Please check your internet connection and firewall settings.");
         }
       }
       
       throw new Error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
-
+  
   private async processQueue(): Promise<void> {
     if (this.pendingEmails.length === 0) return;
     
