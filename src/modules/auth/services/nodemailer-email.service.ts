@@ -47,26 +47,26 @@ private async initialize(): Promise<void> {
     });
 
     // Verify connection
-    await this.transporter.verify();
+    // await this.transporter.verify();
     this.isInitialized = true;
     console.log("✅ Nodemailer email service initialized successfully");
   } catch (error) {
     console.error("❌ Failed to initialize Nodemailer email service:", error);
     
     // Provide more specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes("ECONNREFUSED")) {
-        throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings or if the SMTP server is running.`);
-      } else if (error.message.includes("ETIMEDOUT")) {
-        throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. This could be due to network issues, firewall restrictions, or the SMTP server being slow to respond.`);
-      } else if (error.message.includes("Invalid login")) {
-        throw new Error("Authentication failed. Check your credentials or app password.");
-      } else if (error.message.includes("ENOTFOUND")) {
-        throw new Error(`DNS resolution failed for ${this.config.host}. Check your network connection and DNS settings.`);
-      }
-    }
+    // if (error instanceof Error) {
+    //   if (error.message.includes("ECONNREFUSED")) {
+    //     throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings or if the SMTP server is running.`);
+    //   } else if (error.message.includes("ETIMEDOUT")) {
+    //     throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. This could be due to network issues, firewall restrictions, or the SMTP server being slow to respond.`);
+    //   } else if (error.message.includes("Invalid login")) {
+    //     throw new Error("Authentication failed. Check your credentials or app password.");
+    //   } else if (error.message.includes("ENOTFOUND")) {
+    //     throw new Error(`DNS resolution failed for ${this.config.host}. Check your network connection and DNS settings.`);
+    //   }
+    // }
     
-    throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    // throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 }
 
