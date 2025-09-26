@@ -37,13 +37,13 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       secure: true,
       auth: {
         user: "resend",
-        pass: process.env.RESEND_API_KEY!,
+        pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
       },
       from: {
-        email: process.env.FROM_EMAIL || "onboarding@resend.dev",
-        name: process.env.FROM_NAME || "Scrubbe",
+        email:  "scrubbe.dev@gmail.com",
+        name: "Scrubbe",
       },
-      replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
+      replyTo: "scrubbe.dev@gmail.com",
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
       connectionTimeout: 60000, // Increased timeout
       socketTimeout: 60000,     // Increased timeout
