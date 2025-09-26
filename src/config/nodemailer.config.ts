@@ -3,13 +3,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const emailConfig = {
-  service: process.env.EMAIL_SERVICE || "Gmail", // e.g., 'Gmail', 'SendGrid'
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.EMAIL_PORT || "587", 10),
+ // e.g., 'Gmail', 'SendGrid'
+  host: process.env.EMAIL_HOST || "smtp.resend.com",
+  port: parseInt(process.env.EMAIL_PORT || "465", 10),
   secure: process.env.EMAIL_SECURE === "true", // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER || "",
-    pass: process.env.EMAIL_PASSWORD || "",
+    user: process.env.EMAIL_USER || "resend",
+    pass: process.env.EMAIL_PASSWORD || "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
   },
   from: `"Scrubbe" <${process.env.EMAIL_FROM || process.env.EMAIL_USER || ""}>`,
   tls: {

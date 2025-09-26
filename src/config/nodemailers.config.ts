@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export interface NodemailerConfig {
-  service: string;
+  service?: string;
   host: string;
   port: number;
   secure: boolean;
@@ -19,9 +19,10 @@ export interface NodemailerConfig {
   cooldownPeriod: number; // in milliseconds
 }
 
+
 export const nodemailerConfig: NodemailerConfig = {
-  service: "Gmail",
-  host: "smtp.gmail.com",
+  // host: "smtp.gmail.com",
+  host:"smtp.resend.com",
   port: 465,
   secure: true,
   auth: {
