@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { NodemailerConfig } from "../../../config/nodemailers.config";
+import { NodemailerConfig, validateEmailConfig } from "../../../config/nodemailers.config";
 import {
   EmailService,
   CustomEmailOptions,
@@ -11,18 +11,20 @@ export class NodemailerEmailService implements EmailService {
   private config: NodemailerConfig;
   private transporter!: nodemailer.Transporter;
   private isInitialized: boolean = false;
-  private lastEmailSent: number = 0; // Timestamp of last sent email
+  private lastEmailSent: number = 0;
   private pendingEmails: Array<() => Promise<void>> = [];
+  private connectionRetries: number = 0;
+  private maxRetries: number = 3;
 
   constructor(config: NodemailerConfig) {
     this.config = config;
-    this.initialize();
+    validateEmailConfig(config);
+    this.initializeTransporter();
   }
 
-  private initialize(): void {
-    if (this.isInitialized) return;
+  private initializeTransporter(): void {
     try {
-      this.transporter = nodemailer.createTransport({
+      const transporterConfig: any = {
         host: this.config.host,
         port: this.config.port,
         secure: this.config.secure,
@@ -30,26 +32,68 @@ export class NodemailerEmailService implements EmailService {
           user: this.config.auth.user,
           pass: this.config.auth.pass,
         },
-      });
-      this.isInitialized = true;
-      console.log("✅ Nodemailer email service initialized successfully");
+        connectionTimeout: this.config.connectionTimeout || 30000,
+        socketTimeout: this.config.socketTimeout || 30000,
+        logger: process.env.NODE_ENV === 'development',
+        debug: process.env.NODE_ENV === 'development',
+      };
+
+      // Additional Gmail-specific settings
+      if (this.config.host.includes('gmail.com')) {
+        transporterConfig.service = 'gmail';
+      }
+
+      this.transporter = nodemailer.createTransport(transporterConfig);
+      
+      // Verify connection on initialization
+      this.verifyConnection();
+      
     } catch (error) {
-      console.error("❌ Failed to initialize Nodemailer email service:", error);
+      console.error("❌ Failed to initialize Nodemailer transporter:", error);
       throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 
-  private async sendEmail(options: CustomEmailOptions): Promise<void> {
-    if (!this.isInitialized) {
-      this.initialize();
+  private async verifyConnection(): Promise<void> {
+    try {
+      await this.transporter.verify();
+      this.isInitialized = true;
+      this.connectionRetries = 0; // Reset retry counter on successful connection
+      console.log("✅ Nodemailer email service initialized and connection verified");
+    } catch (error) {
+      console.error("❌ Failed to verify Nodemailer connection:", error);
+      this.isInitialized = false;
+      throw error;
     }
+  }
+
+  private async ensureConnection(): Promise<void> {
+    if (!this.isInitialized && this.connectionRetries < this.maxRetries) {
+      try {
+        await this.verifyConnection();
+      } catch (error) {
+        this.connectionRetries++;
+        console.warn(`⚠️ Connection attempt ${this.connectionRetries}/${this.maxRetries} failed`);
+        
+        if (this.connectionRetries >= this.maxRetries) {
+          throw new Error(`Failed to establish email connection after ${this.maxRetries} attempts`);
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, this.connectionRetries) * 1000));
+        await this.ensureConnection();
+      }
+    }
+  }
+
+  private async sendEmail(options: CustomEmailOptions): Promise<void> {
+    await this.ensureConnection();
 
     // Check cooldown
     const now = Date.now();
     const timeSinceLastEmail = now - this.lastEmailSent;
     
     if (timeSinceLastEmail < this.config.cooldownPeriod) {
-      // Queue the email for later
       return new Promise<void>((resolve, reject) => {
         this.pendingEmails.push(async () => {
           try {
@@ -60,7 +104,6 @@ export class NodemailerEmailService implements EmailService {
           }
         });
          
-        // Set a timer to process the queue after cooldown
         setTimeout(() => this.processQueue(), this.config.cooldownPeriod - timeSinceLastEmail);
       });
     }
@@ -77,39 +120,64 @@ export class NodemailerEmailService implements EmailService {
         replyTo: options.replyTo || this.config.replyTo,
       };
 
-      // Add attachments if provided
       if (options.attachments && options.attachments.length > 0) {
         mailOptions.attachments = options.attachments.map((att) => ({
           filename: att.filename,
           content: att.content,
+          encoding: 'base64',
         }));
       }
 
       const info = await this.transporter.sendMail(mailOptions);
       this.lastEmailSent = Date.now();
       console.log(`✅ Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(", ") : options.to}`);
-      console.log(`Message ID: ${info.messageId}`);
+      console.log(`📫 Message ID: ${info.messageId}`);
       
-      // Process any pending emails
       if (this.pendingEmails.length > 0) {
         setTimeout(() => this.processQueue(), this.config.cooldownPeriod);
       }
     } catch (error) {
       console.error(`❌ Failed to send email to ${Array.isArray(options.to) ? options.to.join(", ") : options.to}:`, error);
       
-      // Provide more helpful error messages
-      if (error instanceof Error) {
-        if (error.message.includes("Invalid login") || error.message.includes("User is locked out")) {
-          throw new Error("Gmail authentication failed. Please check your credentials or app password.");
-        } else if (error.message.includes("Message size exceeded")) {
-          throw new Error("Email size exceeded. Please reduce attachments or content.");
-        } else if (error.message.includes("No recipients defined")) {
-          throw new Error("No valid recipients specified.");
-        }
+      // Reset connection on certain errors
+      if (error instanceof Error && this.shouldResetConnection(error)) {
+        this.isInitialized = false;
+        console.log("🔄 Resetting email connection due to error...");
       }
       
-      throw new Error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw this.formatErrorMessage(error);
     }
+  }
+
+  private shouldResetConnection(error: Error): boolean {
+    const resetErrors = [
+      'ETIMEDOUT',
+      'ECONNREFUSED',
+      'ECONNRESET',
+      'EPIPE',
+      'ESOCKET',
+      'EAUTH'
+    ];
+    
+    return resetErrors.some(errorCode => error.message.includes(errorCode));
+  }
+
+  private formatErrorMessage(error: unknown): Error {
+    if (error instanceof Error) {
+      if (error.message.includes('ETIMEDOUT') || error.message.includes('CONN')) {
+        return new Error(`Email connection timeout. Please check your network connection and SMTP settings. Original error: ${error.message}`);
+      } else if (error.message.includes("Invalid login") || error.message.includes("User is locked out") || error.message.includes("EAUTH")) {
+        return new Error("Email authentication failed. Please check your credentials or API key.");
+      } else if (error.message.includes("Message size exceeded")) {
+        return new Error("Email size exceeded. Please reduce attachments or content.");
+      } else if (error.message.includes("No recipients defined")) {
+        return new Error("No valid recipients specified.");
+      } else if (error.message.includes("ECONNREFUSED")) {
+        return new Error("Email connection refused. Please check your SMTP host and port settings.");
+      }
+    }
+    
+    return new Error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 
   private async processQueue(): Promise<void> {
@@ -123,7 +191,6 @@ export class NodemailerEmailService implements EmailService {
         console.error("Error processing queued email:", error);
       }
       
-      // Process next email if any
       if (this.pendingEmails.length > 0) {
         setTimeout(() => this.processQueue(), this.config.cooldownPeriod);
       }
@@ -374,4 +441,23 @@ export class NodemailerEmailService implements EmailService {
     html
   });
 }
+
+async testConnection(): Promise<boolean> {
+    try {
+      await this.ensureConnection();
+      return true;
+    } catch (error) {
+      console.error("❌ Email connection test failed:", error);
+      return false;
+    }
+  }
+
+  // Add cleanup method
+  async close(): Promise<void> {
+    if (this.transporter) {
+      this.transporter.close();
+      this.isInitialized = false;
+      console.log("📧 Email transporter closed");
+    }
+  }
 }

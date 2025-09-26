@@ -16,31 +16,67 @@ export interface NodemailerConfig {
     name: string;
   };
   replyTo?: string;
-  cooldownPeriod: number; // in milliseconds
+  cooldownPeriod: number;
+  connectionTimeout?: number;
+  socketTimeout?: number;
 }
 
-
-export const nodemailerConfig: NodemailerConfig = {
-  // host: "smtp.gmail.com",
-  host:"smtp.resend.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.GMAIL_USER! || "resend",
-    pass: process.env.GMAIL_APP_PASSWORD! || "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
-  },
-  from: {
-    email: "scrubbe.dev@gmail.com",
-    name: process.env.GMAIL_FROM_NAME || "Scrubbe",
-  },
-  replyTo: "scrubbe.dev@gmail.com",
-  cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"), // Default 5 seconds
+// Choose between Gmail or Resend based on environment
+export const getNodemailerConfig = (): NodemailerConfig => {
+  const useResend = process.env.USE_RESEND === 'true';
+  
+  if (useResend) {
+    return {
+      service: 'Resend',
+      host: "smtp.resend.com",
+      port: 587, // Use 587 for Resend instead of 465
+      secure: false, // Resend uses STARTTLS on port 587
+      auth: {
+        user: "resend", // Fixed username for Resend
+        pass: process.env.RESEND_API_KEY!, // Use Resend API key
+      },
+      from: {
+        email: process.env.FROM_EMAIL || "onboarding@resend.dev",
+        name: process.env.FROM_NAME || "Scrubbe",
+      },
+      replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
+      cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
+      connectionTimeout: 30000, // 30 seconds
+      socketTimeout: 30000, // 30 seconds
+    };
+  } else {
+    return {
+      service: 'Gmail',
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER!,
+        pass: process.env.GMAIL_APP_PASSWORD!,
+      },
+      from: {
+        email: process.env.FROM_EMAIL || "scrubbe.dev@gmail.com",
+        name: process.env.FROM_NAME || "Scrubbe",
+      },
+      replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
+      cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
+      connectionTimeout: 30000,
+      socketTimeout: 30000,
+    };
+  }
 };
 
+export const nodemailerConfig = getNodemailerConfig();
+
 // Validate configuration
-if (!nodemailerConfig.auth.user) {
-  throw new Error("Gmail user is missing. Please set GMAIL_USER environment variable.");
-}
-if (!nodemailerConfig.auth.pass) {
-  throw new Error("Gmail app password is missing. Please set GMAIL_APP_PASSWORD environment variable.");
-}
+export const validateEmailConfig = (config: NodemailerConfig): void => {
+  if (!config.auth.user) {
+    throw new Error("Email user is missing. Please set the appropriate environment variables.");
+  }
+  if (!config.auth.pass) {
+    throw new Error("Email password/API key is missing. Please set the appropriate environment variables.");
+  }
+  
+  console.log(`✅ Email service configured: ${config.service || 'Custom SMTP'}`);
+  console.log(`📧 From: ${config.from.name} <${config.from.email}>`);
+};
