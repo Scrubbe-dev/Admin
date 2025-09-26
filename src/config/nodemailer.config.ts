@@ -29,8 +29,8 @@ export const getNodemailerConfig = (): NodemailerConfig => {
     return {
       service: 'Resend',
       host: "smtp.resend.com",
-      port: 587, // Use 587 for Resend instead of 465
-      secure: false, // Resend uses STARTTLS on port 587
+      port: 465, // Use 465 for Resend
+      secure: true, // Resend uses SSL on port 465
       auth: {
         user: "resend", // Fixed username for Resend
         pass: process.env.RESEND_API_KEY!, // Use Resend API key
@@ -66,7 +66,7 @@ export const getNodemailerConfig = (): NodemailerConfig => {
   }
 };
 
-export const nodemailerConfig = getNodemailerConfig();
+export const emailConfig = getNodemailerConfig();
 
 // Validate configuration
 export const validateEmailConfig = (config: NodemailerConfig): void => {
