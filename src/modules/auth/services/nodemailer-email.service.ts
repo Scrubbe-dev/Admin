@@ -19,49 +19,56 @@ export class NodemailerEmailService implements EmailService {
     this.initialize();
   }
 
-  private async initialize(): Promise<void> {
-    if (this.isInitialized) return;
-    
-    try {
-      this.transporter = nodemailer.createTransport({
-        host: this.config.host,
-        port: this.config.port,
-        secure: this.config.secure,
-        tls: this.config.tls || {
-          rejectUnauthorized: false
-        },
-        auth: {
-          user: this.config.auth.user,
-          pass: this.config.auth.pass,
-        },
-        connectionTimeout: this.config.connectionTimeout || 30000,
-        socketTimeout: this.config.socketTimeout || 30000,
-        // Add these debugging options
-        logger: true,
-        debug: true,
-      });
+private async initialize(): Promise<void> {
+  if (this.isInitialized) return;
+  
+  try {
+    console.log(`Connecting to SMTP server: ${this.config.host}:${this.config.port}`);
+    console.log(`Secure: ${this.config.secure}`);
+    console.log(`Auth user: ${this.config.auth.user}`);
 
-      // Verify connection
-      await this.transporter.verify();
-      this.isInitialized = true;
-      console.log("✅ Nodemailer email service initialized successfully");
-    } catch (error) {
-      console.error("❌ Failed to initialize Nodemailer email service:", error);
-      
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes("ECONNREFUSED")) {
-          throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings.`);
-        } else if (error.message.includes("ETIMEDOUT")) {
-          throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. Check network connectivity.`);
-        } else if (error.message.includes("Invalid login")) {
-          throw new Error("Authentication failed. Check your credentials or app password.");
-        }
+    this.transporter = nodemailer.createTransport({
+      service: this.config.service,
+      host: this.config.host,
+      port: this.config.port,
+      secure: this.config.secure,
+      auth: {
+        user: this.config.auth.user,
+        pass: this.config.auth.pass,
+      },
+      connectionTimeout: this.config.connectionTimeout || 60000,
+      socketTimeout: this.config.socketTimeout || 60000,
+      greetingTimeout: this.config.greetingTimeout || 30000,
+      tls: {
+        rejectUnauthorized: false
+      },
+      logger: true,
+      debug: true,
+    });
+
+    // Verify connection
+    await this.transporter.verify();
+    this.isInitialized = true;
+    console.log("✅ Nodemailer email service initialized successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize Nodemailer email service:", error);
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes("ECONNREFUSED")) {
+        throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings or if the SMTP server is running.`);
+      } else if (error.message.includes("ETIMEDOUT")) {
+        throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. This could be due to network issues, firewall restrictions, or the SMTP server being slow to respond.`);
+      } else if (error.message.includes("Invalid login")) {
+        throw new Error("Authentication failed. Check your credentials or app password.");
+      } else if (error.message.includes("ENOTFOUND")) {
+        throw new Error(`DNS resolution failed for ${this.config.host}. Check your network connection and DNS settings.`);
       }
-      
-      throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
+    
+    throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
+}
 
   private async sendEmail(options: CustomEmailOptions, retryCount = 0): Promise<void> {
     if (!this.isInitialized) {
@@ -143,7 +150,7 @@ export class NodemailerEmailService implements EmailService {
       throw new Error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
-  
+
   private async processQueue(): Promise<void> {
     if (this.pendingEmails.length === 0) return;
     

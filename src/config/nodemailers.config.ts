@@ -22,6 +22,7 @@ export interface NodemailerConfig {
   cooldownPeriod: number;
   connectionTimeout?: number;
   socketTimeout?: number;
+  greetingTimeout?: number;
 }
 
 // Choose between Gmail or Resend based on environment
@@ -32,11 +33,11 @@ export const getNodemailerConfig = (): NodemailerConfig => {
     return {
       service: 'Resend',
       host: "smtp.resend.com",
-      port: 465, // Use 465 for Resend
-      secure: true, // Resend uses SSL on port 465
+      port: 465,
+      secure: true,
       auth: {
-        user: "resend", // Fixed username for Resend
-        pass: process.env.RESEND_API_KEY!, // Use Resend API key
+        user: "resend",
+        pass: process.env.RESEND_API_KEY!,
       },
       from: {
         email: process.env.FROM_EMAIL || "onboarding@resend.dev",
@@ -44,18 +45,20 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       },
       replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-      connectionTimeout: 30000, // 30 seconds
-      socketTimeout: 30000, // 30 seconds
+      connectionTimeout: 60000, // Increased timeout
+      socketTimeout: 60000,     // Increased timeout
+      greetingTimeout: 30000,   // Add greeting timeout
     };
   } else {
- return {
+    // Try alternative Gmail configuration
+    return {
       service: 'Gmail',
       host: "smtp.gmail.com",
-      port: 465,
-      secure: true, // Use SSL
+      port: 587, // Try port 587 with STARTTLS
+      secure: false, // STARTTLS will upgrade the connection
       auth: {
         user: process.env.GMAIL_USER!,
-        pass: process.env.GMAIL_APP_PASSWORD!, // Must be an App Password
+        pass: process.env.GMAIL_APP_PASSWORD!,
       },
       from: {
         email: process.env.FROM_EMAIL || "scrubbe.dev@gmail.com",
@@ -63,16 +66,15 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       },
       replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-      connectionTimeout: 30000,
-      socketTimeout: 30000,
-      // Add these for Gmail
+      connectionTimeout: 60000,
+      socketTimeout: 60000,
+      greetingTimeout: 30000,
       tls: {
         rejectUnauthorized: false
       }
     };
   }
 };
-
 export const nodemailerConfig = getNodemailerConfig();
 
 export const validateEmailConfig = (config: NodemailerConfig): void => {
