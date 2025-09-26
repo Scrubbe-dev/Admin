@@ -23,7 +23,6 @@ export class NodemailerEmailService implements EmailService {
     if (this.isInitialized) return;
     try {
       this.transporter = nodemailer.createTransport({
-        service: this.config.service,
         host: this.config.host,
         port: this.config.port,
         secure: this.config.secure,

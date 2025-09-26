@@ -26,14 +26,14 @@ export const nodemailerConfig: NodemailerConfig = {
   port: 465,
   secure: true,
   auth: {
-    user: process.env.GMAIL_USER!,
-    pass: process.env.GMAIL_APP_PASSWORD!,
+    user: process.env.GMAIL_USER! || "resend",
+    pass: process.env.GMAIL_APP_PASSWORD! || "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
   },
   from: {
-    email: process.env.GMAIL_USER!,
+    email: "scrubbe.dev@gmail.com",
     name: process.env.GMAIL_FROM_NAME || "Scrubbe",
   },
-  replyTo: process.env.GMAIL_REPLY_TO || process.env.GMAIL_USER!,
+  replyTo: "scrubbe.dev@gmail.com",
   cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"), // Default 5 seconds
 };
 
