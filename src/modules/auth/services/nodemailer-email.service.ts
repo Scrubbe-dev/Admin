@@ -28,7 +28,7 @@ private async initialize(): Promise<void> {
     console.log(`Auth user: ${this.config.auth.user}`);
 
     this.transporter = nodemailer.createTransport({
-      // service: this.config.service,
+      service: this.config.service,
       host: this.config.host,
       port: this.config.port,
       secure: this.config.secure,
@@ -36,6 +36,10 @@ private async initialize(): Promise<void> {
         user: this.config.auth.user,
         pass: this.config.auth.pass,
       },
+      pool:true,
+      maxConnections: 5,
+      maxMessages: Infinity,
+      
       // connectionTimeout: this.config.connectionTimeout || 60000,
       // socketTimeout: this.config.socketTimeout || 60000,
       // greetingTimeout: this.config.greetingTimeout || 30000,
