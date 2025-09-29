@@ -230,8 +230,8 @@ app.use("/api/v1", sendMailerRouter); // New  IMS management route
 app.use("/api/v1",incidentStatusEmailrouter) // New incidentStats route 
 app.use("/api/v1",postmortemRouter) // New Postmortum route
 app.use("/api/v1/pricing",pricingRouter)
-app.use("/api/v1/mocktest", customerAuthRoutes); // Route for customer auth route
-app.use("/api/v1/mocktest", customerIncidentRoutes); // Route for  customer incident route
+app.use("/api/v1/customer", customerAuthRoutes); // Route for customer auth route
+app.use("/api/v1/customer", customerIncidentRoutes); // Route for  customer incident route
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 
