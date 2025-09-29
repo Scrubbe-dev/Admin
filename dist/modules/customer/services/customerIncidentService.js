@@ -13,7 +13,7 @@ class CustomerIncidentService {
                 where: {
                     id: customerId,
                     companyUserId: companyUserId,
-                    isActive: true
+                    // isActive: true 
                 }
             });
             if (!customer) {
@@ -127,7 +127,6 @@ class CustomerIncidentService {
                 where: {
                     id: customerId,
                     companyUserId: companyUserId,
-                    isActive: true
                 }
             });
             if (!customer) {

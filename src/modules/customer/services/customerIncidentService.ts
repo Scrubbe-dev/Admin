@@ -165,7 +165,7 @@ export class CustomerIncidentService {
         prisma.endCustomerIncident.findMany({
           where: whereClause,
           orderBy: { createdAt: 'desc' },
-          skip,
+          // skip,
           take: limit,
           include: {
             customer: true,

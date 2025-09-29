@@ -4,7 +4,6 @@ exports.customerAuthRoutes = void 0;
 // customerAuthRoutes.ts
 const express_1 = require("express");
 const customerAuthController_1 = require("../controllers/customerAuthController");
-const customerMiddleware_1 = require("../middleware/customerMiddleware");
 const router = (0, express_1.Router)();
 exports.customerAuthRoutes = router;
 /**
@@ -127,9 +126,11 @@ exports.customerAuthRoutes = router;
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/companies", (req, res, next) => {
-    (0, customerMiddleware_1.authenticateCustomer)(req, res, next);
-}, customerAuthController_1.CustomerAuthController.getCompanies);
+router.get("/companies", 
+// (req: Request, res: Response, next: NextFunction) => {
+//   authenticateCustomer(req, res, next);
+// },
+customerAuthController_1.CustomerAuthController.getCompanies);
 /**
  * @swagger
  * /api/v1/customer/register:

@@ -9,7 +9,7 @@ exports.customerLoginSchema = zod_1.z.object({
 });
 exports.customerRegisterSchema = zod_1.z.object({
     fullName: zod_1.z.string().min(1, { message: "Full name is required" }),
-    companyName: zod_1.z.string().min(1, { message: "Company name is required" }),
+    companyName: zod_1.z.string().min(1, { message: "Company name is required" }).optional(),
     email: zod_1.z.string().email({ message: "Please enter a valid email address" }),
     password: zod_1.z.string().min(6, { message: "Password must be at least 6 characters" }),
     companyUserId: zod_1.z.string().uuid({ message: "Valid company user ID is required" }) // The User (Flutterwave) they're registering for

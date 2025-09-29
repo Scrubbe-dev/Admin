@@ -21,7 +21,6 @@ class CustomerAuthService {
             const companyUser = await prisma_1.prisma.user.findUnique({
                 where: {
                     id: data.companyUserId,
-                    isActive: true
                 },
                 include: {
                     business: true
@@ -34,17 +33,17 @@ class CustomerAuthService {
                 };
             }
             // Verify company name matches
-            if (!companyUser.business || companyUser.business.name !== data.companyName) {
-                return {
-                    success: false,
-                    message: 'Company name does not match our records'
-                };
-            }
+            // if (!companyUser.business || companyUser.business.name !== data.companyName) {
+            //   return {
+            //     success: false,
+            //     message: 'Company name does not match our records'
+            //   };
+            // }
             // Create customer associated with the company user
             const hashedPassword = await password_1.PasswordUtils.hashPassword(data.password);
             const customer = await prisma_1.prisma.endCustomer.create({
                 data: {
-                    name: data.fullName,
+                    name: `${data.fullName}/${companyUser.business?.name || 'NoCompany'}`,
                     contactEmail: data.email,
                     tenantId: `cust_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     companyUserId: data.companyUserId,
@@ -167,7 +166,7 @@ class CustomerAuthService {
             const customer = await prisma_1.prisma.endCustomer.findUnique({
                 where: {
                     id: customerId,
-                    isActive: true
+                    // isActive: true 
                 },
                 include: {
                     companyUser: {
@@ -211,7 +210,7 @@ class CustomerAuthService {
             // Get all active users who have businesses (companies like Flutterwave)
             const companyUsers = await prisma_1.prisma.user.findMany({
                 where: {
-                    isActive: true,
+                    // isActive: true,
                     business: {
                         isNot: null
                     }
@@ -222,7 +221,8 @@ class CustomerAuthService {
                             id: true,
                             name: true
                         }
-                    }
+                    },
+                    Customer: true
                 },
                 orderBy: {
                     business: {

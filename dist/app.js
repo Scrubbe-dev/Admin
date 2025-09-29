@@ -178,8 +178,8 @@ app.use("/api/v1", resend_1.default); // New  IMS management route
 app.use("/api/v1", incidentstatus_routes_1.default); // New incidentStats route 
 app.use("/api/v1", postmortem_route_1.default); // New Postmortum route
 app.use("/api/v1/pricing", pricing_route_1.default);
-app.use("/api/v1/mocktest", customerAuthRoute_1.customerAuthRoutes); // Route for customer auth route
-app.use("/api/v1/mocktest", customerIncidentRoute_1.customerIncidentRoutes); // Route for  customer incident route
+app.use("/api/v1/customer", customerAuthRoute_1.customerAuthRoutes); // Route for customer auth route
+app.use("/api/v1/customer", customerIncidentRoute_1.customerIncidentRoutes); // Route for  customer incident route
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 // app.use((err: Error, req: express.Request, res: express.Response) => {
