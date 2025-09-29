@@ -3,7 +3,11 @@
   "builds": [
     {
       "src": "dist/app.js",
-      "use": "@now/node"
+      "use": "@now/node",
+      "config": {
+        "serverless": true,
+        "entrypoint": "dist/app.js"
+      }
     }
   ],
   "routes": [
