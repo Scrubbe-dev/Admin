@@ -24,7 +24,6 @@ export class CustomerAuthService {
       const companyUser = await prisma.user.findUnique({
         where: { 
           id: data.companyUserId,
-          isActive: true 
         },
         include: {
           business: true
@@ -39,19 +38,19 @@ export class CustomerAuthService {
       }
 
       // Verify company name matches
-      if (!companyUser.business || companyUser.business.name !== data.companyName) {
-        return {
-          success: false,
-          message: 'Company name does not match our records'
-        };
-      }
+      // if (!companyUser.business || companyUser.business.name !== data.companyName) {
+      //   return {
+      //     success: false,
+      //     message: 'Company name does not match our records'
+      //   };
+      // }
 
       // Create customer associated with the company user
       const hashedPassword = await PasswordUtils.hashPassword(data.password);
       
       const customer = await prisma.endCustomer.create({
         data: {
-          name: data.fullName,
+          name: `${data.fullName}/${companyUser.business?.name || 'NoCompany'}`,
           contactEmail: data.email,
           tenantId: `cust_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           companyUserId: data.companyUserId,
