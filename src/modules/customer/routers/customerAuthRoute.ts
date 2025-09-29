@@ -128,9 +128,9 @@ const router = Router();
  */
 router.get(
   "/companies",
-  (req: Request, res: Response, next: NextFunction) => {
-    authenticateCustomer(req, res, next);
-  },
+  // (req: Request, res: Response, next: NextFunction) => {
+  //   authenticateCustomer(req, res, next);
+  // },
   CustomerAuthController.getCompanies
 );
 
