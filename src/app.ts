@@ -277,6 +277,12 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-server.listen(env.PORT, () => {
-  console.log(`Server running on port ${env.PORT}`);
-});
+if(process.env.NODE_ENV !== 'production'){
+  server.listen(env.PORT, () => {
+    console.log(`Server running on port ${env.PORT}`);
+  }); 
+}
+
+
+
+export default app;
