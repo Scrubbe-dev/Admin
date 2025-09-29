@@ -2,6 +2,7 @@
 import { Priority, IncidentStatus } from '@prisma/client';
 import { CreateCustomerIncidentInput, GetCustomerIncidentsInput, ApiResponse, CustomerIncident } from '../types';
 import prisma from '../../../lib/prisma';
+import { generateTimestampId } from '../utils/generateId';
 
 export class CustomerIncidentService {
   static async createIncident(
@@ -40,8 +41,8 @@ export class CustomerIncidentService {
       }
 
       // Generate unique ticket number
-      const ticketNumber = `CUST-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
+      // const ticketNumber = `CUST-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+       const ticketNumber = generateTimestampId();
       // Create the customer incident
       const incident = await prisma.endCustomerIncident.create({
         data: {
