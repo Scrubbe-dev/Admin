@@ -241,7 +241,8 @@ export class CustomerAuthService {
               id: true,
               name: true
             }
-          }
+          },
+          Customer: true
         },
         orderBy: {
           business: {
