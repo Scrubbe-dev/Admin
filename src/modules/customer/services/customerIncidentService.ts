@@ -15,7 +15,7 @@ export class CustomerIncidentService {
         where: { 
           id: customerId,
           companyUserId: companyUserId,
-          isActive: true 
+          // isActive: true 
         }
       });
 
@@ -140,7 +140,6 @@ export class CustomerIncidentService {
         where: { 
           id: customerId,
           companyUserId: companyUserId,
-          isActive: true 
         }
       });
 

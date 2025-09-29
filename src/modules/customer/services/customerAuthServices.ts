@@ -183,7 +183,7 @@ export class CustomerAuthService {
       const customer = await prisma.endCustomer.findUnique({
         where: { 
           id: customerId,
-          isActive: true 
+          // isActive: true 
         },
         include: {
           companyUser: {
@@ -230,7 +230,7 @@ export class CustomerAuthService {
       // Get all active users who have businesses (companies like Flutterwave)
       const companyUsers = await prisma.user.findMany({
         where: {
-          isActive: true,
+          // isActive: true,
           business: {
             isNot: null
           }
