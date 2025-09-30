@@ -29,17 +29,16 @@ private async initialize(): Promise<void> {
     console.log(`Auth user: ${this.config.auth.user}`);
 
     this.transporter = nodemailer.createTransport(smtpTransport({
-      service: 'Gmail',
-      host: "smtp.gmail.com",
-      port: 25,
-      secure: false,
-      logger: true,
-      debug: true,
-      ignoreTLS: true,
-      auth: {
-        user: "scrubbe.dev@gmail.com",
-        pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token
-      },
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, 
+        requireTLS: true,
+        logger: true,
+        debug: true,
+        auth: {
+            user: process.env.MAIL_ADRESS,
+            pass: process.env.MAIL_PASSWORD
+        }
     }));
 
     // Verify connection
