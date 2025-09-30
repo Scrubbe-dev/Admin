@@ -23,7 +23,7 @@ export const getResendConfig = (): ResendConfig => {
   return {
     apiKey,
     from: {
-      email: "scrubbe.dev@gmail.com",
+      email: "info@scrubbe.com",
       name: "scrubbe-dev",
     },
     cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
