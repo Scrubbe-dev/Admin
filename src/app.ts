@@ -283,5 +283,9 @@ server.listen(env.PORT, () => {
   }); 
 
 
+app.listen(() => {
+  console.log(`Server running on port ${env.PORT}`);
+} );
 
-export default server;
+
+export default app;
