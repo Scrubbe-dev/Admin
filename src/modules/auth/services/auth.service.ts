@@ -58,6 +58,8 @@ import { AuthMapper } from "../mapper/auth.mapper";
 
     const transport = nodemailer.createTransport({
       service: 'gmail',
+      port: 465,
+      secure: true, // true for 465, false for other ports
       auth: {
         user: "scrubbe.dev@gmail.com", // generated ethereal user
         pass: "vwce dzct nzip vxtp", // generated ethereal password
