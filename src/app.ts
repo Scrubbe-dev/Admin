@@ -278,7 +278,6 @@ process.on('SIGTERM', () => {
 });
 
 
-server.listen(env.PORT, () => {
+  server.listen(env.PORT, () => {
     console.log(`Server running on port ${env.PORT}`);
   }); 
-

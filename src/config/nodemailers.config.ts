@@ -33,8 +33,9 @@ export const getNodemailerConfig = (): NodemailerConfig => {
     return {
       service: 'Resend',
       host: "smtp.resend.com",
-      port: 465,
-      secure: true,
+      // port: 465,
+      port:587,
+      secure: false,
       auth: {
         user: "resend",
         pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
@@ -54,8 +55,8 @@ export const getNodemailerConfig = (): NodemailerConfig => {
     return {
       service: 'Gmail',
       host: "smtp.gmail.com",
-      port: 587, // Try port 587 with STARTTLS
-      secure: false, // STARTTLS will upgrade the connection
+      port: 465, // Try port 587 with STARTTLS
+      secure: true, // STARTTLS will upgrade the connection
       auth: {
         user: process.env.GMAIL_USER!,
         pass: process.env.GMAIL_APP_PASSWORD!,
@@ -66,9 +67,9 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       },
       replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-      connectionTimeout: 60000,
-      socketTimeout: 60000,
-      greetingTimeout: 30000,
+      connectionTimeout: 60000000,
+      socketTimeout: 60000000,
+      greetingTimeout: 30000000,
       tls: {
         rejectUnauthorized: false
       }

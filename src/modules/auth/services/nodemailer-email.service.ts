@@ -40,14 +40,14 @@ private async initialize(): Promise<void> {
       maxConnections: 5,
       maxMessages: Infinity,
       
-      // connectionTimeout: this.config.connectionTimeout || 60000,
-      // socketTimeout: this.config.socketTimeout || 60000,
-      // greetingTimeout: this.config.greetingTimeout || 30000,
-      // tls: {
-      //   rejectUnauthorized: false
-      // },
-      // logger: true,
-      // debug: true,
+      connectionTimeout: this.config.connectionTimeout ,
+      socketTimeout: this.config.socketTimeout ,
+      greetingTimeout: this.config.greetingTimeout,
+      tls: {
+        rejectUnauthorized: false
+      },
+      logger: true,
+      debug: true,
     });
 
     // Verify connection
