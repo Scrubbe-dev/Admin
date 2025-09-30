@@ -153,7 +153,7 @@ const tokenService = new TokenService(
 );
 // BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
 // const emailService = new ResendEmailService(resendConfig); // verification token service
-const emailService = createEmailService();
+// const emailService = createEmailService();
 const emailsServicesWithResend = createEmailServiceWithResend();
 // const emailServices = new EmailServices();
 const authService = new AuthService(
