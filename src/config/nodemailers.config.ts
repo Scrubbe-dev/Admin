@@ -29,28 +29,28 @@ export interface NodemailerConfig {
 export const getNodemailerConfig = (): NodemailerConfig => {
   const useResend = process.env.USE_RESEND === 'true';
   
-  if (useResend) {
-    return {
-      service: 'Resend',
-      host: "smtp.resend.com",
-      // port: 465,
-      port:587,
-      secure: false,
-      auth: {
-        user: "resend",
-        pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
-      },
-      from: {
-        email:  "scrubbe.dev@gmail.com",
-        name: "Scrubbe",
-      },
-      replyTo: "scrubbe.dev@gmail.com",
-      cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-      connectionTimeout: 60000, // Increased timeout
-      socketTimeout: 60000,     // Increased timeout
-      greetingTimeout: 30000,   // Add greeting timeout
-    };
-  } else {
+  // if (useResend) {
+  //   return {
+  //     service: 'Resend',
+  //     host: "smtp.resend.com",
+  //     // port: 465,
+  //     port:587,
+  //     secure: false,
+  //     auth: {
+  //       user: "resend",
+  //       pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
+  //     },
+  //     from: {
+  //       email:  "scrubbe.dev@gmail.com",
+  //       name: "Scrubbe",
+  //     },
+  //     replyTo: "scrubbe.dev@gmail.com",
+  //     cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
+  //     connectionTimeout: 60000, // Increased timeout
+  //     socketTimeout: 60000,     // Increased timeout
+  //     greetingTimeout: 30000,   // Add greeting timeout
+  //   };
+  // } else {
     // Try alternative Gmail configuration
     return {
       service: 'gmail',
@@ -74,7 +74,7 @@ export const getNodemailerConfig = (): NodemailerConfig => {
         rejectUnauthorized: false
       }
     };
-  }
+  // }
 };
 export const nodemailerConfig = getNodemailerConfig();
 
