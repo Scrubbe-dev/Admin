@@ -6,7 +6,9 @@ import {
   EmailAttachment,
   TicketStatusChangeData,
 } from "../types/nodemailer.types";
-import smtpTransport from 'nodemailer-smtp-transport';
+import smtpTransport from "nodemailer-smtp-transport";
+
+export * from "../types/nodemailer.types";
 
 export class NodemailerEmailService implements EmailService {
   private config: NodemailerConfig;
@@ -28,18 +30,30 @@ private async initialize(): Promise<void> {
     console.log(`Secure: ${this.config.secure}`);
     console.log(`Auth user: ${this.config.auth.user}`);
 
-    this.transporter = nodemailer.createTransport(smtpTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, 
-        requireTLS: true,
-        logger: true,
-        debug: true,
-        auth: {
-            user: process.env.MAIL_ADRESS,
-            pass: process.env.MAIL_PASSWORD
-        }
-    }));
+    this.transporter = nodemailer.createTransport({
+      secure: false, 
+      requireTLS: true,
+      logger: true,
+      debug: true,
+      host: this.config.host,
+      port: this.config.port,
+      auth: {
+        user: this.config.auth.user,
+        pass: this.config.auth.pass,
+      },
+      pool:true,
+      maxConnections: 5,
+      maxMessages: Infinity,
+      
+      // connectionTimeout: this.config.connectionTimeout || 60000,
+      // socketTimeout: this.config.socketTimeout || 60000,
+      // greetingTimeout: this.config.greetingTimeout || 30000,
+      // tls: {
+      //   rejectUnauthorized: false
+      // },
+      // logger: true,
+      // debug: true,
+    });
 
     // Verify connection
     // await this.transporter.verify();

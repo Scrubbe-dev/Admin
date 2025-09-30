@@ -7,6 +7,9 @@ export interface NodemailerConfig {
   host: string;
   port: number;
   secure: boolean;
+  requireTLS:boolean;
+  logger?: boolean;
+  debug?: boolean;
   auth: {
     user: string;
     pass: string;
@@ -53,15 +56,17 @@ export const getNodemailerConfig = (): NodemailerConfig => {
   // } else {
     // Try alternative Gmail configuration
     return {
-      service: 'Gmail',
-      host: "smtp.gmail.com",
-      port: 25,
-      // port: 587, // Try port 587 with STARTTLS
-      secure: false, // STARTTLS will upgrade the connection
-      auth: {
+
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, 
+        requireTLS: true,
+        logger: true,
+        debug: true,
+        auth: {
         user: "scrubbe.dev@gmail.com",
         pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token
-      },
+        },
       from: {
         email: "scrubbe.dev@gmail.com",
         name: "Scrubbe",
@@ -72,9 +77,6 @@ export const getNodemailerConfig = (): NodemailerConfig => {
       connectionTimeout: 60000000,
       socketTimeout: 60000000,
       greetingTimeout: 30000000,
-      tls: {
-        rejectUnauthorized: false
-      }
     };
   // }
 };
