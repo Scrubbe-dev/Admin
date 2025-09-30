@@ -4,4 +4,4 @@ import { nodemailerConfig, validateEmailConfig } from "../../../config/nodemaile
 export const createEmailService = () => {
   validateEmailConfig(nodemailerConfig);
   return new NodemailerEmailService(nodemailerConfig);
-};
+}; 

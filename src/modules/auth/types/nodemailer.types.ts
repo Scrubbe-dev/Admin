@@ -46,6 +46,7 @@ export interface EmailAttachment {
   filename: string;
   type?: string;
   disposition?: string;
+  contentType?:string;
 }
 
 

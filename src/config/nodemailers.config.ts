@@ -7,7 +7,7 @@ export interface NodemailerConfig {
   host: string;
   port: number;
   secure: boolean;
-  requireTLS:boolean;
+  requireTLS?: boolean;
   logger?: boolean;
   debug?: boolean;
   auth: {
@@ -19,7 +19,7 @@ export interface NodemailerConfig {
     name: string;
   };
   tls?: {
-        rejectUnauthorized: boolean;
+    rejectUnauthorized: boolean;
   };
   replyTo?: string;
   cooldownPeriod: number;
@@ -28,70 +28,166 @@ export interface NodemailerConfig {
   greetingTimeout?: number;
 }
 
-// Choose between Gmail or Resend based on environment
 export const getNodemailerConfig = (): NodemailerConfig => {
-  const useResend = process.env.USE_RESEND === 'true';
-  
-  // if (useResend) {
-  //   return {
-  //     service: 'Resend',
-  //     host: "smtp.resend.com",
-  //     // port: 465,
-  //     port:587,
-  //     secure: false,
-  //     auth: {
-  //       user: "resend",
-  //       pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
-  //     },
-  //     from: {
-  //       email:  "scrubbe.dev@gmail.com",
-  //       name: "Scrubbe",
-  //     },
-  //     replyTo: "scrubbe.dev@gmail.com",
-  //     cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-  //     connectionTimeout: 60000, // Increased timeout
-  //     socketTimeout: 60000,     // Increased timeout
-  //     greetingTimeout: 30000,   // Add greeting timeout
-  //   };
-  // } else {
-    // Try alternative Gmail configuration
-    return {
+  const config: NodemailerConfig = {
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
+    requireTLS: true,
+    auth: {
+      user: process.env.SMTP_USER || "scrubbe.dev@gmail.com",
+      pass: process.env.SMTP_PASS || "vwce dzct nzip vxtp",
+    },
+    from: {
+      email: process.env.FROM_EMAIL || "scrubbe.dev@gmail.com",
+      name: process.env.FROM_NAME || "Scrubbe",
+    },
+    replyTo: process.env.REPLY_TO_EMAIL || "scrubbe.dev@gmail.com",
+    cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "1000"),
+    connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "30000"),
+    socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || "60000"),
+    greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "30000"),
+    logger: process.env.NODE_ENV !== 'production',
+    debug: process.env.NODE_ENV !== 'production',
+    tls: {
+      rejectUnauthorized: false
+    }
+  };
 
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, 
-        requireTLS: true,
-        logger: true,
-        debug: true,
-        auth: {
-        user: "scrubbe.dev@gmail.com",
-        pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token
-        },
-      from: {
-        email: "scrubbe.dev@gmail.com",
-        name: "Scrubbe",
-      },
-      // ignoreTLS: true,
-      replyTo: "scrubbe.dev@gmail.com",
-      cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-      connectionTimeout: 60000000,
-      socketTimeout: 60000000,
-      greetingTimeout: 30000000,
-    };
-  // }
+  return config;
 };
+
 export const nodemailerConfig = getNodemailerConfig();
 
 export const validateEmailConfig = (config: NodemailerConfig): void => {
-  if (!config.auth.user) {
-    throw new Error("Email user is missing. Please set the appropriate environment variables.");
-  }
-  if (!config.auth.pass) {
-    throw new Error("Email password/API key is missing. Please set the appropriate environment variables.");
+  const missing: string[] = [];
+  
+  if (!config.auth.user) missing.push("SMTP_USER");
+  if (!config.auth.pass) missing.push("SMTP_PASS");
+  if (!config.host) missing.push("SMTP_HOST");
+
+  if (missing.length > 0) {
+    throw new Error(`Missing email configuration: ${missing.join(", ")}`);
   }
   
-  console.log(`✅ Email service configured: ${config.service || 'Custom SMTP'}`);
+  console.log(`✅ Email service configured`);
   console.log(`📧 From: ${config.from.name} <${config.from.email}>`);
   console.log(`🔌 Host: ${config.host}:${config.port}`);
   console.log(`🔒 Secure: ${config.secure}`);
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import dotenv from "dotenv";
+
+// dotenv.config();
+
+// export interface NodemailerConfig {
+//   service?: string;
+//   host: string;
+//   port: number;
+//   secure: boolean;
+//   requireTLS:boolean;
+//   logger?: boolean;
+//   debug?: boolean;
+//   auth: {
+//     user: string;
+//     pass: string;
+//   };
+//   from: {
+//     email: string;
+//     name: string;
+//   };
+//   tls?: {
+//         rejectUnauthorized: boolean;
+//   };
+//   replyTo?: string;
+//   cooldownPeriod: number;
+//   connectionTimeout?: number;
+//   socketTimeout?: number;
+//   greetingTimeout?: number;
+// }
+
+// // Choose between Gmail or Resend based on environment
+// export const getNodemailerConfig = (): NodemailerConfig => {
+//   const useResend = process.env.USE_RESEND === 'true';
+  
+//   // if (useResend) {
+//   //   return {
+//   //     service: 'Resend',
+//   //     host: "smtp.resend.com",
+//   //     // port: 465,
+//   //     port:587,
+//   //     secure: false,
+//   //     auth: {
+//   //       user: "resend",
+//   //       pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
+//   //     },
+//   //     from: {
+//   //       email:  "scrubbe.dev@gmail.com",
+//   //       name: "Scrubbe",
+//   //     },
+//   //     replyTo: "scrubbe.dev@gmail.com",
+//   //     cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
+//   //     connectionTimeout: 60000, // Increased timeout
+//   //     socketTimeout: 60000,     // Increased timeout
+//   //     greetingTimeout: 30000,   // Add greeting timeout
+//   //   };
+//   // } else {
+//     // Try alternative Gmail configuration
+//     return {
+
+//         host: "smtp.gmail.com",
+//         port: 587,
+//         secure: false, 
+//         requireTLS: true,
+//         logger: true,
+//         debug: true,
+//         auth: {
+//         user: "scrubbe.dev@gmail.com",
+//         pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token
+//         },
+//       from: {
+//         email: "scrubbe.dev@gmail.com",
+//         name: "Scrubbe",
+//       },
+//       // ignoreTLS: true,
+//       replyTo: "scrubbe.dev@gmail.com",
+//       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
+//       connectionTimeout: 60000000,
+//       socketTimeout: 60000000,
+//       greetingTimeout: 30000000,
+//     };
+//   // }
+// };
+// export const nodemailerConfig = getNodemailerConfig();
+
+// export const validateEmailConfig = (config: NodemailerConfig): void => {
+//   if (!config.auth.user) {
+//     throw new Error("Email user is missing. Please set the appropriate environment variables.");
+//   }
+//   if (!config.auth.pass) {
+//     throw new Error("Email password/API key is missing. Please set the appropriate environment variables.");
+//   }
+  
+//   console.log(`✅ Email service configured: ${config.service || 'Custom SMTP'}`);
+//   console.log(`📧 From: ${config.from.name} <${config.from.email}>`);
+//   console.log(`🔌 Host: ${config.host}:${config.port}`);
+//   console.log(`🔒 Secure: ${config.secure}`);
+// };
