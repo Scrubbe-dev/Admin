@@ -55,7 +55,8 @@ export const getNodemailerConfig = (): NodemailerConfig => {
     return {
       service: 'Gmail',
       host: "smtp.gmail.com",
-      port: 587, // Try port 587 with STARTTLS
+      port: 25,
+      // port: 587, // Try port 587 with STARTTLS
       secure: false, // STARTTLS will upgrade the connection
       auth: {
         user: "scrubbe.dev@gmail.com",
@@ -65,6 +66,7 @@ export const getNodemailerConfig = (): NodemailerConfig => {
         email: "scrubbe.dev@gmail.com",
         name: "Scrubbe",
       },
+      // ignoreTLS: true,
       replyTo: "scrubbe.dev@gmail.com",
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
       connectionTimeout: 60000000,
