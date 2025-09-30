@@ -30,9 +30,10 @@ export interface NodemailerConfig {
 export const getNodemailerConfig = (): NodemailerConfig => {
   return {
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    requireTLS: false,
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    requireTLS: true,
+    tls: { rejectUnauthorized: false },
     auth: {
       user: "scrubbe.dev@gmail.com",
       pass: "vwce dzct nzip vxtp", // App password

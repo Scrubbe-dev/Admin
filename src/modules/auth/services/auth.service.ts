@@ -5,7 +5,6 @@ import {
   AccountType,
   OAuthProvider,
 } from "@prisma/client";
-import nodemailer from "nodemailer";
 import {
   LoginInput,
   Tokens,
@@ -32,51 +31,6 @@ import { AuthMapper } from "../mapper/auth.mapper";
 
 // run changes to production db with this command - npx prisma migrate deploy
 //  run changes to dev db with this command - npx prisma migrate dev --name added-this-feature
-
-
-
-  const sendVerificationEmail = async(email: string, code: string): Promise<void> => {
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Verify Your Email Address</h2>
-        <p>Thank you for registering with ${process.env.APP_NAME || "Scrubbe"}!</p>
-        <p>Please use the verification code below to complete your registration:</p>
-        <div style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; margin: 20px 0; border-radius: 5px;">
-          ${code}
-        </div>
-        <p>This code will expire in 15 minutes for security reasons.</p>
-        <p>If you did not create an account, please ignore this email.</p>
-        <p>Thank you,<br>The ${process.env.APP_NAME || "Scrubbe"} Team</p>
-      </div>
-    `;
-    // await this.sendEmail({
-    //   to: email,
-    //   subject: "Verify Your Email Address",
-    //   html,
-    // });
-
-
-    const transport = nodemailer.createTransport({
-      service: 'gmail',
-      port: 565,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: "scrubbe.dev@gmail.com", // generated ethereal user
-        pass: "vwce dzct nzip vxtp", // generated ethereal password
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    await transport.sendMail({
-      from: '"Scrubbe" <scrubbe.dev@gmail.com>', // sender address
-      to: email, // list of receivers
-      subject: "Verify Your Email Address", // Subject line
-      html, // html body
-    });
-  }
-
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
@@ -126,8 +80,7 @@ export class AuthService {
       );
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
-      // await this.emailService.sendVerificationEmail(user.email, code);
-      await sendVerificationEmail(user.email, code);
+      await this.emailService.sendVerificationEmail(user.email, code);
 
       return AuthMapper.toUserResponse(user, businessId, tokens);
     } catch (error) {
@@ -178,7 +131,8 @@ export class AuthService {
       );
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
-      await sendVerificationEmail(user.email, code);
+      await this.emailService.sendVerificationEmail(user.email, code);
+
       return AuthMapper.toUserResponse(user, user.business?.id, tokens);
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
@@ -407,7 +361,7 @@ export class AuthService {
 
 
 
-
+    
   }
 
   async login(input: LoginInput): Promise<MappedUser> {
