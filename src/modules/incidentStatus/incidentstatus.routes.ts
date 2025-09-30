@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { TicketStatusChangeController } from "./incidentstatus.controllers"
 import { createEmailService } from '../auth/services/nodemailer.factory'
+import { createEmailServiceWithResend } from '../auth/services/resend-no-nodemailer.factory';
 
-const incidentStatusEmail = new TicketStatusChangeController(createEmailService())
+const incidentStatusEmail = new TicketStatusChangeController(createEmailServiceWithResend())
 const incidentStatusEmailrouter = Router();
 
 /**
