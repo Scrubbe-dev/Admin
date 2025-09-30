@@ -6,7 +6,8 @@ import {
   EmailAttachment,
   TicketStatusChangeData,
 } from "../types/nodemailer.types";
-import smtpTransport from "nodemailer-smtp-transport";
+
+// NOTE: The 'smtpTransport' package is deprecated and not needed. Nodemailer has it built-in.
 
 export * from "../types/nodemailer.types";
 
@@ -14,7 +15,7 @@ export class NodemailerEmailService implements EmailService {
   private config: NodemailerConfig;
   private transporter!: nodemailer.Transporter;
   private isInitialized: boolean = false;
-  private lastEmailSent: number = 0; // Timestamp of last sent email
+  private lastEmailSent: number = 0;
   private pendingEmails: Array<() => Promise<void>> = [];
 
   constructor(config: NodemailerConfig) {
@@ -22,65 +23,64 @@ export class NodemailerEmailService implements EmailService {
     this.initialize();
   }
 
-private async initialize(): Promise<void> {
-  if (this.isInitialized) return;
-  
-  try {
-    console.log(`Connecting to SMTP server: ${this.config.host}:${this.config.port}`);
-    console.log(`Secure: ${this.config.secure}`);
-    console.log(`Auth user: ${this.config.auth.user}`);
+  private async initialize(): Promise<void> {
+    if (this.isInitialized) return;
 
-    // Set reasonable timeout values (in milliseconds)
-    const connectionTimeout = this.config.connectionTimeout || 30000; // 30 seconds
-    const socketTimeout = this.config.socketTimeout || 30000; // 30 seconds
-    const greetingTimeout = this.config.greetingTimeout || 15000; // 15 seconds
+    try {
+      console.log(`Connecting to SMTP server: ${this.config.host}:${this.config.port}`);
+      console.log(`Auth user: ${this.config.auth.user}`);
 
-    this.transporter = nodemailer.createTransport({
-      host: this.config.host,
-      port: this.config.port,
-      secure: this.config.secure, // true for 465, false for other ports
-      requireTLS: this.config.requireTLS || true,
-      auth: {
-        user: this.config.auth.user,
-        pass: this.config.auth.pass,
-      },
-      pool: true,
-      maxConnections: 5,
-      maxMessages: Infinity,
-      connectionTimeout,
-      socketTimeout,
-      greetingTimeout,
-      tls: {
-        rejectUnauthorized: false // Only for development, remove in production
-      },
-      logger: true,
-      debug: true,
-    });
+      // Use reasonable timeout values (30 seconds is plenty)
+      const connectionTimeout = this.config.connectionTimeout || 30000;
+      const socketTimeout = this.config.socketTimeout || 30000;
 
-    // Verify connection configuration
-    await this.transporter.verify();
-    this.isInitialized = true;
-    console.log("✅ Nodemailer email service initialized successfully");
-  } catch (error) {
-    console.error("❌ Failed to initialize Nodemailer email service:", error);
-    
-    // Provide more specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes("ECONNREFUSED")) {
-        throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings or if the SMTP server is running.`);
-      } else if (error.message.includes("ETIMEDOUT")) {
-        throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. This could be due to network issues, firewall restrictions, or the SMTP server being slow to respond.`);
-      } else if (error.message.includes("Invalid login")) {
-        throw new Error("Authentication failed. Check your credentials or app password.");
-      } else if (error.message.includes("ENOTFOUND")) {
-        throw new Error(`DNS resolution failed for ${this.config.host}. Check your network connection and DNS settings.`);
+      this.transporter = nodemailer.createTransport({
+        host: this.config.host,
+        port: this.config.port,
+        secure: this.config.secure, // true for 465, false for 587
+        requireTLS: true, // Enforce TLS
+        auth: {
+          user: this.config.auth.user,
+          pass: this.config.auth.pass,
+        },
+        // Pooling is good for high volume
+        pool: true,
+        maxConnections: 3,
+        maxMessages: 100,
+        // Rate limiting to avoid being blocked by Gmail
+        rateDelta: 1000,
+        rateLimit: 5, // max 5 messages per second
+        // Timeouts
+        connectionTimeout,
+        socketTimeout,
+        // TLS options for better compatibility
+        tls: {
+          // Do not fail on invalid certs (for development)
+          rejectUnauthorized: false,
+          // Specify ciphers if needed, though usually not required
+          // ciphers: 'SSLv3'
+        },
+        logger: true,
+        debug: true, // Show SMTP traffic in the console
+      });
+
+      // This is CRITICAL. It verifies the connection configuration.
+      await this.transporter.verify();
+      this.isInitialized = true;
+      console.log("✅ Nodemailer email service initialized and verified successfully");
+    } catch (error: any) {
+      console.error("❌ CRITICAL: Failed to initialize Nodemailer email service:", error);
+      // Throw a clear, actionable error
+      if (error.code === 'ETIMEDOUT') {
+        throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. This is a network/firewall issue. See troubleshooting steps.`);
       }
+      if (error.code === 'ECONNREFUSED') {
+        throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check if the port is open and the SMTP service is running.`);
+      }
+      throw new Error(`Nodemailer initialization failed: ${error.message}`);
     }
-    
-    throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
-}
-
+  
   private async sendEmail(options: CustomEmailOptions, retryCount = 0): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize();

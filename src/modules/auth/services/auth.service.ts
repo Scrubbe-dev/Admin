@@ -58,8 +58,8 @@ import { AuthMapper } from "../mapper/auth.mapper";
 
     const transport = nodemailer.createTransport({
       service: 'gmail',
-      port: 465,
-      secure: true, // true for 465, false for other ports
+      port: 565,
+      secure: false, // true for 465, false for other ports
       auth: {
         user: "scrubbe.dev@gmail.com", // generated ethereal user
         pass: "vwce dzct nzip vxtp", // generated ethereal password
@@ -126,7 +126,8 @@ export class AuthService {
       );
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
-      await this.emailService.sendVerificationEmail(user.email, code);
+      // await this.emailService.sendVerificationEmail(user.email, code);
+      await sendVerificationEmail(user.email, code);
 
       return AuthMapper.toUserResponse(user, businessId, tokens);
     } catch (error) {
