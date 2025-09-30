@@ -6,119 +6,104 @@ import {
   EmailAttachment,
   TicketStatusChangeData,
 } from "../types/nodemailer.types";
+import smtpTransport from "nodemailer-smtp-transport";
 
 export * from "../types/nodemailer.types";
 
-interface QueuedEmail {
-  options: CustomEmailOptions;
-  resolve: (value: void) => void;
-  reject: (reason: any) => void;
-  retryCount: number;
-}
-
 export class NodemailerEmailService implements EmailService {
   private config: NodemailerConfig;
-  private transporter: nodemailer.Transporter | null = null;
+  private transporter!: nodemailer.Transporter;
   private isInitialized: boolean = false;
-  private initializationPromise: Promise<void> | null = null;
-  private lastEmailSent: number = 0;
-  private emailQueue: QueuedEmail[] = [];
-  private isProcessingQueue: boolean = false;
-  private maxRetries: number = 3;
+  private lastEmailSent: number = 0; // Timestamp of last sent email
+  private pendingEmails: Array<() => Promise<void>> = [];
 
   constructor(config: NodemailerConfig) {
     this.config = config;
-    // Don't initialize immediately, wait for first email
+    this.initialize();
   }
 
-  private async initialize(): Promise<void> {
-    // Prevent multiple simultaneous initializations
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
+private async initialize(): Promise<void> {
+  if (this.isInitialized) return;
+  
+  try {
+    console.log(`Connecting to SMTP server: ${this.config.host}:${this.config.port}`);
+    console.log(`Secure: ${this.config.secure}`);
+    console.log(`Auth user: ${this.config.auth.user}`);
 
-    this.initializationPromise = this._initializeTransporter();
-    return this.initializationPromise;
-  }
+    // Set reasonable timeout values (in milliseconds)
+    const connectionTimeout = this.config.connectionTimeout || 30000; // 30 seconds
+    const socketTimeout = this.config.socketTimeout || 30000; // 30 seconds
+    const greetingTimeout = this.config.greetingTimeout || 15000; // 15 seconds
 
-  private async _initializeTransporter(): Promise<void> {
-    if (this.isInitialized) return;
+    this.transporter = nodemailer.createTransport({
+      host: this.config.host,
+      port: this.config.port,
+      secure: this.config.secure, // true for 465, false for other ports
+      requireTLS: this.config.requireTLS || true,
+      auth: {
+        user: this.config.auth.user,
+        pass: this.config.auth.pass,
+      },
+      pool: true,
+      maxConnections: 5,
+      maxMessages: Infinity,
+      connectionTimeout,
+      socketTimeout,
+      greetingTimeout,
+      tls: {
+        rejectUnauthorized: false // Only for development, remove in production
+      },
+      logger: true,
+      debug: true,
+    });
 
-    try {
-      console.log(`📧 Initializing SMTP connection to ${this.config.host}:${this.config.port}`);
-      
-      const transportOptions: nodemailer.TransportOptions | any = {
-        host: this.config.host,
-        port: this.config.port,
-        secure: this.config.secure,
-        auth: {
-          user: this.config.auth.user,
-          pass: this.config.auth.pass,
-        },
-        // Connection settings
-        pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
-        // Timeout settings
-        connectionTimeout: this.config.connectionTimeout || 30000, // 30 seconds
-        socketTimeout: this.config.socketTimeout || 60000, // 60 seconds
-        greetingTimeout: this.config.greetingTimeout || 30000, // 30 seconds
-        // TLS settings
-        tls: {
-          rejectUnauthorized: false // Allow self-signed certificates
-        },
-        // Debugging
-        logger: this.config.logger || false,
-        debug: this.config.debug || false,
-      };
-
-      this.transporter = nodemailer.createTransport(transportOptions);
-
-      // Verify connection with timeout
-      await Promise.race([
-        this.transporter.verify(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('SMTP verification timeout')), 15000)
-        )
-      ]);
-
-      this.isInitialized = true;
-      console.log("✅ Nodemailer email service initialized successfully");
-      
-      // Start processing any queued emails
-      this.processQueue();
-
-    } catch (error) {
-      console.error("❌ Failed to initialize Nodemailer:", error);
-      this.transporter = null;
-      this.isInitialized = false;
-      this.initializationPromise = null;
-      throw this.handleSmtpError(error);
-    }
-  }
-
-  private handleSmtpError(error: any): Error {
+    // Verify connection configuration
+    await this.transporter.verify();
+    this.isInitialized = true;
+    console.log("✅ Nodemailer email service initialized successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize Nodemailer email service:", error);
+    
+    // Provide more specific error messages
     if (error instanceof Error) {
-      if (error.message.includes('ECONNREFUSED')) {
-        return new Error(`SMTP connection refused to ${this.config.host}:${this.config.port}. Check if server is running.`);
-      } else if (error.message.includes('ETIMEDOUT')) {
-        return new Error(`SMTP connection timed out. Check network/firewall settings.`);
-      } else if (error.message.includes('Invalid login') || error.message.includes('535')) {
-        return new Error('SMTP authentication failed. Check credentials.');
-      } else if (error.message.includes('ENOTFOUND')) {
-        return new Error(`SMTP host ${this.config.host} not found. Check DNS.`);
+      if (error.message.includes("ECONNREFUSED")) {
+        throw new Error(`Connection refused to ${this.config.host}:${this.config.port}. Check firewall settings or if the SMTP server is running.`);
+      } else if (error.message.includes("ETIMEDOUT")) {
+        throw new Error(`Connection timed out to ${this.config.host}:${this.config.port}. This could be due to network issues, firewall restrictions, or the SMTP server being slow to respond.`);
+      } else if (error.message.includes("Invalid login")) {
+        throw new Error("Authentication failed. Check your credentials or app password.");
+      } else if (error.message.includes("ENOTFOUND")) {
+        throw new Error(`DNS resolution failed for ${this.config.host}. Check your network connection and DNS settings.`);
       }
     }
-    return new Error(`SMTP error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    
+    throw new Error(`Nodemailer initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
+}
 
-  private async sendEmailInternal(options: CustomEmailOptions, retryCount = 0): Promise<void> {
-    if (!this.isInitialized || !this.transporter) {
+  private async sendEmail(options: CustomEmailOptions, retryCount = 0): Promise<void> {
+    if (!this.isInitialized) {
       await this.initialize();
     }
 
-    if (!this.transporter) {
-      throw new Error('SMTP transporter not available');
+    // Check cooldown
+    const now = Date.now();
+    const timeSinceLastEmail = now - this.lastEmailSent;
+    
+    if (timeSinceLastEmail < this.config.cooldownPeriod) {
+      // Queue the email for later
+      return new Promise<void>((resolve, reject) => {
+        this.pendingEmails.push(async () => {
+          try {
+            await this.sendEmail(options);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
+        
+        setTimeout(() => this.processQueue(), this.config.cooldownPeriod - timeSinceLastEmail);
+      });
     }
 
     try {
@@ -131,131 +116,73 @@ export class NodemailerEmailService implements EmailService {
         html: options.html,
         text: options.text,
         replyTo: options.replyTo || this.config.replyTo,
-        attachments: options.attachments?.map((att: EmailAttachment) => ({
+      };
+
+      // Add attachments if provided
+      if (options.attachments && options.attachments.length > 0) {
+        mailOptions.attachments = options.attachments.map((att) => ({
           filename: att.filename,
           content: att.content,
-          contentType: att.contentType,
-        })),
-      };
+        }));
+      }
 
       const info = await this.transporter.sendMail(mailOptions);
       this.lastEmailSent = Date.now();
+      console.log(`✅ Email sent successfully to: ${Array.isArray(options.to) ? options.to.join(", ") : options.to}`);
+      console.log(`Message ID: ${info.messageId}`);
       
-      console.log(`✅ Email sent to: ${Array.isArray(options.to) ? options.to.join(", ") : options.to}`);
-      console.log(`📨 Message ID: ${info.messageId}`);
-      
+      // Process any pending emails
+      if (this.pendingEmails.length > 0) {
+        setTimeout(() => this.processQueue(), this.config.cooldownPeriod);
+      }
     } catch (error) {
-      console.error(`❌ Failed to send email (attempt ${retryCount + 1}):`, error);
+      console.error(`❌ Failed to send email to ${Array.isArray(options.to) ? options.to.join(", ") : options.to}:`, error);
       
-      if (retryCount < this.maxRetries) {
-        const backoffDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
-        console.log(`🔄 Retrying in ${backoffDelay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, backoffDelay));
-        return this.sendEmailInternal(options, retryCount + 1);
+      // Retry logic
+      if (retryCount < 2) {
+        console.log(`Retrying email send (attempt ${retryCount + 1})...`);
+        await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1))); // Exponential backoff
+        return this.sendEmail(options, retryCount + 1);
       }
       
-      throw this.handleSmtpError(error);
+      // Provide more helpful error messages
+      if (error instanceof Error) {
+        if (error.message.includes("Invalid login") || error.message.includes("User is locked out")) {
+          throw new Error("Gmail authentication failed. Please check your credentials or app password.");
+        } else if (error.message.includes("Message size exceeded")) {
+          throw new Error("Email size exceeded. Please reduce attachments or content.");
+        } else if (error.message.includes("No recipients defined")) {
+          throw new Error("No valid recipients specified.");
+        } else if (error.message.includes("ECONNREFUSED") || error.message.includes("ETIMEDOUT")) {
+          throw new Error("Network connection error. Please check your internet connection and firewall settings.");
+        }
+      }
+      
+      throw new Error(`Failed to send email: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
-  }
-
-  async sendEmail(options: CustomEmailOptions): Promise<void> {
-    const now = Date.now();
-    const timeSinceLastEmail = now - this.lastEmailSent;
-    
-    // Enforce cooldown period
-    if (timeSinceLastEmail < this.config.cooldownPeriod) {
-      return new Promise<void>((resolve, reject) => {
-        this.emailQueue.push({
-          options,
-          resolve,
-          reject,
-          retryCount: 0
-        });
-        
-        // Schedule queue processing after cooldown
-        const delay = this.config.cooldownPeriod - timeSinceLastEmail;
-        setTimeout(() => this.processQueue(), delay);
-      });
-    }
-
-    return this.sendEmailInternal(options);
   }
 
   private async processQueue(): Promise<void> {
-    if (this.isProcessingQueue || this.emailQueue.length === 0) {
-      return;
-    }
-
-    this.isProcessingQueue = true;
-
-    while (this.emailQueue.length > 0) {
-      const queuedEmail = this.emailQueue.shift();
-      if (!queuedEmail) continue;
-
+    if (this.pendingEmails.length === 0) return;
+    
+    const emailToSend = this.pendingEmails.shift();
+    if (emailToSend) {
       try {
-        await this.sendEmailInternal(queuedEmail.options, queuedEmail.retryCount);
-        queuedEmail.resolve();
+        await emailToSend();
       } catch (error) {
-        queuedEmail.reject(error);
+        console.error("Error processing queued email:", error);
       }
-
-      // Respect cooldown between emails
-      if (this.emailQueue.length > 0) {
-        await new Promise(resolve => 
-          setTimeout(resolve, this.config.cooldownPeriod)
-        );
+      
+      // Process next email if any
+      if (this.pendingEmails.length > 0) {
+        setTimeout(() => this.processQueue(), this.config.cooldownPeriod);
       }
-    }
-
-    this.isProcessingQueue = false;
-  }
-
-  async close(): Promise<void> {
-    if (this.transporter) {
-      this.transporter.close();
-      this.transporter = null;
-      this.isInitialized = false;
-      this.initializationPromise = null;
-      console.log("📧 Email service closed");
     }
   }
 
-  // Email template methods remain the same but use the new sendEmail method
+  // Implementation of all EmailService methods
   async sendVerificationEmail(email: string, code: string): Promise<void> {
-    const html = this.getVerificationEmailTemplate(code);
-    await this.sendEmail({
-      to: email,
-      subject: "Verify Your Email Address",
-      html,
-    });
-  }
-
-  generateVerificationOTP(): string {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("Generated OTP:", otp);
-    return otp;
-  }
-
-  async sendInviteEmail(
-    invite: {
-      firstName: string;
-      lastName: string;
-      inviteEmail: string;
-    },
-    inviteLink: string
-  ): Promise<void> {
-    const html = this.getInviteEmailTemplate(invite, inviteLink);
-    await this.sendEmail({
-      to: invite.inviteEmail,
-      subject: `You're Invited to Join ${process.env.APP_NAME || "Scrubbe"}`,
-      html,
-    });
-  }
-
-  // ... other email methods with their templates
-
-  private getVerificationEmailTemplate(code: string): string {
-    return `
+    const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Verify Your Email Address</h2>
         <p>Thank you for registering with ${process.env.APP_NAME || "Scrubbe"}!</p>
@@ -268,13 +195,28 @@ export class NodemailerEmailService implements EmailService {
         <p>Thank you,<br>The ${process.env.APP_NAME || "Scrubbe"} Team</p>
       </div>
     `;
+    await this.sendEmail({
+      to: email,
+      subject: "Verify Your Email Address",
+      html,
+    });
   }
 
-  private getInviteEmailTemplate(
-    invite: { firstName: string; lastName: string; inviteEmail: string },
+  generateVerificationOTP(): string {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log("otp code", otp);
+    return otp;
+  }
+
+  async sendInviteEmail(
+    invite: {
+      firstName: string;
+      lastName: string;
+      inviteEmail: string;
+    },
     inviteLink: string
-  ): string {
-    return `
+  ): Promise<void> {
+    const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">You're Invited to Join ${process.env.APP_NAME || "Scrubbe"}</h2>
         <p>Hi ${invite.firstName} ${invite.lastName},</p>
@@ -292,37 +234,11 @@ export class NodemailerEmailService implements EmailService {
         <p>Thank you,<br>The ${process.env.APP_NAME || "Scrubbe"} Team</p>
       </div>
     `;
-  }
-
-  // Implement other template methods similarly...
-  async sendTicketStatusChangeEmail(data: TicketStatusChangeData): Promise<void> {
-    const html = this.getTicketStatusChangeTemplate(data);
     await this.sendEmail({
-      to: data.assigneeEmail,
-      subject: `[Scrubbe IMS] Ticket #${data.ticketId} has been moved to ${data.newStatus}`,
-      html
+      to: invite.inviteEmail,
+      subject: `You're Invited to Join ${process.env.APP_NAME || "Scrubbe"}`,
+      html,
     });
-  }
-
-  private getTicketStatusChangeTemplate(data: TicketStatusChangeData): string {
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Ticket Status Update</h2>
-        <p>Hello ${data.assigneeName},</p>
-        <p>The state of ticket <strong>#${data.ticketId}</strong> has been updated.</p>
-        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
-          <p><strong>Title:</strong> ${data.ticketTitle}</p>
-          <p><strong>Previous State:</strong> ${data.previousStatus}</p>
-          <p><strong>New State:</strong> ${data.newStatus}</p>
-          <p><strong>Changed On:</strong> ${new Date().toLocaleString()}</p>
-        </div>
-        <p><strong>Description:</strong></p>
-        <p style="color: #666;">${data.ticketDescription}</p>
-        <p>Please review the updated state and take the necessary action.</p>
-        <p>Thank you for keeping incidents on track.</p>
-        <p>—<br>Scrubbe IMS<br>Incident Management & Fraud Monitoring Made Simple</p>
-      </div>
-    `;
   }
 
   async sendWarRoomEmail(
@@ -476,4 +392,36 @@ export class NodemailerEmailService implements EmailService {
     await this.sendPasswordChangedConfirmation(email);
   }
 
+  async sendTicketStatusChangeEmail(data: TicketStatusChangeData): Promise<void> {
+  const { ticketId, previousStatus, newStatus, assigneeName, assigneeEmail, ticketTitle, ticketDescription } = data;
+  
+  const html = `
+    [Scrubbe IMS] Ticket #${ticketId} has been moved to ${newStatus}
+
+    Hello ${assigneeName},
+
+    The state of ticket #${ticketId} — ${ticketTitle} has been updated.
+      • Previous State: ${previousStatus}
+      • New State: ${newStatus}
+      • Changed On: ${new Date().toISOString()}
+
+    Description:
+    ${ticketDescription}
+
+    Next Step: Please review the updated state and take the necessary action.
+
+    You can view the full ticket here: View Ticket in Scrubbe IMS
+
+    Thank you for keeping incidents on track.
+    —
+    Scrubbe IMS
+    Incident Management & Fraud Monitoring Made Simple .
+  `;
+
+  await this.sendEmail({
+    to: assigneeEmail,
+    subject: `[Scrubbe IMS] Ticket #${ticketId} has been moved to ${newStatus}`,
+    html
+  });
+}
 }
