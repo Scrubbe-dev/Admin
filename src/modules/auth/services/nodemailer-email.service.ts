@@ -28,27 +28,60 @@ private async initialize(): Promise<void> {
     console.log(`Auth user: ${this.config.auth.user}`);
 
     this.transporter = nodemailer.createTransport({
-      service: this.config.service,
-      host: this.config.host,
-      port: this.config.port,
-      secure: this.config.secure,
-      auth: {
-        user: this.config.auth.user,
-        pass: this.config.auth.pass,
+      service: 'gmail',
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      // auth: {
+      //   user: this.config.auth.user,
+      //   pass: this.config.auth.pass,
+      // },
+      auth:{
+        user: "scrubbe.dev@gmail.com",
+        pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token
       },
       pool:true,
       maxConnections: 5,
       maxMessages: Infinity,
-      
-      connectionTimeout: this.config.connectionTimeout ,
-      socketTimeout: this.config.socketTimeout ,
-      greetingTimeout: this.config.greetingTimeout,
-      tls: {
-        rejectUnauthorized: false
-      },
-      logger: true,
-      debug: true,
     });
+
+
+
+//  this.transporter = nodemailer.createTransport({
+//       service: this.config.service,
+//       host: this.config.host,
+//       port: this.config.port,
+//       secure: this.config.secure,
+//       auth: {
+//         user: this.config.auth.user,
+//         pass: this.config.auth.pass,
+//       },
+//       pool:true,
+//       maxConnections: 5,
+//       maxMessages: Infinity,
+      
+//       connectionTimeout: this.config.connectionTimeout ,
+//       socketTimeout: this.config.socketTimeout ,
+//       greetingTimeout: this.config.greetingTimeout,
+//       tls: {
+//         rejectUnauthorized: false
+//       },
+//       logger: true,
+//       debug: true,
+//     });
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Verify connection
     // await this.transporter.verify();
