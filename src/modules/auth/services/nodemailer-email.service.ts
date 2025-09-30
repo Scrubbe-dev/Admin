@@ -35,20 +35,20 @@ export class NodemailerEmailService implements EmailService {
       const socketTimeout = this.config.socketTimeout || 30000;
 
       this.transporter = nodemailer.createTransport({
-        host: this.config.host,
-        port: this.config.port,
-        secure: this.config.secure, // true for 465, false for 587
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // true for 465, false for 587
         requireTLS: true, // Enforce TLS
         auth: {
-          user: this.config.auth.user,
-          pass: this.config.auth.pass,
+          user: 'scrubbe.dev@gmail.com',
+          pass: 'vwce dzct nzip vxtp', // App password
         },
         // Pooling is good for high volume
         pool: true,
         maxConnections: 3,
         maxMessages: 100,
         // Rate limiting to avoid being blocked by Gmail
-        rateDelta: 1000,
+        rateDelta: 100000,
         rateLimit: 5, // max 5 messages per second
         // Timeouts
         connectionTimeout,
@@ -80,7 +80,7 @@ export class NodemailerEmailService implements EmailService {
       throw new Error(`Nodemailer initialization failed: ${error.message}`);
     }
   }
-  
+
   private async sendEmail(options: CustomEmailOptions, retryCount = 0): Promise<void> {
     if (!this.isInitialized) {
       await this.initialize();
