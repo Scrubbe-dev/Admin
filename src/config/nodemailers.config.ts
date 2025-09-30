@@ -53,10 +53,10 @@ export const getNodemailerConfig = (): NodemailerConfig => {
   // } else {
     // Try alternative Gmail configuration
     return {
-      service: 'gmail',
+      service: 'Gmail',
       host: "smtp.gmail.com",
-      port: 465, // Try port 587 with STARTTLS
-      secure: true, // STARTTLS will upgrade the connection
+      port: 587, // Try port 587 with STARTTLS
+      secure: false, // STARTTLS will upgrade the connection
       auth: {
         user: "scrubbe.dev@gmail.com",
         pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token

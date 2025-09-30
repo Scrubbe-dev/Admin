@@ -37,14 +37,6 @@ private async initialize(): Promise<void> {
         user: this.config.auth.user,
         pass: this.config.auth.pass,
       },
-      connectionTimeout: this.config.connectionTimeout ,
-      socketTimeout: this.config.socketTimeout ,
-      greetingTimeout: this.config.greetingTimeout,
-      tls: {
-        rejectUnauthorized: false
-      },
-      logger: true,
-      debug: true,
     }));
 
     // Verify connection
