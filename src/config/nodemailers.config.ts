@@ -53,19 +53,19 @@ export const getNodemailerConfig = (): NodemailerConfig => {
   } else {
     // Try alternative Gmail configuration
     return {
-      service: 'Gmail',
+      service: 'gmail',
       host: "smtp.gmail.com",
       port: 465, // Try port 587 with STARTTLS
       secure: true, // STARTTLS will upgrade the connection
       auth: {
-        user: process.env.GMAIL_USER!,
-        pass: process.env.GMAIL_APP_PASSWORD!,
+        user: "scrubbe.dev@gmail.com",
+        pass: "vwce dzct nzip vxtp", // Use App Password or OAuth2 token
       },
       from: {
-        email: process.env.FROM_EMAIL || "scrubbe.dev@gmail.com",
-        name: process.env.FROM_NAME || "Scrubbe",
+        email: "scrubbe.dev@gmail.com",
+        name: "Scrubbe",
       },
-      replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
+      replyTo: "scrubbe.dev@gmail.com",
       cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
       connectionTimeout: 60000000,
       socketTimeout: 60000000,
