@@ -56,6 +56,7 @@ model User {
   @@index([apiKey])
   EndCustomerIncident EndCustomerIncident[]
   EndCustomer EndCustomer[]
+  OnCallTeamMember OnCallTeamMember[]
 }
 
 model ResolveIncident {
@@ -906,37 +907,57 @@ enum EndCustomerCommentAuthorType {
 
 
 
+
+
+// =================ON CALL MODELS=======================
+
+// Add these models
+model OnCallAssignment {
+  id          String        @id @default(uuid())
+  startDate   DateTime
+  endDate     DateTime
+  status      OnCallStatus  @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  teamMembers OnCallTeamMember[]
+  
+  @@index([startDate])
+  @@index([endDate])
+  @@index([status])
+}
+
+model OnCallTeamMember {
+  id               String           @id @default(uuid())
+  assignmentId     String
+  memberId         String
+  startTime        String           // Format: "HH:mm"
+  endTime          String           // Format: "HH:mm"
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  
+  assignment       OnCallAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  member           User             @relation(fields: [memberId], references: [id])
+  
+  @@unique([assignmentId, memberId])
+  @@index([memberId])
+}
+
+
+
+
+
+
+
 // =================ENUMS=======================
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Add to your existing enums
+enum OnCallStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
+}
 
 
 
