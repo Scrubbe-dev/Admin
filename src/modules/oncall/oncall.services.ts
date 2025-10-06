@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { CreateOnCallAssignmentRequest, OnCallAssignmentResponse } from './oncall.types';
+import { CreateOnCallAssignmentRequest, OnCallAssignmentResponse, GetAllAssignmentsResponse } from './oncall.types';
 import { DateUtils } from './oncall.utils';
 
 const prisma = new PrismaClient();
 
 export class OnCallService {
   async createAssignment(data: CreateOnCallAssignmentRequest): Promise<OnCallAssignmentResponse> {
-    // Check for overlapping assignments for team members
+    // Check for overlapping assignments for team members on the same date
     await this.checkForOverlappingAssignments(data);
 
     // Create the assignment with transaction
@@ -14,8 +14,7 @@ export class OnCallService {
       // Create the main assignment
       const assignment = await tx.onCallAssignment.create({
         data: {
-          startDate: new Date(data.startDate),
-          endDate: new Date(data.endDate),
+          date: new Date(data.date),
           teamMembers: {
             create: data.teamMembers.map(member => ({
               memberId: member.member,
@@ -44,7 +43,7 @@ export class OnCallService {
     });
   }
 
-  async getAllAssignments(): Promise<OnCallAssignmentResponse[]> {
+  async getAllAssignments(): Promise<GetAllAssignmentsResponse[]> {
     const assignments = await prisma.onCallAssignment.findMany({
       include: {
         teamMembers: {
@@ -61,11 +60,11 @@ export class OnCallService {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        date: 'desc'
       }
     });
 
-    return assignments.map(assignment => this.formatAssignmentResponse(assignment));
+    return assignments.map(assignment => this.formatGetAllResponse(assignment));
   }
 
   async getAssignmentById(id: string): Promise<OnCallAssignmentResponse | null> {
@@ -91,21 +90,15 @@ export class OnCallService {
   }
 
   private async checkForOverlappingAssignments(data: CreateOnCallAssignmentRequest): Promise<void> {
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
+    const assignmentDate = new Date(data.date);
 
     for (const teamMember of data.teamMembers) {
       const existingAssignments = await prisma.onCallTeamMember.findMany({
         where: {
           memberId: teamMember.member,
           assignment: {
-            status: 'ACTIVE',
-            OR: [
-              {
-                startDate: { lte: endDate },
-                endDate: { gte: startDate }
-              }
-            ]
+            date: assignmentDate,
+            status: 'ACTIVE'
           }
         },
         include: {
@@ -115,7 +108,7 @@ export class OnCallService {
 
       if (existingAssignments.length > 0) {
         throw new Error(
-          `User ${teamMember.member} already has overlapping on-call assignments`
+          `User ${teamMember.member} already has an on-call assignment for this date`
         );
       }
     }
@@ -124,8 +117,7 @@ export class OnCallService {
   private formatAssignmentResponse(assignment: any): OnCallAssignmentResponse {
     return {
       id: assignment.id,
-      startDate: DateUtils.formatDateForResponse(assignment.startDate),
-      endDate: DateUtils.formatDateForResponse(assignment.endDate),
+      date: DateUtils.formatDateForResponse(assignment.date),
       status: assignment.status,
       teamMembers: assignment.teamMembers.map((tm: any) => ({
         id: tm.id,
@@ -138,8 +130,19 @@ export class OnCallService {
         startTime: tm.startTime,
         endTime: tm.endTime
       })),
-      createdAt: DateUtils.formatDateForResponse(assignment.createdAt),
-      updatedAt: DateUtils.formatDateForResponse(assignment.updatedAt)
+      createdAt: DateUtils.formatDateTimeForResponse(assignment.createdAt),
+      updatedAt: DateUtils.formatDateTimeForResponse(assignment.updatedAt)
+    };
+  }
+
+  private formatGetAllResponse(assignment: any): GetAllAssignmentsResponse {
+    return {
+      date: DateUtils.formatDateForResponse(assignment.date),
+      teamMembers: assignment.teamMembers.map((tm: any) => ({
+        member: tm.member.id,
+        startTime: tm.startTime,
+        endTime: tm.endTime
+      }))
     };
   }
 }

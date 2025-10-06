@@ -4,28 +4,11 @@ export class OnCallValidator {
   static validateCreateAssignment(data: any): ValidationResult {
     const errors: string[] = [];
 
-    // Validate startDate
-    if (!data.startDate || typeof data.startDate !== 'string') {
-      errors.push('startDate is required and must be a string');
-    } else if (!this.isValidDate(data.startDate)) {
-      errors.push('startDate must be a valid ISO date string');
-    }
-
-    // Validate endDate
-    if (!data.endDate || typeof data.endDate !== 'string') {
-      errors.push('endDate is required and must be a string');
-    } else if (!this.isValidDate(data.endDate)) {
-      errors.push('endDate must be a valid ISO date string');
-    }
-
-    // Validate date range
-    if (data.startDate && data.endDate) {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      
-      if (start >= end) {
-        errors.push('endDate must be after startDate');
-      }
+    // Validate date
+    if (!data.date || typeof data.date !== 'string') {
+      errors.push('date is required and must be a string');
+    } else if (!this.isValidDate(data.date)) {
+      errors.push('date must be a valid ISO date string');
     }
 
     // Validate teamMembers
@@ -80,15 +63,10 @@ export class OnCallValidator {
 
 export class DateUtils {
   static formatDateForResponse(date: Date): string {
-    return date.toISOString();
+    return date.toISOString().split('T')[0]; // Return only YYYY-MM-DD
   }
 
-  static areDatesOverlapping(
-    start1: Date, 
-    end1: Date, 
-    start2: Date, 
-    end2: Date
-  ): boolean {
-    return start1 < end2 && start2 < end1;
+  static formatDateTimeForResponse(date: Date): string {
+    return date.toISOString();
   }
 }

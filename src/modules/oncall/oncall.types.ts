@@ -5,15 +5,13 @@ export interface OnCallTeamMember {
 }
 
 export interface CreateOnCallAssignmentRequest {
-  startDate: string;
-  endDate: string;
+  date: string; // Single date instead of startDate/endDate
   teamMembers: OnCallTeamMember[];
 }
 
 export interface OnCallAssignmentResponse {
   id: string;
-  startDate: string;
-  endDate: string;
+  date: string; // Single date
   status: string;
   teamMembers: Array<{
     id: string;
@@ -28,6 +26,15 @@ export interface OnCallAssignmentResponse {
   }>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface GetAllAssignmentsResponse {
+  date: string;
+  teamMembers: Array<{
+    member: string;
+    startTime: string;
+    endTime: string;
+  }>;
 }
 
 export interface ValidationResult {

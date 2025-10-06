@@ -52,6 +52,7 @@ const options: swaggerJSDoc.Options = {
     "./src/modules/pricing/pricing.route.ts",
     "./src/modules/customer/routers/customerAuthRoute.ts",
     "./src/modules/customer/routers/customerIncidentRoute.ts",
+    "./src/modules/oncall/oncall.routes.ts",
   ],
 };
 

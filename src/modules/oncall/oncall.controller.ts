@@ -48,7 +48,7 @@ export class OnCallController {
     } catch (error: any) {
       console.error('Error creating on-call assignment:', error);
 
-      if (error.message.includes('overlapping')) {
+      if (error.message.includes('already has an on-call assignment')) {
         return res.status(409).json({
           success: false,
           message: error.message

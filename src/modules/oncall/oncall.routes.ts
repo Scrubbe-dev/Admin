@@ -1,7 +1,7 @@
 import { Response, Request, Router, NextFunction } from 'express';
 import { OnCallController } from './oncall.controller';
 
-const router = Router();
+const oncallRouter = Router();
 const onCallController = new OnCallController();
 
 // Utility to wrap async route handlers and forward errors to Express
@@ -42,59 +42,20 @@ function asyncHandler(fn: Function) {
  *     CreateOnCallAssignmentRequest:
  *       type: object
  *       required:
- *         - startDate
- *         - endDate
+ *         - date
  *         - teamMembers
  *       properties:
- *         startDate:
+ *         date:
  *           type: string
- *           format: date-time
- *           description: Start date of the on-call assignment period
- *           example: "2024-01-15T00:00:00.000Z"
- *         endDate:
- *           type: string
- *           format: date-time
- *           description: End date of the on-call assignment period
- *           example: "2024-01-22T23:59:59.999Z"
+ *           format: date
+ *           description: Date of the on-call assignment (YYYY-MM-DD)
+ *           example: "2024-01-15"
  *         teamMembers:
  *           type: array
  *           minItems: 1
  *           items:
  *             $ref: '#/components/schemas/OnCallTeamMember'
  *           description: Array of team members with their assigned time slots
- *     OnCallTeamMemberResponse:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           format: uuid
- *           description: Unique identifier for the team member assignment
- *           example: "660e8400-e29b-41d4-a716-446655440000"
- *         member:
- *           type: object
- *           properties:
- *             id:
- *               type: string
- *               format: uuid
- *               example: "550e8400-e29b-41d4-a716-446655440000"
- *             email:
- *               type: string
- *               format: email
- *               example: "john.doe@example.com"
- *             firstName:
- *               type: string
- *               nullable: true
- *               example: "John"
- *             lastName:
- *               type: string
- *               nullable: true
- *               example: "Doe"
- *         startTime:
- *           type: string
- *           example: "09:00"
- *         endTime:
- *           type: string
- *           example: "17:00"
  *     OnCallAssignmentResponse:
  *       type: object
  *       properties:
@@ -103,14 +64,10 @@ function asyncHandler(fn: Function) {
  *           format: uuid
  *           description: Unique identifier for the on-call assignment
  *           example: "770e8400-e29b-41d4-a716-446655440000"
- *         startDate:
+ *         date:
  *           type: string
- *           format: date-time
- *           example: "2024-01-15T00:00:00.000Z"
- *         endDate:
- *           type: string
- *           format: date-time
- *           example: "2024-01-22T23:59:59.999Z"
+ *           format: date
+ *           example: "2024-01-15"
  *         status:
  *           type: string
  *           enum: [ACTIVE, INACTIVE, COMPLETED]
@@ -118,7 +75,37 @@ function asyncHandler(fn: Function) {
  *         teamMembers:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/OnCallTeamMemberResponse'
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *                 example: "660e8400-e29b-41d4-a716-446655440000"
+ *               member:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                     example: "550e8400-e29b-41d4-a716-446655440000"
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: "john.doe@example.com"
+ *                   firstName:
+ *                     type: string
+ *                     nullable: true
+ *                     example: "John"
+ *                   lastName:
+ *                     type: string
+ *                     nullable: true
+ *                     example: "Doe"
+ *               startTime:
+ *                 type: string
+ *                 example: "09:00"
+ *               endTime:
+ *                 type: string
+ *                 example: "17:00"
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -127,6 +114,28 @@ function asyncHandler(fn: Function) {
  *           type: string
  *           format: date-time
  *           example: "2024-01-10T10:30:00.000Z"
+ *     GetAllAssignmentsResponse:
+ *       type: object
+ *       properties:
+ *         date:
+ *           type: string
+ *           format: date
+ *           example: "2024-01-15"
+ *         teamMembers:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               member:
+ *                 type: string
+ *                 format: uuid
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
+ *               startTime:
+ *                 type: string
+ *                 example: "09:00"
+ *               endTime:
+ *                 type: string
+ *                 example: "17:00"
  *     ErrorResponse:
  *       type: object
  *       properties:
@@ -140,11 +149,11 @@ function asyncHandler(fn: Function) {
  *           type: array
  *           items:
  *             type: string
- *           example: ["startDate is required and must be a string"]
+ *           example: ["date is required and must be a string"]
  *         error:
  *           type: string
  *           description: Detailed error message (only in development)
- *           example: "User already has overlapping on-call assignments"
+ *           example: "User already has an on-call assignment for this date"
  *   parameters:
  *     OnCallAssignmentId:
  *       in: path
@@ -161,8 +170,8 @@ function asyncHandler(fn: Function) {
  * @swagger
  * /assign-member:
  *   post:
- *     summary: Create a new on-call assignment
- *     description: Assign team members to on-call shifts for a specific date range with their respective time slots
+ *     summary: Create a new on-call assignment for a specific date
+ *     description: Assign team members to on-call shifts for a specific date with their respective time slots
  *     tags:
  *       - On-Call
  *     requestBody:
@@ -175,8 +184,7 @@ function asyncHandler(fn: Function) {
  *             basicAssignment:
  *               summary: Basic on-call assignment
  *               value:
- *                 startDate: "2024-01-15T00:00:00.000Z"
- *                 endDate: "2024-01-22T23:59:59.999Z"
+ *                 date: "2024-01-15"
  *                 teamMembers:
  *                   - member: "550e8400-e29b-41d4-a716-446655440000"
  *                     startTime: "09:00"
@@ -184,21 +192,6 @@ function asyncHandler(fn: Function) {
  *                   - member: "550e8400-e29b-41d4-a716-446655440001"
  *                     startTime: "17:00"
  *                     endTime: "09:00"
- *             multipleMembers:
- *               summary: Multiple team members assignment
- *               value:
- *                 startDate: "2024-02-01T00:00:00.000Z"
- *                 endDate: "2024-02-07T23:59:59.999Z"
- *                 teamMembers:
- *                   - member: "550e8400-e29b-41d4-a716-446655440002"
- *                     startTime: "08:00"
- *                     endTime: "16:00"
- *                   - member: "550e8400-e29b-41d4-a716-446655440003"
- *                     startTime: "16:00"
- *                     endTime: "00:00"
- *                   - member: "550e8400-e29b-41d4-a716-446655440004"
- *                     startTime: "00:00"
- *                     endTime: "08:00"
  *     responses:
  *       201:
  *         description: On-call assignment created successfully
@@ -235,7 +228,7 @@ function asyncHandler(fn: Function) {
  *                   type: string
  *                   example: "User with id 550e8400-e29b-41d4-a716-446655440000 not found"
  *       409:
- *         description: Conflict - Overlapping assignments detected
+ *         description: Conflict - User already assigned for this date
  *         content:
  *           application/json:
  *             schema:
@@ -246,7 +239,7 @@ function asyncHandler(fn: Function) {
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: "User 550e8400-e29b-41d4-a716-446655440000 already has overlapping on-call assignments"
+ *                   example: "User 550e8400-e29b-41d4-a716-446655440000 already has an on-call assignment for this date"
  *       500:
  *         description: Internal server error
  *         content:
@@ -254,17 +247,25 @@ function asyncHandler(fn: Function) {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/assign-member', asyncHandler(onCallController.assignMember.bind(onCallController)));
+oncallRouter.post('/assign-member', asyncHandler(onCallController.assignMember.bind(onCallController)));
 
 /**
  * @swagger
  * /get-all-assign:
  *   get:
  *     summary: Get all on-call assignments
- *     description: Retrieve a list of all on-call assignments with their team members and schedule details
+ *     description: Retrieve a list of all on-call assignments with their team members organized by date
  *     tags:
  *       - On-Call
  *     parameters:
+ *       - name: date
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter assignments by specific date
+ *         example: "2024-01-15"
  *       - name: status
  *         in: query
  *         required: false
@@ -273,23 +274,6 @@ router.post('/assign-member', asyncHandler(onCallController.assignMember.bind(on
  *           enum: [ACTIVE, INACTIVE, COMPLETED]
  *         description: Filter assignments by status
  *         example: "ACTIVE"
- *       - name: page
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *           minimum: 1
- *           default: 1
- *         description: Page number for pagination
- *       - name: limit
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *         description: Number of items per page
  *     responses:
  *       200:
  *         description: Successfully retrieved on-call assignments
@@ -307,7 +291,7 @@ router.post('/assign-member', asyncHandler(onCallController.assignMember.bind(on
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/OnCallAssignmentResponse'
+ *                     $ref: '#/components/schemas/GetAllAssignmentsResponse'
  *             examples:
  *               multipleAssignments:
  *                 summary: Multiple assignments response
@@ -315,36 +299,24 @@ router.post('/assign-member', asyncHandler(onCallController.assignMember.bind(on
  *                   success: true
  *                   message: "On-call assignments retrieved successfully"
  *                   data:
- *                     - id: "770e8400-e29b-41d4-a716-446655440000"
- *                       startDate: "2024-01-15T00:00:00.000Z"
- *                       endDate: "2024-01-22T23:59:59.999Z"
- *                       status: "ACTIVE"
+ *                     - date: "2024-01-15"
  *                       teamMembers:
- *                         - id: "660e8400-e29b-41d4-a716-446655440000"
- *                           member:
- *                             id: "550e8400-e29b-41d4-a716-446655440000"
- *                             email: "john.doe@example.com"
- *                             firstName: "John"
- *                             lastName: "Doe"
+ *                         - member: "550e8400-e29b-41d4-a716-446655440000"
  *                           startTime: "09:00"
  *                           endTime: "17:00"
- *                       createdAt: "2024-01-10T10:30:00.000Z"
- *                       updatedAt: "2024-01-10T10:30:00.000Z"
- *                     - id: "770e8400-e29b-41d4-a716-446655440001"
- *                       startDate: "2024-01-23T00:00:00.000Z"
- *                       endDate: "2024-01-30T23:59:59.999Z"
- *                       status: "ACTIVE"
- *                       teamMembers:
- *                         - id: "660e8400-e29b-41d4-a716-446655440001"
- *                           member:
- *                             id: "550e8400-e29b-41d4-a716-446655440001"
- *                             email: "jane.smith@example.com"
- *                             firstName: "Jane"
- *                             lastName: "Smith"
+ *                         - member: "550e8400-e29b-41d4-a716-446655440001"
  *                           startTime: "17:00"
  *                           endTime: "09:00"
- *                       createdAt: "2024-01-17T14:20:00.000Z"
- *                       updatedAt: "2024-01-17T14:20:00.000Z"
+ *                     - date: "2024-01-16"
+ *                       teamMembers:
+ *                         - member: "550e8400-e29b-41d4-a716-446655440002"
+ *                           startTime: "08:00"
+ *                           endTime: "16:00"
+ *                     - date: "2024-01-17"
+ *                       teamMembers:
+ *                         - member: "550e8400-e29b-41d4-a716-446655440003"
+ *                           startTime: "16:00"
+ *                           endTime: "00:00"
  *       500:
  *         description: Internal server error
  *         content:
@@ -352,13 +324,13 @@ router.post('/assign-member', asyncHandler(onCallController.assignMember.bind(on
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/get-all-assign', asyncHandler(onCallController.getAllAssignments.bind(onCallController)));
+oncallRouter.get('/get-all-assign', asyncHandler(onCallController.getAllAssignments.bind(onCallController)));
 
 /**
  * @swagger
  * /get-assign/{id}:
  *   get:
- *     summary: Get a specific on-call assignment
+ *     summary: Get a specific on-call assignment by ID
  *     description: Retrieve detailed information about a specific on-call assignment by its ID
  *     tags:
  *       - On-Call
@@ -380,36 +352,6 @@ router.get('/get-all-assign', asyncHandler(onCallController.getAllAssignments.bi
  *                   example: "On-call assignment retrieved successfully"
  *                 data:
  *                   $ref: '#/components/schemas/OnCallAssignmentResponse'
- *             examples:
- *               singleAssignment:
- *                 summary: Single assignment response
- *                 value:
- *                   success: true
- *                   message: "On-call assignment retrieved successfully"
- *                   data:
- *                     id: "770e8400-e29b-41d4-a716-446655440000"
- *                     startDate: "2024-01-15T00:00:00.000Z"
- *                     endDate: "2024-01-22T23:59:59.999Z"
- *                     status: "ACTIVE"
- *                     teamMembers:
- *                       - id: "660e8400-e29b-41d4-a716-446655440000"
- *                         member:
- *                           id: "550e8400-e29b-41d4-a716-446655440000"
- *                           email: "john.doe@example.com"
- *                           firstName: "John"
- *                           lastName: "Doe"
- *                         startTime: "09:00"
- *                         endTime: "17:00"
- *                       - id: "660e8400-e29b-41d4-a716-446655440001"
- *                         member:
- *                           id: "550e8400-e29b-41d4-a716-446655440001"
- *                           email: "jane.smith@example.com"
- *                           firstName: "Jane"
- *                           lastName: "Smith"
- *                         startTime: "17:00"
- *                         endTime: "09:00"
- *                     createdAt: "2024-01-10T10:30:00.000Z"
- *                     updatedAt: "2024-01-10T10:30:00.000Z"
  *       404:
  *         description: On-call assignment not found
  *         content:
@@ -430,6 +372,6 @@ router.get('/get-all-assign', asyncHandler(onCallController.getAllAssignments.bi
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/get-assign/:id', asyncHandler(onCallController.getAssignmentById.bind(onCallController)));
+oncallRouter.get('/get-assign/:id', asyncHandler(onCallController.getAssignmentById.bind(onCallController)));
 
-export default router;
+export default oncallRouter;
