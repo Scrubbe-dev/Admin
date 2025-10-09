@@ -89,10 +89,33 @@ export class BusinessService {
 
   async fetchAllValidMembers(userId: string, businessId: string) {
     try {
+      // First verify the user has access to this business
+      const userBusiness = await prisma.business.findFirst({
+        where: {
+          OR: [
+            { userId: userId }, // User is the business owner
+            { 
+              invites: {
+                some: {
+                  email: { equals: String(prisma.user.fields.email) }, // User is invited member
+                  status: "ACCEPTED",
+                  stillAMember: true
+                }
+              }
+            }
+          ],
+          id: businessId
+        }
+      });
+
+      if (!userBusiness) {
+        throw new ConflictError("You don't have access to this business");
+      }
+
       const invites = await prisma.invites.findMany({
         where: {
           sentById: businessId,
-          accepted: true,
+          status: "ACCEPTED",
           stillAMember: true,
         },
       });
@@ -108,19 +131,18 @@ export class BusinessService {
     }
   }
 
-
-
-  async sendInvite(businessId: string, request: InviteMembers ,userdata:IUserdata) {
+  async sendInvite(businessId: string, request: InviteMembers, userdata: IUserdata) {
     try {
-
-      const invites = await prisma.invites.findUnique({
+      const invites = await prisma.invites.findFirst({
         where: {
           email: request.inviteEmail,
+          sentById: businessId,
         },
       });
 
-      if (invites) throw new ConflictError("User have already been invited");
-      await prisma.invites.create({
+      if (invites) throw new ConflictError("User has already been invited");
+
+      const invite = await prisma.invites.create({
         data: {
           firstName: request.firstName,
           lastName: request.lastName,
@@ -131,38 +153,26 @@ export class BusinessService {
         },
       });
 
+      const businessData = await prisma.business.findFirst({
+        where: { id: userdata.businessId }
+      });
 
+      if (!businessData) throw new ConflictError("Business does not exist");
 
-  // inviteId?: string;
-  // email: string;
-  // firstName?: string;
-  // lastName?: string;
-  // role?: Role;
-  // accessPermissions?: AccessPermissions[];
-  // level?: string;
-  // workspaceName?: string;
-  // businessId?: string;
-
-  const businessData = await prisma.business.findFirst({
-     where:{id:userdata.businessId}
-  })
-
-  if(!businessData) throw new ConflictError("Business does not exist");
-
-    const newInvite = {
-           firstName: userdata.firstName,
-           lastName: userdata.lastName,
-           inviteEmail: request.inviteEmail,
-           role: request.role,
-           businessId:userdata.businessId,
-           workspaceName:businessData?.name,
-           accessPermissions: request.accessPermissions
-    }
+      const newInvite = {
+        firstName: request.firstName || userdata.firstName,
+        lastName: request.lastName || userdata.lastName,
+        inviteEmail: request.inviteEmail,
+        role: request.role,
+        businessId: userdata.businessId,
+        workspaceName: businessData?.name,
+        accessPermissions: request.accessPermissions
+      };
 
       await this.businessUtil.sendInviteEmail(newInvite);
 
       return {
-        message: `Invite sent to ${request.inviteEmail} sucessfully!`,
+        message: `Invite sent to ${request.inviteEmail} successfully!`,
       };
     } catch (error) {
       console.error(`Error inviting member: ${error}`);
@@ -172,53 +182,76 @@ export class BusinessService {
 
   async acceptInvite(request: AcceptInviteTypes) {
     try {
-      // Find the invite
-      const invite = await this.prisma.invites.findUnique({
-        where: { email: request.email }
+      // Find the invite with the correct business ID
+      const invite = await this.prisma.invites.findFirst({
+        where: { 
+          email: request.email,
+          sentById: request.businessId,
+          status: "PENDING"
+        }
       });
 
       if (!invite) {
-        throw new ConflictError("Invalid invite token");
+        throw new ConflictError("Invalid invite or invite already accepted");
       }
-
-      // Verify the token
-      // const decodedToken = await this.businessUtil.verifyInviteToken(request.token);
-      
-      // Check if token matches the invite
-      // if (decodedToken.email !== invite.email) {
-      //   throw new ConflictError("Token does not match invite");
-      // }
 
       // Check if user already exists
       const existingUser = await this.prisma.user.findUnique({
         where: { email: request.email }
       });
 
+      let result;
+
       if (existingUser) {
-        // Link existing user to business
-        await this.prisma.user.update({
+        // Update existing user with business relationship
+        result = await this.prisma.user.update({
           where: { id: existingUser.id },
           data: {
-            business: {
-              connect: {id:request.businessId as string}
-            }
+            businessId: request.businessId,
+            accountType: "BUSINESS"
           }
         });
-        
+
+        // Update invite status
+        await this.prisma.invites.update({
+          where: { id: invite.id },
+          data: {
+            status: "ACCEPTED",
+            stillAMember: true,
+            userId: existingUser.id,
+            accepted: true,
+            acceptedAt: new Date(),
+          }
+        });
+
+        // Add user as participant to existing conversations
+        await InviteUtil.addNewInviteAsParticipant(existingUser, invite);
+
         return {
           message: "Existing user added to business successfully"
         };
       } else {
-        // Create new user
-         await this.prisma.user.create({
+        // Create new user with business relationship
+        result = await this.prisma.user.create({
           data: {
             email: request.email,
             firstName: request.firstName,
             lastName: request.lastName,
             passwordHash: await this.businessUtil.hashPassword(request.password),
-            business:{
-              connect:{id: request.businessId}
-            }
+            businessId: request.businessId,
+            accountType: "BUSINESS"
+          }
+        });
+
+        // Update invite status
+        await this.prisma.invites.update({
+          where: { id: invite.id },
+          data: {
+            status: "ACCEPTED",
+            stillAMember: true,
+            userId: result.id,
+            accepted: true,
+            acceptedAt: new Date(),
           }
         });
 
@@ -232,12 +265,10 @@ export class BusinessService {
     }
   }
 
-
-   async decodeInvite(token: string): Promise<any> {
+  async decodeInvite(token: string): Promise<any> {
     try {
       const decodedToken = await this.businessUtil.decodeInviteToken(token);
-      
-      return decodedToken
+      return decodedToken;
     } catch (error) {
       throw new ConflictError("Invalid or expired token");
     }

@@ -21,6 +21,7 @@ model User {
   apiKeyDuration             DateTime                       @default(now())
   createdAt                  DateTime                       @default(now())
   updatedAt                  DateTime                       @updatedAt
+  // business                   Business?
   apiKey                     String?                        @default(cuid())
   role                       Role                           @default(USER)
   passwordChangedAt          DateTime?
@@ -31,7 +32,6 @@ model User {
   oauthProvider_uuid         String?
   scopes                     String[]                       @default(["api-key:create"])
   scrubbe_apikey             ApiKey[]
-  business                   Business?
   ConversationParticipant    ConversationParticipant[]
   DetectionRule              DetectionRule[]
   developer                  Developer?
@@ -54,10 +54,12 @@ model User {
   Imssetup                   Imssetup[]
   createdIncidentTickets IncidentTicket[] @relation("IncidentTicketCreator")
   customers EndCustomer[] @relation("CompanyUserToCustomers")
-  @@index([apiKey])
+  businessId String?  // Add this field
+  business   Business? @relation(fields: [businessId], references: [id])
   EndCustomerIncident EndCustomerIncident[]
   EndCustomer EndCustomer[]
   OnCallTeamMember OnCallTeamMember[]
+  @@index([apiKey])
 }
 
 model ResolveIncident {
@@ -227,14 +229,14 @@ model Business {
   userId                     String                       @unique
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
-  user                       User                         @relation(fields: [userId], references: [id])
+  // user                       User                         @relation(fields: [userId], references: [id])
   dashboard                  BusinessDashboard?           @relation("BusinessToDashboard")
   IncidentTicket             IncidentTicket[]
   invites                    Invites[]
   IncidentTicketNotification IncidentTicketNotification[]
   thirdpartyIntegrations     UserThirdpartyIntegration[]
-
   EndCustomerIncident EndCustomerIncident[]
+  User User[]
 }
 
 model BusinessDashboard {
