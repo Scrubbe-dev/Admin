@@ -18,7 +18,7 @@
     "testmail": "ts-node src/config/test-ethereal.config.ts",
     "sendsms": "ts-node src/config/twilio.config.ts",
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "nodemon dist/app.js",
     "migrate:init": "npx prisma migrate dev --name init",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
