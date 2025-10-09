@@ -66,9 +66,18 @@ export class EmailIntegrationService {
     const senderEmail = parsedCommand.incident?.fromEmail?.toLowerCase();
     if (!senderEmail) throw new UnauthorizedError("Sender email is missing");
 
+    // Find user with their business relation
     const user = await prisma.user.findFirst({
       where: { email: senderEmail },
-      include: { business: { select: { id: true, subdomain: true } } },
+      include: { 
+        business: { 
+          select: { 
+            id: true, 
+            subdomain: true,
+            userId: true // Include userId to get owner email
+          } 
+        } 
+      },
     });
 
     if (!user)
@@ -87,10 +96,21 @@ export class EmailIntegrationService {
 
     const business = await prisma.business.findFirst({
       where: { subdomain },
-      include: { user: { select: { email: true } } },
+      include: { 
+        User: { // Changed from 'user' to 'User' (capitalized as per your schema)
+          select: { 
+            id: true, // Add id to select
+            email: true 
+          } 
+        } 
+      },
     });
 
     if (!business) throw new NotFoundError("Tenant not found");
+
+    // Get business owner email from the User array
+    const businessOwner = business.User.find(u => u.id === business.userId);
+    if (!businessOwner) throw new NotFoundError("Business owner not found");
 
     const invites = await prisma.invites.findMany({
       where: {
@@ -101,7 +121,7 @@ export class EmailIntegrationService {
     });
 
     const memberEmails = [
-      business.user.email.toLowerCase(),
+      businessOwner.email.toLowerCase(),
       ...invites.map((inv) => inv.email.toLowerCase()),
     ];
 

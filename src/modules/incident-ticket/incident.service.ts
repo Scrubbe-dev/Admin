@@ -32,18 +32,6 @@ export class IncidentService {
     limit: number
   ) {
     try {
-      // const pageable = await paginate<IncidentTicket>(
-      //   "incidentTicket",
-      //   {
-      //     where: { assignedById: userId },
-      //     orderBy: { createdAt: "desc" },
-      //   },
-      //   page,
-      //   limit
-      // );
-
-      // return pageable;
-
       const inicidentTickets = prisma.incidentTicket.findMany({
         where: {
           businessId,
@@ -76,37 +64,10 @@ export class IncidentService {
         });
       } while (exists);
 
-      // const incidentTicket = await prisma.incidentTicket.create({
-      //   data: {
-      //     ticketId,
-      //     reason: request.reason,
-      //     assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
-      //     userName: request.userName,
-      //     assignedById: userId,
-      //     priority: request.priority ,
-      //     category: request.category as string,
-      //     subCategory: request.subCategory as string,
-      //     description: request.description as string,
-      //     MTTR: request.MTTR as string,
-      //     createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
-      //     businessId,
-      // conversation: {
-      //   create: {
-      //     participants: {
-      //       create: [
-      //         { user: { connect: { id: userId } } }, // assignedBy as first participant
-      //       ],
-      //     },
-      //   },
-      // },
-      //   },
-      // });
-
       const incidentTicket = await prisma.incidentTicket.create({
         data: {
           ticketId,
           reason: request.reason,
-          // Set to null if not provided, not a placeholder string
           assignedToEmail: request.assignedTo ?? null,
           userName: request.userName,
           assignedById: userId as string,
@@ -117,21 +78,11 @@ export class IncidentService {
           MTTR: request.MTTR as string,
           createdFrom: request.createdFrom ?? null,
           businessId,
-          // Add other required fields
           source: request.source as Source,
           impact: request.impact as Impact,
           suggestionFix: request.suggestionFix,
           affectedSystem: request.affectedSystem,
           status: request.status as IncidentStatus,
-          // conversation: {
-          //   create: {
-          //     participants: {
-          //       create: [
-          //         { user: { connect: { id: request.userId as string } } },
-          //       ],
-          //     },
-          //   },
-          // },
         },
       });
 
@@ -199,7 +150,6 @@ export class IncidentService {
 
       if (!ticket) throw new NotFoundError("Incident ticket not found with id");
 
-      // already acknowledged
       if (ticket.firstAcknowledgedAt) return;
 
       const now = new Date();
@@ -212,7 +162,6 @@ export class IncidentService {
         },
       });
 
-      // log breach
       if (breach && ticket.slaTargetAck) {
         const breachDurationMinutes = Math.floor(
           (now.getTime() - ticket.slaTargetAck.getTime()) / 60000
@@ -315,7 +264,6 @@ export class IncidentService {
       where: {
         incidentTicketId: ticket.id,
       },
-
       data: {
         knowledgeTitleCustomer: request.title,
         knowledgeSummaryCustomer: request.summary,
@@ -439,18 +387,29 @@ export class IncidentService {
     try {
       const business = await prisma.business.findUnique({
         where: { id: businessId },
-        include: { invites: true, user: true },
+        include: { 
+          invites: true, 
+          User: { // Changed from 'user' to 'User'
+            where: { id: userId },
+            select: { id: true, firstName: true, lastName: true }
+          } 
+        },
       });
 
       if (!business) {
         throw new NotFoundError(`Business not found with id: ${businessId}`);
       }
 
+      // Get business owner from User array
+      const businessOwner = business.User.find(u => u.id === business.userId);
+      if (!businessOwner) {
+        throw new NotFoundError("Business owner not found");
+      }
+
       // Check membership either owner or active member
       const inviteMember = business.invites.find(
         (invite) =>
           invite.email === email &&
-          // invite.accepted && //
           invite.stillAMember
       );
 
@@ -475,8 +434,8 @@ export class IncidentService {
         id: newComment.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
-        firstname: inviteMember?.firstName ?? business.user.firstName,
-        lastname: inviteMember?.lastName ?? business.user.lastName,
+        firstname: inviteMember?.firstName ?? businessOwner.firstName,
+        lastname: inviteMember?.lastName ?? businessOwner.lastName,
         isBusinessOwner: newComment.isBusinessOwner,
       });
     } catch (error) {

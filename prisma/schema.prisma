@@ -226,7 +226,7 @@ model Business {
   companyPurpose             String?
   purpose                    String?
   dashBoardId                String?                      @unique
-  userId                     String                       @unique
+  userId                     String?                      @unique
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
   // user                       User                         @relation(fields: [userId], references: [id])
