@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const incidentstatus_controllers_1 = require("./incidentstatus.controllers");
-const nodemailer_factory_1 = require("../auth/services/nodemailer.factory");
-const incidentStatusEmail = new incidentstatus_controllers_1.TicketStatusChangeController((0, nodemailer_factory_1.createEmailService)());
+const resend_no_nodemailer_factory_1 = require("../auth/services/resend-no-nodemailer.factory");
+const incidentStatusEmail = new incidentstatus_controllers_1.TicketStatusChangeController((0, resend_no_nodemailer_factory_1.createEmailServiceWithResend)());
 const incidentStatusEmailrouter = (0, express_1.Router)();
 /**
  * @swagger

@@ -81,4 +81,35 @@ export class CustomerAuthController {
       res.status(500).json(response);
     }
   }
+
+  // Add to CustomerAuthController
+static async getOrganizationCustomers(req: any, res: Response) {
+  try {
+    // For organization users to see their customers
+    const companyUserId = req.user?.id || req.query.companyUserId;
+    
+    if (!companyUserId) {
+      const response: ApiResponse = {
+        success: false,
+        message: 'Company user ID is required'
+      };
+      return res.status(400).json(response);
+    }
+
+    const result = await CustomerAuthService.getOrganizationCustomers(companyUserId);
+    
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error: any) {
+    const response: ApiResponse = {
+      success: false,
+      message: 'Internal server error retrieving organization customers',
+      error: error.message
+    };
+    res.status(500).json(response);
+  }
+}
 }

@@ -10,7 +10,7 @@ export class OnCallController {
     try {
       // Validate request body
       const validationResult: ValidationResult = OnCallValidator.validateCreateAssignment(req.body);
-      
+       
       if (!validationResult.isValid) {
         return res.status(400).json({
           success: false,
@@ -66,7 +66,7 @@ export class OnCallController {
   async getAllAssignments(req: Request, res: Response) {
     try {
       const assignments = await onCallService.getAllAssignments();
-
+      console.log(assignments, "============Assignments=============")
       return res.status(200).json({
         success: true,
         message: 'On-call assignments retrieved successfully',

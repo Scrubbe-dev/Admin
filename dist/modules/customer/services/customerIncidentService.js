@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CustomerIncidentService = void 0;
 const prisma_1 = __importDefault(require("../../../lib/prisma"));
+const generateId_1 = require("../utils/generateId");
 class CustomerIncidentService {
     static async createIncident(data, customerId, companyUserId) {
         try {
@@ -34,7 +35,8 @@ class CustomerIncidentService {
                 };
             }
             // Generate unique ticket number
-            const ticketNumber = `CUST-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+            // const ticketNumber = `CUST-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+            const ticketNumber = (0, generateId_1.generateTimestampId)();
             // Create the customer incident
             const incident = await prisma_1.default.endCustomerIncident.create({
                 data: {
@@ -148,7 +150,7 @@ class CustomerIncidentService {
                 prisma_1.default.endCustomerIncident.findMany({
                     where: whereClause,
                     orderBy: { createdAt: 'desc' },
-                    skip,
+                    // skip,
                     take: limit,
                     include: {
                         customer: true,

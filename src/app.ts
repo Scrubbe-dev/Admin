@@ -77,6 +77,7 @@ import { customerIncidentRoutes } from "./modules/customer/routers/customerIncid
 import { createEmailServiceWithResend } from "./modules/auth/services/resend-no-nodemailer.factory";
 import oncallRouter from "./modules/oncall/oncall.routes";
 import contactusRouter from "./modules/contactus/contactus.routes";
+import { organizationRoutes } from "./modules/customer/routers/organizationRoute";
 
 
 dotenvConfig();
@@ -238,6 +239,7 @@ app.use("/api/v1/customer", customerAuthRoutes); // Route for customer auth rout
 app.use("/api/v1/customer", customerIncidentRoutes); // Route for  customer incident route
 app.use("/api/v1", oncallRouter); // Route for testing email sending
 app.use("/api/v1/mocktest", contactusRouter); // Route for testing email sending
+app.use("/api/v1/organization", organizationRoutes)
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 

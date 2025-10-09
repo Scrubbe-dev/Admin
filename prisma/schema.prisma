@@ -53,6 +53,7 @@ model User {
   escalatedIncidentsMade     EscalatedIncident[]            @relation("UserEscalatedBy")
   Imssetup                   Imssetup[]
   createdIncidentTickets IncidentTicket[] @relation("IncidentTicketCreator")
+  customers EndCustomer[] @relation("CompanyUserToCustomers")
   @@index([apiKey])
   EndCustomerIncident EndCustomerIncident[]
   EndCustomer EndCustomer[]
@@ -821,7 +822,6 @@ model EndCustomer {
   contactEmail String    @unique
   tenantId     String    @unique
   passwordHash String?
-  companyUserId String
   isVerified   Boolean   @default(false)
   isActive     Boolean   @default(true)
   lastLogin    DateTime?
@@ -829,10 +829,11 @@ model EndCustomer {
   updatedAt    DateTime  @updatedAt
 
   // Relations
-  companyUser User @relation(fields: [companyUserId], references: [id])
   incidents   EndCustomerIncident[]
   comments    EndCustomerIncidentComment[]
-
+  User User[]
+  companyUserId String
+  companyUser   User   @relation("CompanyUserToCustomers", fields: [companyUserId], references: [id])
   @@map("end_customers")
 }
 

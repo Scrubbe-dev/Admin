@@ -56,13 +56,15 @@ const reset_route_1 = __importDefault(require("./modules/password-reset/reset.ro
 const node_cron_1 = __importDefault(require("node-cron"));
 const cleanup_service_1 = require("./modules/auth/services/cleanup.service");
 const resend_1 = __importDefault(require("./modules/mocktest/resend"));
-const nodemailer_factory_1 = require("./modules/auth/services/nodemailer.factory");
 const incidentstatus_routes_1 = __importDefault(require("./modules/incidentStatus/incidentstatus.routes"));
 const postmortem_route_1 = __importDefault(require("./modules/postmortem/postmortem.route"));
 const pricing_route_1 = __importDefault(require("./modules/pricing/pricing.route"));
 const auto_cron_service_1 = require("./modules/auto-sla/auto-cron.service");
 const customerAuthRoute_1 = require("./modules/customer/routers/customerAuthRoute");
 const customerIncidentRoute_1 = require("./modules/customer/routers/customerIncidentRoute");
+const resend_no_nodemailer_factory_1 = require("./modules/auth/services/resend-no-nodemailer.factory");
+const oncall_routes_1 = __importDefault(require("./modules/oncall/oncall.routes"));
+const contactus_routes_1 = __importDefault(require("./modules/contactus/contactus.routes"));
 (0, dotenv_1.config)();
 // SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 /**
@@ -115,9 +117,10 @@ const securityUtils = new security_utils_1.SecurityUtils();
 const tokenService = new token_service_1.TokenService(config.jwtSecret, config.jwtExpiresIn, config.refreshTokenExpiresInDays);
 // BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
 // const emailService = new ResendEmailService(resendConfig); // verification token service
-const emailService = (0, nodemailer_factory_1.createEmailService)();
+// const emailService = createEmailService();
+const emailsServicesWithResend = (0, resend_no_nodemailer_factory_1.createEmailServiceWithResend)();
 // const emailServices = new EmailServices();
-const authService = new auth_service_1.AuthService(prisma, tokenService, securityUtils, emailService);
+const authService = new auth_service_1.AuthService(prisma, tokenService, securityUtils, emailsServicesWithResend);
 const authMiddleware = new auth_middleware_1.AuthMiddleware(tokenService);
 const authController = new auth_controller_1.AuthController(authService);
 console.log(__dirname, "CURRENT DIRECTORY NAME");
@@ -180,6 +183,8 @@ app.use("/api/v1", postmortem_route_1.default); // New Postmortum route
 app.use("/api/v1/pricing", pricing_route_1.default);
 app.use("/api/v1/customer", customerAuthRoute_1.customerAuthRoutes); // Route for customer auth route
 app.use("/api/v1/customer", customerIncidentRoute_1.customerIncidentRoutes); // Route for  customer incident route
+app.use("/api/v1", oncall_routes_1.default); // Route for testing email sending
+app.use("/api/v1/mocktest", contactus_routes_1.default); // Route for testing email sending
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 // app.use((err: Error, req: express.Request, res: express.Response) => {

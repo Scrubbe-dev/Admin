@@ -8,53 +8,27 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // Choose between Gmail or Resend based on environment
 const getNodemailerConfig = () => {
-    const useResend = process.env.USE_RESEND === 'true';
-    if (useResend) {
-        return {
-            service: 'Resend',
-            host: "smtp.resend.com",
-            port: 465,
-            secure: true,
-            auth: {
-                user: "resend",
-                pass: "re_jnPgXfz2_KKCMtDPwdytWiY686JEpfkZk",
-            },
-            from: {
-                email: "scrubbe.dev@gmail.com",
-                name: "Scrubbe",
-            },
-            replyTo: "scrubbe.dev@gmail.com",
-            cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-            connectionTimeout: 60000, // Increased timeout
-            socketTimeout: 60000, // Increased timeout
-            greetingTimeout: 30000, // Add greeting timeout
-        };
-    }
-    else {
-        // Try alternative Gmail configuration
-        return {
-            service: 'Gmail',
-            host: "smtp.gmail.com",
-            port: 587, // Try port 587 with STARTTLS
-            secure: false, // STARTTLS will upgrade the connection
-            auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_APP_PASSWORD,
-            },
-            from: {
-                email: process.env.FROM_EMAIL || "scrubbe.dev@gmail.com",
-                name: process.env.FROM_NAME || "Scrubbe",
-            },
-            replyTo: process.env.REPLY_TO_EMAIL || process.env.FROM_EMAIL,
-            cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
-            connectionTimeout: 60000,
-            socketTimeout: 60000,
-            greetingTimeout: 30000,
-            tls: {
-                rejectUnauthorized: false
-            }
-        };
-    }
+    return {
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        requireTLS: true,
+        tls: { rejectUnauthorized: false },
+        auth: {
+            user: "scrubbe.dev@gmail.com",
+            pass: "vwce dzct nzip vxtp", // App password
+        },
+        from: {
+            email: "scrubbe.dev@gmail.com",
+            name: "Scrubbe",
+        },
+        replyTo: "scrubbe.dev@gmail.com",
+        cooldownPeriod: parseInt(process.env.EMAIL_COOLDOWN || "5000"),
+        // Reasonable timeout values (in milliseconds)
+        connectionTimeout: 30000, // 30 seconds
+        socketTimeout: 30000, // 30 seconds
+        greetingTimeout: 15000, // 15 seconds
+    };
 };
 exports.getNodemailerConfig = getNodemailerConfig;
 exports.nodemailerConfig = (0, exports.getNodemailerConfig)();

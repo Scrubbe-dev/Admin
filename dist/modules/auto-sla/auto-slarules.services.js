@@ -3,12 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SLAService = void 0;
 const client_1 = require("@prisma/client");
 const auto_slarules_utils_1 = require("./auto-slarules.utils");
-const nodemailer_factory_1 = require("../auth/services/nodemailer.factory");
+const resend_no_nodemailer_factory_1 = require("../auth/services/resend-no-nodemailer.factory");
+// import { createEmailService } from '../auth/services/nodemailer.factory';
 const prisma = new client_1.PrismaClient();
 class SLAService {
     emailService;
     constructor() {
-        this.emailService = (0, nodemailer_factory_1.createEmailService)();
+        this.emailService = (0, resend_no_nodemailer_factory_1.createEmailServiceWithResend)();
     }
     async initializeSLAForNewIncidents() {
         const newIncidents = await prisma.incidentTicket.findMany({

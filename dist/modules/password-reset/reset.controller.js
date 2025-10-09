@@ -6,10 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PasswordResetController = void 0;
 const reset_services_1 = require("./reset.services");
 const logger_1 = require("./utils/logger");
-const nodemailer_factory_1 = require("../auth/services/nodemailer.factory");
 const prisma_1 = __importDefault(require("../../lib/prisma"));
+const resend_no_nodemailer_factory_1 = require("../auth/services/resend-no-nodemailer.factory");
 // Create service instances
-const emailService = (0, nodemailer_factory_1.createEmailService)();
+const emailService = (0, resend_no_nodemailer_factory_1.createEmailServiceWithResend)();
 const logger = new logger_1.Logger();
 const passwordResetService = new reset_services_1.PasswordResetService(prisma_1.default, emailService, logger);
 class PasswordResetController {

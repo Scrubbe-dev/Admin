@@ -7,8 +7,8 @@ exports.BusinessUtil = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const error_1 = require("../auth/error");
-const nodemailer_factory_1 = require("../auth/services/nodemailer.factory");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const resend_no_nodemailer_factory_1 = require("../auth/services/resend-no-nodemailer.factory");
 dotenv_1.default.config();
 class BusinessUtil {
     async updateBusinessAdmin(tx, input, id // or sub from req.user
@@ -107,7 +107,7 @@ class BusinessUtil {
             const inviteLink = await this.generateInviteLink(invite);
             // const emailService = new EmailService();
             // await emailService.sendInviteEmail(invite, inviteLink);
-            await (0, nodemailer_factory_1.createEmailService)().sendInviteEmail(invite, inviteLink);
+            await (0, resend_no_nodemailer_factory_1.createEmailServiceWithResend)().sendInviteEmail(invite, inviteLink);
         }
         catch (error) {
             throw new Error(`Error occured while sending email: ${error instanceof Error && error.message}`);

@@ -55,6 +55,8 @@ const options = {
         "./src/modules/pricing/pricing.route.ts",
         "./src/modules/customer/routers/customerAuthRoute.ts",
         "./src/modules/customer/routers/customerIncidentRoute.ts",
+        "./src/modules/oncall/oncall.routes.ts",
+        "./src/modules/contactus/contactus.routes.ts",
     ],
 };
 const swaggerSpec = (0, swagger_jsdoc_1.default)(options);

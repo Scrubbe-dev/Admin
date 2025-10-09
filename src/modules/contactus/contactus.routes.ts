@@ -90,7 +90,7 @@ function asyncHandler(fn: Function) {
 
 /**
  * @swagger
- * /contact-us:
+ * /mocktest/contact-us:
  *   post:
  *     summary: Submit a contact form
  *     description: Send a contact form submission to Scrubbe support team and receive a confirmation email
