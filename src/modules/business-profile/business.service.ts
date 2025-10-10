@@ -277,7 +277,7 @@ async acceptInvite(request: AcceptInviteTypes) {
           accountType: "BUSINESS"
         }
       });
-
+    console.log(existingUser , invite, "==================EXISTING USER INVITE=========")
       // Update invite status with ALL required fields
       await this.prisma.invites.update({
         where: { id: invite.id },
