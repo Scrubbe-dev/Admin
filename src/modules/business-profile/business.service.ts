@@ -245,6 +245,9 @@ async sendInvite(businessId: string, request: InviteMembers, userdata: IUserdata
 
 async acceptInvite(request: AcceptInviteTypes) {
   try {
+
+
+    console.log(request, "==================ACCEPTINVITE TYPE=========")
     // Find the invite with the correct business ID
     const invite = await this.prisma.invites.findFirst({
       where: { 
@@ -289,6 +292,9 @@ async acceptInvite(request: AcceptInviteTypes) {
         }
       });
 
+
+
+      console.log(result, "====================RESULT==============")
       // Add user as participant to existing conversations
       await InviteUtil.addNewInviteAsParticipant(existingUser, invite);
 

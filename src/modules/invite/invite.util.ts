@@ -100,6 +100,9 @@ export class InviteUtil {
 
   static async addNewInviteAsParticipant(existingUser: User, invite: Invites) {
     try {
+
+        console.log(existingUser, "==================EXISTING INVITE=========")
+
       const openTickets = await prisma.incidentTicket.findMany({
         where: {
           businessId: invite.sentById,
