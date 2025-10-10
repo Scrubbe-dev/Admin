@@ -82,6 +82,7 @@ class InviteUtil {
     }
     static async addNewInviteAsParticipant(existingUser, invite) {
         try {
+            console.log(existingUser, "==================EXISTING INVITE=========");
             const openTickets = await client_1.default.incidentTicket.findMany({
                 where: {
                     businessId: invite.sentById,

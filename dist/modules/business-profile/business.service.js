@@ -180,6 +180,7 @@ class BusinessService {
     }
     async acceptInvite(request) {
         try {
+            // console.log(request, "==================ACCEPTINVITE TYPE=========")
             // Find the invite with the correct business ID
             const invite = await this.prisma.invites.findFirst({
                 where: {
@@ -205,19 +206,21 @@ class BusinessService {
                         accountType: "BUSINESS"
                     }
                 });
+                console.log(existingUser, invite, "==================EXISTING USER INVITE=========");
                 // Update invite status with ALL required fields
                 await this.prisma.invites.update({
                     where: { id: invite.id },
                     data: {
                         status: "ACCEPTED",
                         stillAMember: true,
-                        userId: existingUser.id,
+                        userId: request.businessId,
                         accepted: true,
                         acceptedAt: new Date(),
                         firstName: request.firstName, // Update with actual user data
                         lastName: request.lastName, // Update with actual user data
                     }
                 });
+                console.log(result, "====================RESULT==============");
                 // Add user as participant to existing conversations
                 await invite_util_1.InviteUtil.addNewInviteAsParticipant(existingUser, invite);
                 return {
@@ -242,7 +245,7 @@ class BusinessService {
                     data: {
                         status: "ACCEPTED",
                         stillAMember: true,
-                        userId: result.id,
+                        userId: request.businessId,
                         accepted: true,
                         acceptedAt: new Date(),
                         firstName: request.firstName, // Update with actual user data
@@ -262,6 +265,7 @@ class BusinessService {
     async decodeInvite(token) {
         try {
             const decodedToken = await this.businessUtil.decodeInviteToken(token);
+            console.log(decodedToken, "==================DECODE TOKENS=========");
             return decodedToken;
         }
         catch (error) {
