@@ -87,6 +87,7 @@ export interface Members {
   firstname: string | null;
   lastname: string | null;
   email: string | null;
+  isOwner?: boolean;
 }
 
 

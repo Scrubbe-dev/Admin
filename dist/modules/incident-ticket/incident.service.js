@@ -15,16 +15,6 @@ class IncidentService {
     constructor() { }
     async getIncidentTicketByBusiness(businessId, page, limit) {
         try {
-            // const pageable = await paginate<IncidentTicket>(
-            //   "incidentTicket",
-            //   {
-            //     where: { assignedById: userId },
-            //     orderBy: { createdAt: "desc" },
-            //   },
-            //   page,
-            //   limit
-            // );
-            // return pageable;
             const inicidentTickets = client_1.default.incidentTicket.findMany({
                 where: {
                     businessId,
@@ -48,36 +38,10 @@ class IncidentService {
                     where: { ticketId },
                 });
             } while (exists);
-            // const incidentTicket = await prisma.incidentTicket.create({
-            //   data: {
-            //     ticketId,
-            //     reason: request.reason,
-            //     assignedToEmail: request.assignedTo || "<NO_EMAIL_PROVIDED>",
-            //     userName: request.userName,
-            //     assignedById: userId,
-            //     priority: request.priority ,
-            //     category: request.category as string,
-            //     subCategory: request.subCategory as string,
-            //     description: request.description as string,
-            //     MTTR: request.MTTR as string,
-            //     createdFrom: request.createdFrom ?? null, // this is from 3rd party incident creation
-            //     businessId,
-            // conversation: {
-            //   create: {
-            //     participants: {
-            //       create: [
-            //         { user: { connect: { id: userId } } }, // assignedBy as first participant
-            //       ],
-            //     },
-            //   },
-            // },
-            //   },
-            // });
             const incidentTicket = await client_1.default.incidentTicket.create({
                 data: {
                     ticketId,
                     reason: request.reason,
-                    // Set to null if not provided, not a placeholder string
                     assignedToEmail: request.assignedTo ?? null,
                     userName: request.userName,
                     assignedById: userId,
@@ -88,21 +52,11 @@ class IncidentService {
                     MTTR: request.MTTR,
                     createdFrom: request.createdFrom ?? null,
                     businessId,
-                    // Add other required fields
                     source: request.source,
                     impact: request.impact,
                     suggestionFix: request.suggestionFix,
                     affectedSystem: request.affectedSystem,
                     status: request.status,
-                    // conversation: {
-                    //   create: {
-                    //     participants: {
-                    //       create: [
-                    //         { user: { connect: { id: request.userId as string } } },
-                    //       ],
-                    //     },
-                    //   },
-                    // },
                 },
             });
             const riskScore = await incident_util_1.IncidentUtils.ezraDetermineRiskScore(incidentTicket);
@@ -142,7 +96,6 @@ class IncidentService {
             });
             if (!ticket)
                 throw new error_1.NotFoundError("Incident ticket not found with id");
-            // already acknowledged
             if (ticket.firstAcknowledgedAt)
                 return;
             const now = new Date();
@@ -153,7 +106,6 @@ class IncidentService {
                     firstAcknowledgedAt: now,
                 },
             });
-            // log breach
             if (breach && ticket.slaTargetAck) {
                 const breachDurationMinutes = Math.floor((now.getTime() - ticket.slaTargetAck.getTime()) / 60000);
                 await client_1.default.sLABreachAuditLog.create({
@@ -304,14 +256,24 @@ class IncidentService {
         try {
             const business = await client_1.default.business.findUnique({
                 where: { id: businessId },
-                include: { invites: true, user: true },
+                include: {
+                    invites: true,
+                    User: {
+                        where: { id: userId },
+                        select: { id: true, firstName: true, lastName: true }
+                    }
+                },
             });
             if (!business) {
                 throw new error_1.NotFoundError(`Business not found with id: ${businessId}`);
             }
+            // Get business owner from User array
+            const businessOwner = business.User.find(u => u.id === business.userId);
+            if (!businessOwner) {
+                throw new error_1.NotFoundError("Business owner not found");
+            }
             // Check membership either owner or active member
             const inviteMember = business.invites.find((invite) => invite.email === email &&
-                // invite.accepted && //
                 invite.stillAMember);
             const isMember = inviteMember || business.userId === userId;
             if (!isMember) {
@@ -329,8 +291,8 @@ class IncidentService {
                 id: newComment.id,
                 content: newComment.content,
                 createdAt: newComment.createdAt,
-                firstname: inviteMember?.firstName ?? business.user.firstName,
-                lastname: inviteMember?.lastName ?? business.user.lastName,
+                firstname: inviteMember?.firstName ?? businessOwner.firstName,
+                lastname: inviteMember?.lastName ?? businessOwner.lastName,
                 isBusinessOwner: newComment.isBusinessOwner,
             });
         }

@@ -10,5 +10,12 @@ class BusinessMapper {
             email: invite.email,
         };
     }
+    static userToMember(user) {
+        return {
+            firstname: user.firstName,
+            lastname: user.lastName,
+            email: user.email,
+        };
+    }
 }
 exports.BusinessMapper = BusinessMapper;

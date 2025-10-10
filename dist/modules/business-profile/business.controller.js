@@ -40,7 +40,9 @@ class BusinessController {
         try {
             const userId = req.user?.sub;
             const businessId = req.user?.businessId;
+            console.log(userId, businessId, " ============USERID & BUSINESSID======================");
             const response = await this.businessService.fetchAllValidMembers(userId, businessId);
+            console.log(response, "===================FROM GET MEMBERS===========");
             res.json(response);
         }
         catch (error) {

@@ -251,5 +251,87 @@ class CustomerAuthService {
             };
         }
     }
+    // Add to CustomerAuthService
+    static async getOrganizationCustomers(companyUserId) {
+        try {
+            // Verify the company user exists
+            const companyUser = await prisma_1.prisma.user.findUnique({
+                where: {
+                    id: companyUserId,
+                    // isActive: true 
+                },
+                include: {
+                    business: true
+                }
+            });
+            if (!companyUser) {
+                return {
+                    success: false,
+                    message: 'Company not found'
+                };
+            }
+            // Get all customers under this organization
+            const customers = await prisma_1.prisma.endCustomer.findMany({
+                where: {
+                    companyUserId: companyUserId,
+                    // isActive: true 
+                },
+                include: {
+                    // Include incident counts for dashboard
+                    incidents: {
+                        select: {
+                            id: true,
+                            status: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
+            // Format the response with useful stats
+            const formattedCustomers = customers.map(customer => ({
+                id: customer.id,
+                name: customer.name,
+                contactEmail: customer.contactEmail,
+                isActive: customer.isActive,
+                isVerified: customer.isVerified,
+                lastLogin: customer.lastLogin,
+                createdAt: customer.createdAt,
+                updatedAt: customer.updatedAt,
+                totalIncidents: customer.incidents.length,
+                openIncidents: customer.incidents.filter(inc => inc.status === 'OPEN').length,
+                resolvedIncidents: customer.incidents.filter(inc => inc.status === 'RESOLVED' || inc.status === 'CLOSED').length
+            }));
+            return {
+                success: true,
+                message: 'Organization customers retrieved successfully',
+                data: {
+                    company: {
+                        id: companyUser.id,
+                        name: `${companyUser.firstName} ${companyUser.lastName}`.trim(),
+                        business: companyUser.business ? {
+                            name: companyUser.business.name,
+                            industry: companyUser.business.industry
+                        } : null
+                    },
+                    customers: formattedCustomers,
+                    stats: {
+                        totalCustomers: formattedCustomers.length,
+                        activeCustomers: formattedCustomers.filter(c => c.isActive).length,
+                        totalIncidents: formattedCustomers.reduce((sum, customer) => sum + customer.totalIncidents, 0)
+                    }
+                }
+            };
+        }
+        catch (error) {
+            console.error('Get organization customers error:', error);
+            return {
+                success: false,
+                message: 'Failed to retrieve organization customers',
+                error: error.message
+            };
+        }
+    }
 }
 exports.CustomerAuthService = CustomerAuthService;

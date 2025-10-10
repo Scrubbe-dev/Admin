@@ -11,36 +11,49 @@ class InviteUtil {
     constructor() { }
     static async acceptInvite(email, user) {
         let acceptedNewInvite = false;
+        let businessId;
         try {
             const invite = await client_1.default.invites.findFirst({
                 where: {
                     email,
+                    status: "PENDING"
                 },
                 include: {
                     business: true,
                 },
             });
-            if (invite && invite.status === "ACCEPTED")
-                throw new error_1.ConflictError("Invite have already been accepted");
-            if (invite && invite.status === "PENDING") {
-                acceptedNewInvite = true;
-                await client_1.default.invites.update({
-                    where: {
-                        email: email,
-                    },
-                    data: {
-                        status: "ACCEPTED",
-                        stillAMember: true,
-                        userId: user.id,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        accepted: true,
-                        acceptedAt: new Date(),
-                    },
-                });
-                await this.addNewInviteAsParticipant(user, invite);
+            if (!invite) {
+                throw new error_1.ConflictError("No pending invite found for this email");
             }
-            return { acceptedNewInvite, businessId: invite?.business.id };
+            if (invite.status === "ACCEPTED") {
+                throw new error_1.ConflictError("Invite has already been accepted");
+            }
+            acceptedNewInvite = true;
+            businessId = invite.business.id;
+            // Update user's business relationship
+            await client_1.default.user.update({
+                where: { id: user.id },
+                data: {
+                    businessId: invite.sentById,
+                    accountType: "BUSINESS"
+                }
+            });
+            await client_1.default.invites.update({
+                where: {
+                    id: invite.id,
+                },
+                data: {
+                    status: "ACCEPTED",
+                    stillAMember: true,
+                    userId: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    accepted: true,
+                    acceptedAt: new Date(),
+                },
+            });
+            await this.addNewInviteAsParticipant(user, invite);
+            return { acceptedNewInvite, businessId };
         }
         catch (error) {
             console.error(`Failed to accept invite: ${error}`);
@@ -52,6 +65,7 @@ class InviteUtil {
             const invite = await client_1.default.invites.findFirst({
                 where: {
                     email,
+                    status: "ACCEPTED",
                 },
                 include: {
                     business: true,
@@ -62,7 +76,7 @@ class InviteUtil {
             }
         }
         catch (error) {
-            console.error("Error occured while fetching user invite business id", error);
+            console.error("Error occurred while fetching user invite business id", error);
             throw new Error(`${error instanceof Error && error.message}`);
         }
     }
@@ -104,7 +118,7 @@ class InviteUtil {
         }
         catch (error) {
             throw new Error(`${(error instanceof Error && error.message) ||
-                "Error occured while adding new member as conversation participant"}`);
+                "Error occurred while adding new member as conversation participant"}`);
         }
     }
     generateInviteToken(invite) {
@@ -114,7 +128,7 @@ class InviteUtil {
             role: invite.role,
             accessPermissions: invite.accessPermissions,
             level: invite.level,
-            workspaceName: invite.sentById, // Business name from sentById
+            workspaceName: invite.sentById,
             businessId: invite.sentById
         };
         return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, {
@@ -125,7 +139,7 @@ class InviteUtil {
         return jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
     }
     async generateInviteLink(invite) {
-        const baseUrl = "https://www.scrubbe.com/auth/invite";
+        const baseUrl = "https://incidents.scrubbe.com/auth/invite";
         const token = this.generateInviteToken(invite);
         const inviteLink = `${baseUrl}?token=${encodeURIComponent(token)}`;
         return inviteLink;

@@ -65,6 +65,7 @@ const customerIncidentRoute_1 = require("./modules/customer/routers/customerInci
 const resend_no_nodemailer_factory_1 = require("./modules/auth/services/resend-no-nodemailer.factory");
 const oncall_routes_1 = __importDefault(require("./modules/oncall/oncall.routes"));
 const contactus_routes_1 = __importDefault(require("./modules/contactus/contactus.routes"));
+const organizationRoute_1 = require("./modules/customer/routers/organizationRoute");
 (0, dotenv_1.config)();
 // SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 /**
@@ -185,6 +186,7 @@ app.use("/api/v1/customer", customerAuthRoute_1.customerAuthRoutes); // Route fo
 app.use("/api/v1/customer", customerIncidentRoute_1.customerIncidentRoutes); // Route for  customer incident route
 app.use("/api/v1", oncall_routes_1.default); // Route for testing email sending
 app.use("/api/v1/mocktest", contactus_routes_1.default); // Route for testing email sending
+app.use("/api/v1/organization", organizationRoute_1.organizationRoutes);
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 // app.use((err: Error, req: express.Request, res: express.Response) => {

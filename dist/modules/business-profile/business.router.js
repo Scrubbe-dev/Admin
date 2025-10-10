@@ -10,7 +10,6 @@ const client_1 = require("@prisma/client");
 const auth_middleware_1 = require("../auth/middleware/auth.middleware");
 const token_service_1 = require("../auth/services/token.service");
 const dotenv_1 = __importDefault(require("dotenv"));
-const business_middleware_1 = require("./business.middleware");
 dotenv_1.default.config();
 const businessRouter = express_1.default.Router();
 const prismaClient = new client_1.PrismaClient();
@@ -126,7 +125,9 @@ const authMiddleware = new auth_middleware_1.AuthMiddleware(tokenService);
  *                   type: string
  *                   example: "Setup successful. 1 invite sent. Skipped: test@example.com (already invited)."
  */
-businessRouter.put("/setup", authMiddleware.authenticate, business_middleware_1.businessAccountOnly, (req, res, next) => {
+businessRouter.put("/setup", authMiddleware.authenticate, 
+// businessAccountOnly,
+(req, res, next) => {
     businessController.businessSetUp(req, res, next);
 });
 /**
@@ -168,7 +169,9 @@ businessRouter.put("/setup", authMiddleware.authenticate, business_middleware_1.
  *       500:
  *         description: Internal server error
  */
-businessRouter.get("/get_members", authMiddleware.authenticate, business_middleware_1.mustBeAMember, (req, res, next) => {
+businessRouter.get("/get_members", authMiddleware.authenticate, 
+// mustBeAMember,
+(req, res, next) => {
     businessController.fetchAllValidMembers(req, res, next);
 });
 /**
@@ -228,7 +231,10 @@ businessRouter.get("/get_members", authMiddleware.authenticate, business_middlew
  *       500:
  *         description: Failed to send invitation
  */
-businessRouter.post("/send-invite", authMiddleware.authenticate, business_middleware_1.mustBeAMember, business_middleware_1.businessAccountOnly, (req, res, next) => {
+businessRouter.post("/send-invite", authMiddleware.authenticate, 
+// mustBeAMember,
+// businessAccountOnly,
+(req, res, next) => {
     businessController.sendInvite(req, res, next);
 });
 /**

@@ -51,9 +51,18 @@ class EmailIntegrationService {
         const senderEmail = parsedCommand.incident?.fromEmail?.toLowerCase();
         if (!senderEmail)
             throw new error_1.UnauthorizedError("Sender email is missing");
+        // Find user with their business relation
         const user = await client_1.default.user.findFirst({
             where: { email: senderEmail },
-            include: { business: { select: { id: true, subdomain: true } } },
+            include: {
+                business: {
+                    select: {
+                        id: true,
+                        subdomain: true,
+                        userId: true // Include userId to get owner email
+                    }
+                }
+            },
         });
         if (!user)
             throw new error_1.UnauthorizedError("You are not allowed to perform this action");
@@ -66,10 +75,21 @@ class EmailIntegrationService {
         }
         const business = await client_1.default.business.findFirst({
             where: { subdomain },
-            include: { user: { select: { email: true } } },
+            include: {
+                User: {
+                    select: {
+                        id: true, // Add id to select
+                        email: true
+                    }
+                }
+            },
         });
         if (!business)
             throw new error_1.NotFoundError("Tenant not found");
+        // Get business owner email from the User array
+        const businessOwner = business.User.find(u => u.id === business.userId);
+        if (!businessOwner)
+            throw new error_1.NotFoundError("Business owner not found");
         const invites = await client_1.default.invites.findMany({
             where: {
                 accepted: true,
@@ -78,7 +98,7 @@ class EmailIntegrationService {
             },
         });
         const memberEmails = [
-            business.user.email.toLowerCase(),
+            businessOwner.email.toLowerCase(),
             ...invites.map((inv) => inv.email.toLowerCase()),
         ];
         if (!memberEmails.includes(senderEmail)) {

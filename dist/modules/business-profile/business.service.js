@@ -57,15 +57,69 @@ class BusinessService {
     }
     async fetchAllValidMembers(userId, businessId) {
         try {
-            const invites = await client_1.default.invites.findMany({
-                where: {
-                    sentById: businessId,
-                    accepted: true,
-                    stillAMember: true,
-                },
+            // First verify the user has access to this business
+            const user = await client_1.default.user.findUnique({
+                where: { id: userId },
+                select: { email: true, businessId: true }
             });
-            const mappedInvites = invites.map((invite) => business_mapper_1.BusinessMapper.toNameAndEmail(invite));
-            return mappedInvites;
+            if (!user) {
+                throw new error_1.ConflictError("User not found");
+            }
+            const userBusiness = await client_1.default.business.findFirst({
+                where: {
+                    OR: [
+                        { userId: userId }, // User is the business owner
+                        {
+                            invites: {
+                                some: {
+                                    email: user.email, // User is invited member
+                                    status: "ACCEPTED",
+                                    stillAMember: true
+                                }
+                            }
+                        }
+                    ],
+                    id: businessId
+                }
+            });
+            if (!userBusiness) {
+                throw new error_1.ConflictError("You don't have access to this business");
+            }
+            // Get all valid members: business owner + accepted invites
+            const [businessOwner, acceptedInvites] = await Promise.all([
+                // Get business owner
+                client_1.default.user.findUnique({
+                    where: { id: userBusiness.userId },
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                }),
+                // Get accepted invites
+                client_1.default.invites.findMany({
+                    where: {
+                        sentById: businessId,
+                        status: "ACCEPTED",
+                        stillAMember: true,
+                    },
+                })
+            ]);
+            // Map business owner to member format
+            const ownerMember = businessOwner ? {
+                firstname: businessOwner.firstName,
+                lastname: businessOwner.lastName,
+                email: businessOwner.email,
+                isOwner: true
+            } : null;
+            // Map invites to member format
+            const invitedMembers = acceptedInvites.map((invite) => ({
+                ...business_mapper_1.BusinessMapper.toNameAndEmail(invite),
+                isOwner: false
+            }));
+            // Combine owner and invited members, filter out null owner if needed
+            const allMembers = ownerMember ? [ownerMember, ...invitedMembers] : invitedMembers;
+            return allMembers;
         }
         catch (error) {
             console.error(`Error while fetching members: ${error}`);
@@ -74,49 +128,49 @@ class BusinessService {
     }
     async sendInvite(businessId, request, userdata) {
         try {
-            const invites = await client_1.default.invites.findUnique({
+            // Check if user already has a pending or accepted invite
+            const existingInvite = await client_1.default.invites.findFirst({
                 where: {
                     email: request.inviteEmail,
+                    sentById: businessId,
+                    OR: [
+                        { status: "PENDING" },
+                        { status: "ACCEPTED", stillAMember: true }
+                    ]
                 },
             });
-            if (invites)
-                throw new error_1.ConflictError("User have already been invited");
-            await client_1.default.invites.create({
+            if (existingInvite) {
+                throw new error_1.ConflictError("User has already been invited or is already a member");
+            }
+            const invite = await client_1.default.invites.create({
                 data: {
-                    firstName: request.firstName,
-                    lastName: request.lastName,
+                    firstName: request.firstName || '', // Ensure non-null
+                    lastName: request.lastName || '', // Ensure non-null
                     email: request.inviteEmail,
                     role: request.role,
                     accessPermissions: request.accessPermissions,
                     sentById: businessId,
+                    status: "PENDING", // Explicitly set status
+                    stillAMember: false, // Will be set to true when accepted
                 },
             });
-            // inviteId?: string;
-            // email: string;
-            // firstName?: string;
-            // lastName?: string;
-            // role?: Role;
-            // accessPermissions?: AccessPermissions[];
-            // level?: string;
-            // workspaceName?: string;
-            // businessId?: string;
             const businessData = await client_1.default.business.findFirst({
                 where: { id: userdata.businessId }
             });
             if (!businessData)
                 throw new error_1.ConflictError("Business does not exist");
             const newInvite = {
-                firstName: userdata.firstName,
-                lastName: userdata.lastName,
+                firstName: request.firstName || userdata.firstName,
+                lastName: request.lastName || userdata.lastName,
                 inviteEmail: request.inviteEmail,
                 role: request.role,
                 businessId: userdata.businessId,
-                workspaceName: businessData?.name,
+                workspaceName: businessData.name,
                 accessPermissions: request.accessPermissions
             };
             await this.businessUtil.sendInviteEmail(newInvite);
             return {
-                message: `Invite sent to ${request.inviteEmail} sucessfully!`,
+                message: `Invite sent to ${request.inviteEmail} successfully!`,
             };
         }
         catch (error) {
@@ -126,48 +180,73 @@ class BusinessService {
     }
     async acceptInvite(request) {
         try {
-            // Find the invite
-            const invite = await this.prisma.invites.findUnique({
-                where: { email: request.email }
+            // Find the invite with the correct business ID
+            const invite = await this.prisma.invites.findFirst({
+                where: {
+                    email: request.email,
+                    sentById: request.businessId,
+                    status: "PENDING"
+                }
             });
             if (!invite) {
-                throw new error_1.ConflictError("Invalid invite token");
+                throw new error_1.ConflictError("Invalid invite or invite already accepted");
             }
-            // Verify the token
-            // const decodedToken = await this.businessUtil.verifyInviteToken(request.token);
-            // Check if token matches the invite
-            // if (decodedToken.email !== invite.email) {
-            //   throw new ConflictError("Token does not match invite");
-            // }
             // Check if user already exists
             const existingUser = await this.prisma.user.findUnique({
                 where: { email: request.email }
             });
+            let result;
             if (existingUser) {
-                // Link existing user to business
-                await this.prisma.user.update({
+                // Update existing user with business relationship
+                result = await this.prisma.user.update({
                     where: { id: existingUser.id },
                     data: {
-                        business: {
-                            connect: { id: request.businessId }
-                        }
+                        businessId: request.businessId,
+                        accountType: "BUSINESS"
                     }
                 });
+                // Update invite status with ALL required fields
+                await this.prisma.invites.update({
+                    where: { id: invite.id },
+                    data: {
+                        status: "ACCEPTED",
+                        stillAMember: true,
+                        userId: existingUser.id,
+                        accepted: true,
+                        acceptedAt: new Date(),
+                        firstName: request.firstName, // Update with actual user data
+                        lastName: request.lastName, // Update with actual user data
+                    }
+                });
+                // Add user as participant to existing conversations
+                await invite_util_1.InviteUtil.addNewInviteAsParticipant(existingUser, invite);
                 return {
                     message: "Existing user added to business successfully"
                 };
             }
             else {
-                // Create new user
-                await this.prisma.user.create({
+                // Create new user with business relationship
+                result = await this.prisma.user.create({
                     data: {
                         email: request.email,
                         firstName: request.firstName,
                         lastName: request.lastName,
                         passwordHash: await this.businessUtil.hashPassword(request.password),
-                        business: {
-                            connect: { id: request.businessId }
-                        }
+                        businessId: request.businessId,
+                        accountType: "BUSINESS"
+                    }
+                });
+                // Update invite status with ALL required fields
+                await this.prisma.invites.update({
+                    where: { id: invite.id },
+                    data: {
+                        status: "ACCEPTED",
+                        stillAMember: true,
+                        userId: result.id,
+                        accepted: true,
+                        acceptedAt: new Date(),
+                        firstName: request.firstName, // Update with actual user data
+                        lastName: request.lastName, // Update with actual user data
                     }
                 });
                 return {

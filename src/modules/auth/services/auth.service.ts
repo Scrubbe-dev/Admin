@@ -786,28 +786,42 @@ export class AuthService {
           firstName: input.firstName,
           lastName: input.lastName,
           role: Role.ADMIN,
-          business: {
-            create: {
-              address: input.businessAddress,
-              companySize: input.companySize,
-              purpose: input.purpose,
-            },
-          },
+          // business: {
+          //   create: {
+          //         userId:"",  // NEED TO LOOK AT THIS MORE
+          //     address: input.businessAddress,
+          //     companySize: input.companySize,
+          //     purpose: input.purpose,
+          //   },
+          // },
         },
-        include: {
-          business: true,
-        },
+        // include: {
+        //   business: true,
+        // },
       });
+
+
+     const newBusiness = await  this.prisma.business.create({
+        data:{
+          userId: user.id,
+          address: input.businessAddress,
+          companySize: input.companySize,
+          purpose: input.purpose,
+        },
+        include:{
+          User: true
+        }
+      })
 
       const tokens = await this.tokenService.generateTokens(
         user as any,
-        user.business?.id
+        newBusiness.id
       );
 
       const code = await this.generateAndSaveOTP(user.id, user.email);
       await this.emailService.sendVerificationEmail(user.email, code);
 
-      return AuthMapper.toUserResponse(user, user.business?.id, tokens);
+      return AuthMapper.toUserResponse(user,newBusiness?.id, tokens);
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }

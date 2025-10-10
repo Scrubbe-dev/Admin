@@ -49,8 +49,10 @@ export class BusinessController {
       const userId = req.user?.sub!;
       const businessId = req.user?.businessId!;
 
-      const response = await this.businessService.fetchAllValidMembers(userId, businessId);
+      console.log(userId , businessId ," ============USERID & BUSINESSID======================" )
 
+      const response = await this.businessService.fetchAllValidMembers(userId, businessId);
+      console.log(response , "===================FROM GET MEMBERS===========")
       res.json(response);
     } catch (error) {
       next(error);

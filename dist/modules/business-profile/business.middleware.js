@@ -24,9 +24,11 @@ const mustBeAMember = async (req, res, next) => {
         if (!business) {
             throw new error_1.ForbiddenError("You must be associated with a valid business to continue");
         }
+        // Check if user is the business owner
         if (business.userId === req.user.id) {
             return next();
         }
+        // Check if user is an accepted member via invite
         const invite = await client_1.default.invites.findFirst({
             where: {
                 email: req.user.email,
@@ -38,7 +40,7 @@ const mustBeAMember = async (req, res, next) => {
         if (invite) {
             return next();
         }
-        return next();
+        throw new error_1.ForbiddenError("You are not a member of this business");
     }
     catch (error) {
         next(error);
