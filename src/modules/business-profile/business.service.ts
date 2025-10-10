@@ -233,21 +233,11 @@ async sendInvite(businessId: string, request: InviteMembers, userdata: IUserdata
 
 
 
-
-
-
-
-
-
-
-
-
-
 async acceptInvite(request: AcceptInviteTypes) {
   try {
 
 
-    console.log(request, "==================ACCEPTINVITE TYPE=========")
+    // console.log(request, "==================ACCEPTINVITE TYPE=========")
     // Find the invite with the correct business ID
     const invite = await this.prisma.invites.findFirst({
       where: { 
@@ -277,6 +267,7 @@ async acceptInvite(request: AcceptInviteTypes) {
           accountType: "BUSINESS"
         }
       });
+      
     console.log(existingUser , invite, "==================EXISTING USER INVITE=========")
       // Update invite status with ALL required fields
       await this.prisma.invites.update({
@@ -284,7 +275,7 @@ async acceptInvite(request: AcceptInviteTypes) {
         data: {
           status: "ACCEPTED",
           stillAMember: true,
-          userId: existingUser.id,
+          userId: request.businessId,
           accepted: true,
           acceptedAt: new Date(),
           firstName: request.firstName, // Update with actual user data
@@ -303,6 +294,8 @@ async acceptInvite(request: AcceptInviteTypes) {
       };
     } else {
       // Create new user with business relationship
+
+      
       result = await this.prisma.user.create({
         data: {
           email: request.email,
@@ -314,13 +307,15 @@ async acceptInvite(request: AcceptInviteTypes) {
         }
       });
 
+
+
       // Update invite status with ALL required fields
       await this.prisma.invites.update({
         where: { id: invite.id },
         data: {
           status: "ACCEPTED",
           stillAMember: true,
-          userId: result.id,
+          userId: request.businessId,
           accepted: true,
           acceptedAt: new Date(),
           firstName: request.firstName, // Update with actual user data
