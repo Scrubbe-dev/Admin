@@ -341,6 +341,7 @@ async acceptInvite(request: AcceptInviteTypes) {
   async decodeInvite(token: string): Promise<any> {
     try {
       const decodedToken = await this.businessUtil.decodeInviteToken(token);
+      console.log(decodedToken, "==================DECODE TOKENS=========")
       return decodedToken;
     } catch (error) {
       throw new ConflictError("Invalid or expired token");
