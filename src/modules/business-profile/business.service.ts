@@ -191,7 +191,7 @@ async sendInvite(businessId: string, request: InviteMembers, userdata: IUserdata
       throw new ConflictError("User has already been invited or is already a member");
     }
 
-    const invite = await prisma.invites.create({
+     await prisma.invites.create({
       data: {
         firstName: request.firstName || '', // Ensure non-null
         lastName: request.lastName || '',   // Ensure non-null
@@ -234,11 +234,12 @@ async sendInvite(businessId: string, request: InviteMembers, userdata: IUserdata
 
 
 async acceptInvite(request: AcceptInviteTypes) {
+  console.log('1. Starting acceptInvite service method', { email: request.email });
   try {
-
-
+      // const result = await this.prisma.$transaction(async (tx) => { })
     // console.log(request, "==================ACCEPTINVITE TYPE=========")
     // Find the invite with the correct business ID
+    console.log('2. Looking for invite...');
     const invite = await this.prisma.invites.findFirst({
       where: { 
         email: request.email,
@@ -246,11 +247,12 @@ async acceptInvite(request: AcceptInviteTypes) {
         status: "PENDING"
       }
     });
-
+    
     if (!invite) {
+      console.log('4. No invite found');
       throw new ConflictError("Invalid invite or invite already accepted");
     }
-
+    console.log('3. Invite found:', invite?.id);
     // Check if user already exists
     const existingUser = await this.prisma.user.findUnique({
       where: { email: request.email }

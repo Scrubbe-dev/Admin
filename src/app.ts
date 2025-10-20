@@ -240,6 +240,23 @@ app.use("/api/v1/customer", customerIncidentRoutes); // Route for  customer inci
 app.use("/api/v1", oncallRouter); // Route for testing email sending
 app.use("/api/v1/mocktest", contactusRouter); // Route for testing email sending
 app.use("/api/v1/organization", organizationRoutes)
+
+app.get("/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ 
+      status: "OK", 
+      database: "connected",
+      timestamp: new Date().toISOString()
+    });
+  } catch (error:any) {
+    res.status(500).json({ 
+      status: "ERROR", 
+      database: "disconnected",
+      error: error.message 
+    });
+  }
+});
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 

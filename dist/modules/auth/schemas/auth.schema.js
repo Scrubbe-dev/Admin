@@ -72,7 +72,7 @@ exports.registerBusinessByOauth = zod_1.z.object({
     email: exports.businessEmailSchema,
     businessAddress: zod_1.z.string().min(10, "Please provide a valid address"),
     companySize: zod_1.z.string().min(1, "Company size is required"),
-    purpose: zod_1.z.string().min(1, "Purpose is required"),
+    purpose: zod_1.z.string().min(1, "Purpose is required").optional(),
 });
 // Register business schema
 exports.registerBusinessSchema = zod_1.z.object({
@@ -82,7 +82,7 @@ exports.registerBusinessSchema = zod_1.z.object({
     password: passwordSchema,
     businessAddress: zod_1.z.string().min(10, "Please provide a valid address"),
     companySize: zod_1.z.string().min(1, "Company size is required"),
-    purpose: zod_1.z.string().min(1, "Purpose is required"),
+    purpose: zod_1.z.string().min(1, "Purpose is required").optional(),
 });
 // Login schema
 exports.loginSchema = zod_1.z.object({

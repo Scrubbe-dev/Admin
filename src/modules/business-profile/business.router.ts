@@ -1,4 +1,4 @@
-import express from "express";
+import express, {Request , Response, NextFunction} from "express";
 import { BusinessController } from "./business.controller";
 import { BusinessService } from "./business.service";
 import { PrismaClient } from "@prisma/client";
@@ -392,6 +392,14 @@ businessRouter.post(
     businessController.acceptInvite(req, res, next);
   }
 );
+
+
+businessRouter.use((error: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Unhandled Error:', error);
+  res.status(error.status || 500).json({
+    error: error.message || 'Internal Server Error'
+  });
+});
 
 
 export default businessRouter;

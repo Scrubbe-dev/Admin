@@ -94,17 +94,21 @@ async decodeInvite(req: Request, res: Response, next: NextFunction) {
 
 
 
-  async acceptInvite(req: Request, res: Response, next: NextFunction) {
-      try {
-        const request = await validateRequest<AcceptInviteTypes>(acceptInviteSchema, req.body);
-        
-        const response = await this.businessService.acceptInvite(request);
-        res.json(response);
-      } catch (error) {
-            throw new ConflictError("Failed to register invite");
-      }
-    }
-
+// FIX: Add proper error handling
+// In your controller
+async acceptInvite(req: Request, res: Response, next: NextFunction) {
+  try {
+    console.log('Raw request body:', req.body);
+    const request = await validateRequest<AcceptInviteTypes>(acceptInviteSchema, req.body);
+    console.log('Validated request:', request);
+    
+    const response = await this.businessService.acceptInvite(request);
+    res.json(response);
+  } catch (error) {
+    console.error('Controller error:', error);
+    next(error);
+  }
+}
 
     async getAuthTokenData(req:Request , res:Response){
       const authHeader = req.headers.authorization;

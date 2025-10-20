@@ -131,3 +131,9 @@ export type AcceptInviteTypes = {
   password: string;
   businessId: string;
 };
+
+// businessId: "f0f0829c-f5bc-48b1-8831-8871bda36eeb"
+// email: "sanivi6981@fixwap.com"
+// firstName: "micheal"
+// lastName: "fred"
+// password: "Goodboy2"
