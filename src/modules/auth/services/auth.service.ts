@@ -806,7 +806,7 @@ export class AuthService {
           userId: user.id,
           address: input.businessAddress,
           companySize: input.companySize,
-          purpose: input.purpose,
+          purpose: input.purpose || "None",
         },
         include:{
           User: true
@@ -914,7 +914,7 @@ export class AuthService {
             create: {
               address: input.businessAddress,
               companySize: input.companySize,
-              purpose: input.purpose,
+              purpose: input.purpose || "None",
             },
           },
         },
