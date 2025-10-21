@@ -187,6 +187,23 @@ app.use("/api/v1/customer", customerIncidentRoute_1.customerIncidentRoutes); // 
 app.use("/api/v1", oncall_routes_1.default); // Route for testing email sending
 app.use("/api/v1/mocktest", contactus_routes_1.default); // Route for testing email sending
 app.use("/api/v1/organization", organizationRoute_1.organizationRoutes);
+app.get("/health", async (req, res) => {
+    try {
+        await prisma.$queryRaw `SELECT 1`;
+        res.status(200).json({
+            status: "OK",
+            database: "connected",
+            timestamp: new Date().toISOString()
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            status: "ERROR",
+            database: "disconnected",
+            error: error.message
+        });
+    }
+});
 // Add password reset routes
 // app.use('/api/v1/auth', passwordResetRoutes.getRouter());
 // app.use((err: Error, req: express.Request, res: express.Response) => {

@@ -74,14 +74,19 @@ class BusinessController {
             next(error);
         }
     }
+    // FIX: Add proper error handling
+    // In your controller
     async acceptInvite(req, res, next) {
         try {
+            console.log('Raw request body:', req.body);
             const request = await (0, validators_1.validateRequest)(business_schema_1.acceptInviteSchema, req.body);
+            console.log('Validated request:', request);
             const response = await this.businessService.acceptInvite(request);
             res.json(response);
         }
         catch (error) {
-            throw new error_1.ConflictError("Failed to register invite");
+            console.error('Controller error:', error);
+            next(error);
         }
     }
     async getAuthTokenData(req, res) {

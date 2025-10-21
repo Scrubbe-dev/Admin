@@ -370,4 +370,10 @@ businessRouter.post("/accept-invite",
 (req, res, next) => {
     businessController.acceptInvite(req, res, next);
 });
+businessRouter.use((error, req, res, next) => {
+    console.error('Unhandled Error:', error);
+    res.status(error.status || 500).json({
+        error: error.message || 'Internal Server Error'
+    });
+});
 exports.default = businessRouter;

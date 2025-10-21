@@ -142,7 +142,7 @@ class BusinessService {
             if (existingInvite) {
                 throw new error_1.ConflictError("User has already been invited or is already a member");
             }
-            const invite = await client_1.default.invites.create({
+            await client_1.default.invites.create({
                 data: {
                     firstName: request.firstName || '', // Ensure non-null
                     lastName: request.lastName || '', // Ensure non-null
@@ -179,57 +179,48 @@ class BusinessService {
         }
     }
     async acceptInvite(request) {
+        console.log('1. Starting acceptInvite service method', { email: request.email });
         try {
-            // console.log(request, "==================ACCEPTINVITE TYPE=========")
-            // Find the invite with the correct business ID
+            const business = await this.prisma.business.findUnique({
+                where: { id: request.businessId }
+            });
+            if (!business) {
+                throw new error_1.ConflictError("Business not found");
+            }
+            console.log('2. Looking for invite...');
             const invite = await this.prisma.invites.findFirst({
                 where: {
                     email: request.email,
                     sentById: request.businessId,
-                    status: "PENDING"
+                    status: "PENDING",
+                    stillAMember: true
                 }
             });
             if (!invite) {
+                console.log('4. No invite found');
                 throw new error_1.ConflictError("Invalid invite or invite already accepted");
             }
+            console.log('3. Invite found:', invite?.id);
             // Check if user already exists
             const existingUser = await this.prisma.user.findUnique({
                 where: { email: request.email }
             });
-            let result;
+            let userId;
             if (existingUser) {
                 // Update existing user with business relationship
-                result = await this.prisma.user.update({
+                const updatedUser = await this.prisma.user.update({
                     where: { id: existingUser.id },
                     data: {
                         businessId: request.businessId,
                         accountType: "BUSINESS"
                     }
                 });
+                userId = updatedUser.id;
                 console.log(existingUser, invite, "==================EXISTING USER INVITE=========");
-                // Update invite status with ALL required fields
-                await this.prisma.invites.update({
-                    where: { id: invite.id },
-                    data: {
-                        status: "ACCEPTED",
-                        stillAMember: true,
-                        userId: request.businessId,
-                        accepted: true,
-                        acceptedAt: new Date(),
-                        firstName: request.firstName, // Update with actual user data
-                        lastName: request.lastName, // Update with actual user data
-                    }
-                });
-                console.log(result, "====================RESULT==============");
-                // Add user as participant to existing conversations
-                await invite_util_1.InviteUtil.addNewInviteAsParticipant(existingUser, invite);
-                return {
-                    message: "Existing user added to business successfully"
-                };
             }
             else {
                 // Create new user with business relationship
-                result = await this.prisma.user.create({
+                const newUser = await this.prisma.user.create({
                     data: {
                         email: request.email,
                         firstName: request.firstName,
@@ -239,23 +230,30 @@ class BusinessService {
                         accountType: "BUSINESS"
                     }
                 });
-                // Update invite status with ALL required fields
-                await this.prisma.invites.update({
-                    where: { id: invite.id },
-                    data: {
-                        status: "ACCEPTED",
-                        stillAMember: true,
-                        userId: request.businessId,
-                        accepted: true,
-                        acceptedAt: new Date(),
-                        firstName: request.firstName, // Update with actual user data
-                        lastName: request.lastName, // Update with actual user data
-                    }
-                });
-                return {
-                    message: "New user created and added to business successfully"
-                };
+                userId = newUser.id;
             }
+            // Update invite status with CORRECT userId
+            await this.prisma.invites.update({
+                where: { id: invite.id },
+                data: {
+                    status: "ACCEPTED",
+                    stillAMember: true,
+                    userId: userId, // ✅ Use the actual user ID, not businessId
+                    accepted: true,
+                    acceptedAt: new Date(),
+                    firstName: request.firstName,
+                    lastName: request.lastName,
+                }
+            });
+            // Add user as participant to existing conversations
+            if (existingUser) {
+                await invite_util_1.InviteUtil.addNewInviteAsParticipant(existingUser, invite);
+            }
+            return {
+                message: existingUser
+                    ? "Existing user added to business successfully"
+                    : "New user created and added to business successfully"
+            };
         }
         catch (error) {
             console.error(`Error accepting invite: ${error}`);
