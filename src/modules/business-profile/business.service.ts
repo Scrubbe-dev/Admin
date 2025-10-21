@@ -246,12 +246,7 @@ async acceptInvite(request: AcceptInviteTypes) {
       }
     console.log('2. Looking for invite...');
     const invite = await this.prisma.invites.findFirst({
-      where: { 
-        email: request.email,
-        sentById: request.businessId,
-        status: "PENDING",
-        stillAMember: true
-      }
+      where: { email: request.email}
     });
 
 
