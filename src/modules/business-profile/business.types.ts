@@ -84,6 +84,7 @@ export interface DecodeInvite{
 }
 
 export interface Members {
+  id?: string | null;
   firstname: string | null;
   lastname: string | null;
   email: string | null;

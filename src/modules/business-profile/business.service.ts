@@ -127,6 +127,7 @@ async fetchAllValidMembers(userId: string, businessId: string) {
       prisma.user.findUnique({
         where: { id: userBusiness.userId as string },
         select: {
+          id: true,
           firstName: true,
           lastName: true,
           email: true
@@ -144,6 +145,7 @@ async fetchAllValidMembers(userId: string, businessId: string) {
 
     // Map business owner to member format
     const ownerMember = businessOwner ? {
+      id: businessOwner.id,
       firstname: businessOwner.firstName,
       lastname: businessOwner.lastName,
       email: businessOwner.email,

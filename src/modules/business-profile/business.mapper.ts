@@ -6,6 +6,7 @@ export class BusinessMapper {
 
   static toNameAndEmail(invite: Invites): Members {
     return {
+      id: invite.userId ,
       firstname: invite.firstName,
       lastname: invite.lastName,
       email: invite.email,
