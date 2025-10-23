@@ -233,7 +233,7 @@ const incidentController = new IncidentController();
 incidentRouter.get(
   "/",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getIncidentTicketByBusiness(req, res, next);
   }
@@ -464,7 +464,7 @@ incidentRouter.get(
 incidentRouter.post(
   "/",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.submitIncident(req, res, next);
   }
@@ -543,7 +543,7 @@ incidentRouter.post(
 incidentRouter.post(
   "/comment/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.addComment(req, res, next);
   }
@@ -609,7 +609,7 @@ incidentRouter.post(
 incidentRouter.get(
   "/comment/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getComments(req, res, next);
   }
@@ -733,7 +733,7 @@ incidentRouter.get(
 incidentRouter.put(
   "/",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.updateTicket(req, res, next);
   }
@@ -782,7 +782,7 @@ incidentRouter.put(
 incidentRouter.get(
   "/analytics",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getAnalytics(req, res, next);
   }
@@ -857,7 +857,7 @@ incidentRouter.get(
 incidentRouter.get(
   "/message/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getMessages(req, res, next);
   }
@@ -908,7 +908,7 @@ incidentRouter.get(
 incidentRouter.post(
   "/acknowledge/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.acknowledgeIncident(req, res, next);
   }
@@ -1019,7 +1019,7 @@ incidentRouter.post(
 incidentRouter.post(
   "/resolve/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.resolveIncident(req, res, next);
   }
@@ -1081,7 +1081,7 @@ incidentRouter.post(
 incidentRouter.post(
   "/resolve/customer-kb/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.publishCustomerFacingKb(req, res, next);
   }
@@ -1130,7 +1130,7 @@ incidentRouter.post(
 incidentRouter.get(
   "/resolve/ai/suggestion/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getAiSuggestion(req, res, next);
   }
@@ -1188,7 +1188,7 @@ incidentRouter.get(
 incidentRouter.get(
   "/resolve/ai/five-whys/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getFiveWhys(req, res, next);
   }
@@ -1234,7 +1234,7 @@ incidentRouter.get(
 incidentRouter.get(
   "/resolve/ai/stakeholder/:incidentTicketId",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     incidentController.getStakeHolderMessage(req, res, next);
   }

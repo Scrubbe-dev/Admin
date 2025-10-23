@@ -377,75 +377,150 @@ export class IncidentService {
     }
   }
 
+  // async addComment(
+  //   request: CommentRequest,
+  //   userId: string,
+  //   email: string,
+  //   incidentTicketId: string,
+  //   businessId: string
+  // ) {
+  //   try {
+  //     const business = await prisma.business.findUnique({
+  //       where: { id: businessId },
+  //       include: { 
+  //         invites: true, 
+  //         User: { // Changed from 'user' to 'User'
+  //           where: { id: userId },
+  //           select: { id: true, firstName: true, lastName: true }
+  //         } 
+  //       },
+  //     });
+
+  //     if (!business) {
+  //       throw new NotFoundError(`Business not found with id: ${businessId}`);
+  //     }
+
+  //     // Get business owner from User array
+  //     const businessOwner = business.User.find(u => u.id === business.userId);
+  //     if (!businessOwner) {
+  //       throw new NotFoundError("Business owner not found");
+  //     }
+
+  //     // Check membership either owner or active member
+  //     const inviteMember = business.invites.find(
+  //       (invite) =>
+  //         invite.email === email &&
+  //         invite.stillAMember
+  //     );
+
+  //     const isMember = inviteMember || business.userId === userId;
+
+  //     if (!isMember) {
+  //       throw new ForbiddenError(
+  //         `You must be an active member of ${business.name} to comment`
+  //       );
+  //     }
+
+  //     const newComment = await prisma.incidentComment.create({
+  //       data: {
+  //         incidentTicketId,
+  //         authorId: userId,
+  //         content: request.content,
+  //         isBusinessOwner: business.userId === userId,
+  //       },
+  //     });
+
+  //     return IncidentMapper.mapToCommentResponse({
+  //       id: newComment.id,
+  //       content: newComment.content,
+  //       createdAt: newComment.createdAt,
+  //       firstname: inviteMember?.firstName ?? businessOwner.firstName,
+  //       lastname: inviteMember?.lastName ?? businessOwner.lastName,
+  //       isBusinessOwner: newComment.isBusinessOwner,
+  //     });
+  //   } catch (error) {
+  //     throw new Error(
+  //       `Failed to submit comment: ${
+  //         error instanceof Error ? error.message : String(error)
+  //       }`
+  //     );
+  //   }
+  // }
+
   async addComment(
-    request: CommentRequest,
-    userId: string,
-    email: string,
-    incidentTicketId: string,
-    businessId: string
-  ) {
-    try {
-      const business = await prisma.business.findUnique({
-        where: { id: businessId },
-        include: { 
-          invites: true, 
-          User: { // Changed from 'user' to 'User'
-            where: { id: userId },
-            select: { id: true, firstName: true, lastName: true }
-          } 
-        },
-      });
+  request: CommentRequest,
+  userId: string,
+  email: string,
+  incidentTicketId: string,
+  businessId: string
+) {
+  try {
+    // Add validation for businessId
+    if (!businessId) {
+      throw new Error("Business ID is required");
+    }
 
-      if (!business) {
-        throw new NotFoundError(`Business not found with id: ${businessId}`);
-      }
+    const business = await prisma.business.findUnique({
+      where: { id: businessId }, // This was undefined in your error
+      include: { 
+        invites: true, 
+        User: {
+          where: { id: userId },
+          select: { id: true, firstName: true, lastName: true }
+        } 
+      },
+    });
 
-      // Get business owner from User array
-      const businessOwner = business.User.find(u => u.id === business.userId);
-      if (!businessOwner) {
-        throw new NotFoundError("Business owner not found");
-      }
+    if (!business) {
+      throw new NotFoundError(`Business not found with id: ${businessId}`);
+    }
 
-      // Check membership either owner or active member
-      const inviteMember = business.invites.find(
-        (invite) =>
-          invite.email === email &&
-          invite.stillAMember
-      );
+    // Get business owner from User array
+    const businessOwner = business.User.find(u => u.id === business.userId);
+    if (!businessOwner) {
+      throw new NotFoundError("Business owner not found");
+    }
 
-      const isMember = inviteMember || business.userId === userId;
+    // Check membership either owner or active member
+    const inviteMember = business.invites.find(
+      (invite) =>
+        invite.email === email &&
+        invite.stillAMember
+    );
 
-      if (!isMember) {
-        throw new ForbiddenError(
-          `You must be an active member of ${business.name} to comment`
-        );
-      }
+    const isMember = inviteMember || business.userId === userId;
 
-      const newComment = await prisma.incidentComment.create({
-        data: {
-          incidentTicketId,
-          authorId: userId,
-          content: request.content,
-          isBusinessOwner: business.userId === userId,
-        },
-      });
-
-      return IncidentMapper.mapToCommentResponse({
-        id: newComment.id,
-        content: newComment.content,
-        createdAt: newComment.createdAt,
-        firstname: inviteMember?.firstName ?? businessOwner.firstName,
-        lastname: inviteMember?.lastName ?? businessOwner.lastName,
-        isBusinessOwner: newComment.isBusinessOwner,
-      });
-    } catch (error) {
-      throw new Error(
-        `Failed to submit comment: ${
-          error instanceof Error ? error.message : String(error)
-        }`
+    if (!isMember) {
+      throw new ForbiddenError(
+        `You must be an active member of ${business.name} to comment`
       );
     }
+
+    const newComment = await prisma.incidentComment.create({
+      data: {
+        incidentTicketId,
+        authorId: userId,
+        content: request.content,
+        isBusinessOwner: business.userId === userId,
+      },
+    });
+
+    return IncidentMapper.mapToCommentResponse({
+      id: newComment.id,
+      content: newComment.content,
+      createdAt: newComment.createdAt,
+      firstname: inviteMember?.firstName ?? businessOwner.firstName,
+      lastname: inviteMember?.lastName ?? businessOwner.lastName,
+      isBusinessOwner: newComment.isBusinessOwner,
+    });
+  } catch (error) {
+    throw new Error(
+      `Failed to submit comment: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
+}
 
   async getComments(incidentTicketId: string) {
     try {

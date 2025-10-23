@@ -178,31 +178,64 @@ export class IncidentController {
     }
   }
 
-  async addComment(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userId = req.user?.sub!;
-      const email = req.user?.email!;
-      const businessId = req.user?.businessId!;
+  // async addComment(req: Request, res: Response, next: NextFunction) {
+  //   try {
+  //     const userId = req.user?.sub!;
+  //     const email = req.user?.email!;
+  //     const businessId = req.user?.businessId!;
 
-      const incidentTicketId = req.params.incidentTicketId;
-      const request = await validateRequest<CommentRequest>(
-        commentSchema,
-        req.body
-      );
+  //     const incidentTicketId = req.params.incidentTicketId;
+  //     const request = await validateRequest<CommentRequest>(
+  //       commentSchema,
+  //       req.body
+  //     );
 
-      const response = await this.incidentService.addComment(
-        request,
-        userId,
-        email,
-        incidentTicketId,
-        businessId
-      );
+  //     const response = await this.incidentService.addComment(
+  //       request,
+  //       userId,
+  //       email,
+  //       incidentTicketId,
+  //       businessId
+  //     );
 
-      res.json(response);
-    } catch (error) {
-      next(error);
-    }
+  //     res.json(response);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // }
+
+
+
+  // In your controller's addComment method
+async addComment(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.sub!;
+    const email = req.user?.email!;
+    const businessId = req.user?.businessId!;
+
+    console.log('User ID:', userId);
+    console.log('Email:', email);
+    console.log('Business ID:', businessId); // This might be undefined
+
+    const incidentTicketId = req.params.incidentTicketId;
+    const request = await validateRequest<CommentRequest>(
+      commentSchema,
+      req.body
+    );
+
+    const response = await this.incidentService.addComment(
+      request,
+      userId,
+      email,
+      incidentTicketId,
+      businessId
+    );
+
+    res.json(response);
+  } catch (error) {
+    next(error);
   }
+}
 
   async getComments(req: Request, res: Response, next: NextFunction) {
     try {
