@@ -106,15 +106,8 @@ console.log('- Run comprehensive audit every hour');
 
 
 
-
-
 const server = http.createServer(app);
-const io = new Server(server, {
-  // path: "/api/v1/incident-ticket/conversation",
-  cors: {
-    origin: "*",
-  },
-});
+const io = new Server(server);
 
 app.set("io", io);
 
