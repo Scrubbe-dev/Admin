@@ -23,27 +23,14 @@ export const businessAccountOnly = (
   throw new ForbiddenError("Access restricted to business accounts only");
 };
 
+// business.middleware.ts
 export const mustBeAMember = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-
-      const authHeader = req.headers.authorization;
-          if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            throw new UnauthorizedError("Authentication required");
-          }
-    
-          const token = authHeader.split(" ")[1];
-          const payload = await tokenService.verifyAccessToken(token);
-    
-          // Ensure we have the user ID in the payload
-          if (!payload.sub) {
-            throw new UnauthorizedError("Invalid token: missing user ID");
-          }
-       req.user = payload.sub as any;
-
+    console.log("User Info from Middleware:", req.user);
     if (!req.user?.businessId) {
       throw new ForbiddenError(
         "You need to be associated with a business to continue"
@@ -52,6 +39,15 @@ export const mustBeAMember = async (
 
     const business = await prisma.business.findUnique({
       where: { id: req.user.businessId },
+      include: {
+        invites: {
+          where: {
+            email: req.user.email,
+            status: "ACCEPTED",
+            stillAMember: true
+          }
+        }
+      }
     });
 
     if (!business) {
@@ -61,21 +57,14 @@ export const mustBeAMember = async (
     }
 
     // Check if user is the business owner
-    if (business.userId === req.user.id) {
+    if (business.userId === req.user.sub) {
       return next();
     }
 
     // Check if user is an accepted member via invite
-    const invite = await prisma.invites.findFirst({
-      where: {
-        email: req.user.email,
-        sentById: req.user.businessId,
-        status: "ACCEPTED",
-        stillAMember: true,
-      },
-    });
+    const isInvitedMember = business.invites.length > 0;
 
-    if (invite) {
+    if (isInvitedMember) {
       return next();
     }
 
