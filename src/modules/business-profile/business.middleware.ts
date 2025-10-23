@@ -1,6 +1,15 @@
 import prisma from "../../prisma-clients/client";
 import { NextFunction, Request, Response } from "express";
-import { ForbiddenError } from "../auth/error";
+import { ForbiddenError, UnauthorizedError } from "../auth/error";
+import { TokenService } from "../auth/services/token.service";
+import {config} from "dotenv";
+config();
+
+const tokenService = new TokenService(
+    process.env.JWT_SECRET!,
+    process.env.JWT_EXPIRES_IN || "1h",
+    15
+);
 
 export const businessAccountOnly = (
   req: Request,
@@ -20,6 +29,21 @@ export const mustBeAMember = async (
   next: NextFunction
 ) => {
   try {
+
+      const authHeader = req.headers.authorization;
+          if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedError("Authentication required");
+          }
+    
+          const token = authHeader.split(" ")[1];
+          const payload = await tokenService.verifyAccessToken(token);
+    
+          // Ensure we have the user ID in the payload
+          if (!payload.sub) {
+            throw new UnauthorizedError("Invalid token: missing user ID");
+          }
+       req.user = payload as any;
+
     if (!req.user?.businessId) {
       throw new ForbiddenError(
         "You need to be associated with a business to continue"
