@@ -132,7 +132,7 @@ const authMiddleware = new AuthMiddleware(tokenService);
 businessRouter.put(
   "/setup",
   authMiddleware.authenticate,
-  // businessAccountOnly,
+  businessAccountOnly,
   (req, res, next) => {
     businessController.businessSetUp(req, res, next);
   }
@@ -180,7 +180,7 @@ businessRouter.put(
 businessRouter.get(
   "/get_members",
   authMiddleware.authenticate,
-  // mustBeAMember,
+  mustBeAMember,
   (req, res, next) => {
     businessController.fetchAllValidMembers(req, res, next);
   }
@@ -246,8 +246,8 @@ businessRouter.get(
 businessRouter.post(
   "/send-invite",
   authMiddleware.authenticate,
-  // mustBeAMember,
-  // businessAccountOnly,
+  mustBeAMember,
+  businessAccountOnly,
   (req, res, next) => {
     businessController.sendInvite(req, res, next);
   }
@@ -385,9 +385,9 @@ businessRouter.post(
  */
 businessRouter.post(
   "/accept-invite",
-  // authMiddleware.authenticate,
-  // mustBeAMember,
-  // businessAccountOnly,
+  authMiddleware.authenticate,
+  mustBeAMember,
+  businessAccountOnly,
   (req, res, next) => {
     businessController.acceptInvite(req, res, next);
   }

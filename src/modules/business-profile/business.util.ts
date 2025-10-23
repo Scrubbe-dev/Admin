@@ -196,7 +196,7 @@ generateInviteToken(invite: any): string {
   }
 
   private async generateInviteLink(invite: any): Promise<string> {
-    const baseUrl = "https://www.scrubbe.com/auth/invite";
+    const baseUrl = "https://incidents.scrubbe.com/auth/invite";
     const token = this.generateInviteToken(invite);
     const inviteLink = `${baseUrl}?token=${token}`;
     return inviteLink;
