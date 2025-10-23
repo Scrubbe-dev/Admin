@@ -12,13 +12,13 @@ export type GeoData = {
     asn?: number;
     isProxy: boolean;
   };
-  
-  export type DeviceData = {
-    os: string;
-    browser: string;
-    deviceModel?: string;
-    deviceType?: string;
-  };
+
+export type DeviceData = {
+  os: string;
+  browser: string;
+  deviceModel?: string;
+  deviceType?: string;
+};
   
   export type SystemInfo = {
     ip: string;
@@ -27,3 +27,34 @@ export type GeoData = {
     device: DeviceData;
     usersDetails?: IPGeoResponse
   };
+
+
+
+export interface JoinPayload {
+  incidentTicketId: string;
+}
+
+export interface SendMessagePayload {
+  incidentTicketId: string;
+  content: string;
+}
+
+export interface TypingPayload {
+  incidentTicketId: string;
+  isTyping: boolean;
+}
+
+export interface SocketUser {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  createdAt: Date;
+  sender: SocketUser;
+  conversationId: string;
+}
