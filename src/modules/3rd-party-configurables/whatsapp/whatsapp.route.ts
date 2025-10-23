@@ -79,7 +79,7 @@ const authMiddleware = new AuthMiddleware(tokenService);
 whatsappRouter.post(
   "/connect",
   authMiddleware.authenticate,
-  mustBeAMember,
+  // mustBeAMember,
   (req, res, next) => {
     whatsappController.connectWhatsapp(req, res, next);
   }

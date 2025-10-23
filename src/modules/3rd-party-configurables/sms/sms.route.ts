@@ -71,7 +71,9 @@ smsRouter.use(authMiddleware.authenticate);
  *       500:
  *         description: Failed to connect SMS integration
  */
-smsRouter.post("/connect", mustBeAMember, (req, res, next) => {
+smsRouter.post("/connect",
+  //  mustBeAMember,
+    (req, res, next) => {
   smsController.connectSMS(req, res, next);
 });
 
