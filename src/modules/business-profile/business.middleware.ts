@@ -42,7 +42,7 @@ export const mustBeAMember = async (
           if (!payload.sub) {
             throw new UnauthorizedError("Invalid token: missing user ID");
           }
-       req.user = payload as any;
+       req.user = payload.sub as any;
 
     if (!req.user?.businessId) {
       throw new ForbiddenError(
