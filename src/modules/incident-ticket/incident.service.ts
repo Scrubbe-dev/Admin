@@ -48,163 +48,99 @@ export class IncidentService {
     }
   }
 
-  // async submitIncident(
-  //   request: IncidentRequest,
-  //   userId: string,
-  //   businessId: string
-  // ) {
-  //   try {
-  //     let ticketId: string;
-  //     let exists;
-  //     do {
-  //       ticketId = IncidentUtils.generateTicketId();
-
-  //       exists = await prisma.incidentTicket.findUnique({
-  //         where: { ticketId },
-  //       });
-  //     } while (exists);
-
-  //     const incidentTicket = await prisma.incidentTicket.create({
-  //       data: {
-  //         ticketId,
-  //         reason: request.reason,
-  //         assignedToEmail: request.assignedTo ?? null,
-  //         userName: request.userName,
-  //         assignedById: userId as string,
-  //         priority: request.priority as Priority,
-  //         category: request.category as string,
-  //         subCategory: request.subCategory as string,
-  //         description: request.description as string,
-  //         MTTR: request.MTTR as string,
-  //         createdFrom: request.createdFrom ?? null,
-  //         businessId,
-  //         source: request.source as Source,
-  //         impact: request.impact as Impact,
-  //         suggestionFix: request.suggestionFix,
-  //         affectedSystem: request.affectedSystem,
-  //         status: request.status as IncidentStatus,
-  //       },
-  //     });
-
-  //     const riskScore = await IncidentUtils.ezraDetermineRiskScore(
-  //       incidentTicket
-  //     );
-
-  //     const recommendedActions = await IncidentUtils.ezraRecommendedActions(
-  //       incidentTicket
-  //     );
-
-  //     const mappedActions = IncidentMapper.mapRecommendedAction(
-  //       recommendedActions?.action
-  //     );
-
-  //     const slaTargets = IncidentUtils.calculateSLATargets(
-  //       incidentTicket.createdAt,
-  //       incidentTicket.priority
-  //     );
-
-  //     const updatedTicket = await prisma.incidentTicket.update({
-  //       where: {
-  //         id: incidentTicket.id,
-  //       },
-  //       data: {
-  //         riskScore: riskScore?.score,
-  //         recommendedActions: mappedActions,
-  //         slaTargetAck: slaTargets.ack,
-  //         slaTargetResolve: slaTargets.resolve,
-  //       },
-  //     });
-
-  //     await IncidentUtils.sendIncidentTicketNotification(
-  //       updatedTicket,
-  //       "New Ticket submitted"
-  //     );
-
-  //     if (
-  //       updatedTicket.priority === "HIGH" ||
-  //       updatedTicket.priority === "CRITICAL"
-  //     ) {
-  //       console.log(
-  //         "============== HIGH PRIORITY INCIDENT DETECTED =============="
-  //       );
-  //       const meetUtil = new MeetUtil();
-
-  //       await meetUtil.triggerWarRoom(updatedTicket);
-  //     }
-
-  //     return updatedTicket;
-  //   } catch (error) {
-  //     const err = `Failed to submit incident: ${
-  //       error instanceof Error && error.message
-  //     }`;
-  //     console.error(err);
-  //     throw new Error(err);
-  //   }
-  // }
   async submitIncident(
-  request: IncidentRequest,
-  userId: string,
-  businessId: string
-) {
-  try {
-    // Validate assignedTo email exists in invites if provided
-    let assignedToEmail = null;
-    if (request.assignedTo) {
-      const invite = await prisma.invites.findFirst({
+    request: IncidentRequest,
+    userId: string,
+    businessId: string
+  ) {
+    try {
+      let ticketId: string;
+      let exists;
+      do {
+        ticketId = IncidentUtils.generateTicketId();
+
+        exists = await prisma.incidentTicket.findUnique({
+          where: { ticketId },
+        });
+      } while (exists);
+
+      const incidentTicket = await prisma.incidentTicket.create({
+        data: {
+          ticketId,
+          reason: request.reason,
+          assignedToEmail: request.assignedTo ?? null,
+          userName: request.userName,
+          assignedById: userId as string,
+          priority: request.priority as Priority,
+          category: request.category as string,
+          subCategory: request.subCategory as string,
+          description: request.description as string,
+          MTTR: request.MTTR as string,
+          createdFrom: request.createdFrom ?? null,
+          businessId,
+          source: request.source as Source,
+          impact: request.impact as Impact,
+          suggestionFix: request.suggestionFix,
+          affectedSystem: request.affectedSystem,
+          status: request.status as IncidentStatus,
+        },
+      });
+
+      const riskScore = await IncidentUtils.ezraDetermineRiskScore(
+        incidentTicket
+      );
+
+      const recommendedActions = await IncidentUtils.ezraRecommendedActions(
+        incidentTicket
+      );
+
+      const mappedActions = IncidentMapper.mapRecommendedAction(
+        recommendedActions?.action
+      );
+
+      const slaTargets = IncidentUtils.calculateSLATargets(
+        incidentTicket.createdAt,
+        incidentTicket.priority
+      );
+
+      const updatedTicket = await prisma.incidentTicket.update({
         where: {
-          email: request.assignedTo,
-          sentById: businessId,
-          status: "ACCEPTED",
-          stillAMember: true
-        }
+          id: incidentTicket.id,
+        },
+        data: {
+          riskScore: riskScore?.score,
+          recommendedActions: mappedActions,
+          slaTargetAck: slaTargets.ack,
+          slaTargetResolve: slaTargets.resolve,
+        },
       });
 
-      if (!invite) {
-        throw new Error(`User with email ${request.assignedTo} is not a valid team member`);
+      await IncidentUtils.sendIncidentTicketNotification(
+        updatedTicket,
+        "New Ticket submitted"
+      );
+
+      if (
+        updatedTicket.priority === "HIGH" ||
+        updatedTicket.priority === "CRITICAL"
+      ) {
+        console.log(
+          "============== HIGH PRIORITY INCIDENT DETECTED =============="
+        );
+        const meetUtil = new MeetUtil();
+
+        await meetUtil.triggerWarRoom(updatedTicket);
       }
-      assignedToEmail = request.assignedTo;
+
+      return updatedTicket;
+    } catch (error) {
+      const err = `Failed to submit incident: ${
+        error instanceof Error && error.message
+      }`;
+      console.error(err);
+      throw new Error(err);
     }
-
-    let ticketId: string;
-    let exists;
-    do {
-      ticketId = IncidentUtils.generateTicketId();
-      exists = await prisma.incidentTicket.findUnique({
-        where: { ticketId },
-      });
-    } while (exists);
-
-    const incidentTicket = await prisma.incidentTicket.create({
-      data: {
-        ticketId,
-        reason: request.reason,
-        assignedToEmail: assignedToEmail, // Use validated email or null
-        userName: request.userName,
-        assignedById: userId,
-        priority: request.priority as Priority,
-        category: request.category as string,
-        subCategory: request.subCategory as string,
-        description: request.description as string,
-        MTTR: request.MTTR as string,
-        createdFrom: request.createdFrom ?? null,
-        businessId,
-        source: request.source as Source,
-        impact: request.impact as Impact,
-        suggestionFix: request.suggestionFix,
-        affectedSystem: request.affectedSystem,
-        status: request.status as IncidentStatus,
-      },
-    });
-
-    // ... rest of your method
-  } catch (error) {
-    const err = `Failed to submit incident: ${
-      error instanceof Error && error.message
-    }`;
-    console.error(err);
-    throw new Error(err);
   }
-}
 
   async acknowledgeIncident(ticketId: string) {
     try {
@@ -441,150 +377,75 @@ export class IncidentService {
     }
   }
 
-  // async addComment(
-  //   request: CommentRequest,
-  //   userId: string,
-  //   email: string,
-  //   incidentTicketId: string,
-  //   businessId: string
-  // ) {
-  //   try {
-  //     const business = await prisma.business.findUnique({
-  //       where: { id: businessId },
-  //       include: { 
-  //         invites: true, 
-  //         User: { // Changed from 'user' to 'User'
-  //           where: { id: userId },
-  //           select: { id: true, firstName: true, lastName: true }
-  //         } 
-  //       },
-  //     });
-
-  //     if (!business) {
-  //       throw new NotFoundError(`Business not found with id: ${businessId}`);
-  //     }
-
-  //     // Get business owner from User array
-  //     const businessOwner = business.User.find(u => u.id === business.userId);
-  //     if (!businessOwner) {
-  //       throw new NotFoundError("Business owner not found");
-  //     }
-
-  //     // Check membership either owner or active member
-  //     const inviteMember = business.invites.find(
-  //       (invite) =>
-  //         invite.email === email &&
-  //         invite.stillAMember
-  //     );
-
-  //     const isMember = inviteMember || business.userId === userId;
-
-  //     if (!isMember) {
-  //       throw new ForbiddenError(
-  //         `You must be an active member of ${business.name} to comment`
-  //       );
-  //     }
-
-  //     const newComment = await prisma.incidentComment.create({
-  //       data: {
-  //         incidentTicketId,
-  //         authorId: userId,
-  //         content: request.content,
-  //         isBusinessOwner: business.userId === userId,
-  //       },
-  //     });
-
-  //     return IncidentMapper.mapToCommentResponse({
-  //       id: newComment.id,
-  //       content: newComment.content,
-  //       createdAt: newComment.createdAt,
-  //       firstname: inviteMember?.firstName ?? businessOwner.firstName,
-  //       lastname: inviteMember?.lastName ?? businessOwner.lastName,
-  //       isBusinessOwner: newComment.isBusinessOwner,
-  //     });
-  //   } catch (error) {
-  //     throw new Error(
-  //       `Failed to submit comment: ${
-  //         error instanceof Error ? error.message : String(error)
-  //       }`
-  //     );
-  //   }
-  // }
-
   async addComment(
-  request: CommentRequest,
-  userId: string,
-  email: string,
-  incidentTicketId: string,
-  businessId: string
-) {
-  try {
-    // Add validation for businessId
-    if (!businessId) {
-      throw new Error("Business ID is required");
-    }
+    request: CommentRequest,
+    userId: string,
+    email: string,
+    incidentTicketId: string,
+    businessId: string
+  ) {
+    try {
+      const business = await prisma.business.findUnique({
+        where: { id: businessId },
+        include: { 
+          invites: true, 
+          User: { // Changed from 'user' to 'User'
+            where: { id: userId },
+            select: { id: true, firstName: true, lastName: true }
+          } 
+        },
+      });
 
-    const business = await prisma.business.findUnique({
-      where: { id: businessId }, // This was undefined in your error
-      include: { 
-        invites: true, 
-        User: {
-          where: { id: userId },
-          select: { id: true, firstName: true, lastName: true }
-        } 
-      },
-    });
+      if (!business) {
+        throw new NotFoundError(`Business not found with id: ${businessId}`);
+      }
 
-    if (!business) {
-      throw new NotFoundError(`Business not found with id: ${businessId}`);
-    }
+      // Get business owner from User array
+      const businessOwner = business.User.find(u => u.id === business.userId);
+      if (!businessOwner) {
+        throw new NotFoundError("Business owner not found");
+      }
 
-    // Get business owner from User array
-    const businessOwner = business.User.find(u => u.id === business.userId);
-    if (!businessOwner) {
-      throw new NotFoundError("Business owner not found");
-    }
+      // Check membership either owner or active member
+      const inviteMember = business.invites.find(
+        (invite) =>
+          invite.email === email &&
+          invite.stillAMember
+      );
 
-    // Check membership either owner or active member
-    const inviteMember = business.invites.find(
-      (invite) =>
-        invite.email === email &&
-        invite.stillAMember
-    );
+      const isMember = inviteMember || business.userId === userId;
 
-    const isMember = inviteMember || business.userId === userId;
+      if (!isMember) {
+        throw new ForbiddenError(
+          `You must be an active member of ${business.name} to comment`
+        );
+      }
 
-    if (!isMember) {
-      throw new ForbiddenError(
-        `You must be an active member of ${business.name} to comment`
+      const newComment = await prisma.incidentComment.create({
+        data: {
+          incidentTicketId,
+          authorId: userId,
+          content: request.content,
+          isBusinessOwner: business.userId === userId,
+        },
+      });
+
+      return IncidentMapper.mapToCommentResponse({
+        id: newComment.id,
+        content: newComment.content,
+        createdAt: newComment.createdAt,
+        firstname: inviteMember?.firstName ?? businessOwner.firstName,
+        lastname: inviteMember?.lastName ?? businessOwner.lastName,
+        isBusinessOwner: newComment.isBusinessOwner,
+      });
+    } catch (error) {
+      throw new Error(
+        `Failed to submit comment: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
-
-    const newComment = await prisma.incidentComment.create({
-      data: {
-        incidentTicketId,
-        authorId: userId,
-        content: request.content,
-        isBusinessOwner: business.userId === userId,
-      },
-    });
-
-    return IncidentMapper.mapToCommentResponse({
-      id: newComment.id,
-      content: newComment.content,
-      createdAt: newComment.createdAt,
-      firstname: inviteMember?.firstName ?? businessOwner.firstName,
-      lastname: inviteMember?.lastName ?? businessOwner.lastName,
-      isBusinessOwner: newComment.isBusinessOwner,
-    });
-  } catch (error) {
-    throw new Error(
-      `Failed to submit comment: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
   }
-}
 
   async getComments(incidentTicketId: string) {
     try {
