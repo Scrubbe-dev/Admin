@@ -298,5 +298,5 @@ process.on('SIGTERM', () => {
 
   server.listen(env.PORT, () => {
     console.log(`Server running on port ${env.PORT}`);
-    console.log(`🔌 Socket.io available at /socket.io/`);
+    console.log(`🔌 Socket.io available at /api/v1/incident-ticket/conversation`);
   }); 
