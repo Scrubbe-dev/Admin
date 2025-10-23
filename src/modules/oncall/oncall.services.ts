@@ -49,12 +49,6 @@ export class OnCallService {
         teamMembers: {
           include: {
             member: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true
-              }
             }
           }
         }
