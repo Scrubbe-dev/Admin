@@ -1058,7 +1058,7 @@ export class AuthService {
       throw new UnauthorizedError("Invalid credentials");
     }
 
-    const businessId = await InviteUtil.getInvitedBusinessId(user.email);
+    // const businessId = await InviteUtil.getInvitedBusinessId(user.email);
 
     await this.prisma.user.update({
       where: { id: user.id },
@@ -1067,12 +1067,17 @@ export class AuthService {
 
     const tokens = await this.tokenService.generateTokens(
       user as any,
-      businessId ?? user.business?.id
+      user?.business?.id 
     );
+
+    // const tokens = await this.tokenService.generateTokens(
+    //   user as any,
+    //   businessId ?? user.business?.id
+    // );
 
     return AuthMapper.toUserResponse(
       user,
-      businessId ?? user.business?.id,
+      user?.business?.id,
       tokens,
       user?.business?.purpose
     );
