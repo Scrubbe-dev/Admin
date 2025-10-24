@@ -32,9 +32,9 @@ model User {
   scopes                     String[]                       @default(["api-key:create"])
   
   // Business relationship - User belongs to one Business
-  businessId                 String?                        @unique
+  businessId                 String?                        
   business                   Business?                      @relation(fields: [businessId], references: [id])
-  
+  businessOwner              String?
   // IncidentTicket relationships
   createdIncidentTickets     IncidentTicket[]               @relation("IncidentTicketCreator")
   assignedIncidentTickets    IncidentTicket[]               @relation("IncidentTicketAssignee")

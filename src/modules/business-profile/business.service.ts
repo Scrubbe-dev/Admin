@@ -124,7 +124,7 @@ async fetchAllValidMembers(userId: string, businessId: string) {
     // Get all valid members: business owner + accepted invites
     const [businessOwner, acceptedInvites] = await Promise.all([
       // Get business owner
-      prisma.user.findUnique({
+      prisma.user.findFirst({
         where: { businessId: userBusiness.id as string },
         select: {
           id: true,
@@ -259,7 +259,7 @@ async acceptInvite(request: AcceptInviteTypes) {
     console.log('3. Invite found:', invite?.id);
 
     // Check if user already exists
-    const existingUser = await this.prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findFirst({
       where: { email: request.email }
     });
 
@@ -286,7 +286,7 @@ async acceptInvite(request: AcceptInviteTypes) {
           firstName: request.firstName,
           lastName: request.lastName,
           passwordHash: await this.businessUtil.hashPassword(request.password),
-          businessId: request.businessId,
+          businessId: request.businessId ,
           accountType: "BUSINESS"
         }
       });
