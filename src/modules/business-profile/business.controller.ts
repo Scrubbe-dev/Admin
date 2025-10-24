@@ -6,6 +6,7 @@ import { acceptInviteSchema, businessSetUpSchema, decodeInviteSchema, inviteMemb
 import { AccountType } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { ConflictError, UnauthorizedError } from "../auth/error";
+import prisma from "../../lib/prisma";
 
 
 export class BusinessController {
@@ -47,9 +48,16 @@ export class BusinessController {
   async fetchAllValidMembers(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.sub!;
+      const dataBusinessId = await prisma?.user.findUnique({
+        where: { id: userId },
+        select:{
+          businessId:true
+        }
+      });
+      const businessIdFromDB = dataBusinessId?.businessId;
       const businessId = req.user?.businessId!;
 
-      console.log(userId , businessId ," ============USERID & BUSINESSID======================" )
+      console.log(userId , businessId ,businessIdFromDB ," ============USERID & BUSINESSID======================" )
 
       const response = await this.businessService.fetchAllValidMembers(userId, businessId);
       console.log(response , "===================FROM GET MEMBERS===========")

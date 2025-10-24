@@ -8,6 +8,7 @@ const validators_1 = require("../auth/utils/validators");
 const business_schema_1 = require("./business.schema");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const error_1 = require("../auth/error");
+const prisma_1 = __importDefault(require("../../lib/prisma"));
 class BusinessController {
     businessService;
     constructor(businessService) {
@@ -39,8 +40,15 @@ class BusinessController {
     async fetchAllValidMembers(req, res, next) {
         try {
             const userId = req.user?.sub;
+            const dataBusinessId = await prisma_1.default?.user.findUnique({
+                where: { id: userId },
+                select: {
+                    businessId: true
+                }
+            });
+            const businessIdFromDB = dataBusinessId?.businessId;
             const businessId = req.user?.businessId;
-            console.log(userId, businessId, " ============USERID & BUSINESSID======================");
+            console.log(userId, businessId, businessIdFromDB, " ============USERID & BUSINESSID======================");
             const response = await this.businessService.fetchAllValidMembers(userId, businessId);
             console.log(response, "===================FROM GET MEMBERS===========");
             res.json(response);

@@ -37,6 +37,11 @@ export const mustBeAMember = async (
       );
     }
 
+
+    const userId = await prisma.user.findFirst({
+      where:{id: req.user.id}
+    })
+
     const business = await prisma.business.findUnique({
       where: { id: req.user.businessId },
       include: {
@@ -57,7 +62,7 @@ export const mustBeAMember = async (
     }
 
     // Check if user is the business owner
-    if (business.userId === req.user.sub) {
+    if (userId?.businessId === business.id) {
       return next();
     }
 

@@ -102,7 +102,7 @@ async fetchAllValidMembers(userId: string, businessId: string) {
     const userBusiness = await prisma.business.findFirst({
       where: {
         OR: [
-          { userId: userId }, // User is the business owner
+          { id: user.businessId as string }, // User is the business owner
           { 
             invites: {
               some: {
@@ -125,7 +125,7 @@ async fetchAllValidMembers(userId: string, businessId: string) {
     const [businessOwner, acceptedInvites] = await Promise.all([
       // Get business owner
       prisma.user.findUnique({
-        where: { id: userBusiness.userId as string },
+        where: { businessId: userBusiness.id as string },
         select: {
           id: true,
           firstName: true,

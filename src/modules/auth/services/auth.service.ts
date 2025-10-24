@@ -778,6 +778,16 @@ export class AuthService {
         input.password
       );
 
+
+   const newBusiness = await  this.prisma.business.create({
+       data:{
+         address: input.businessAddress,
+         companySize: input.companySize,
+         purpose: input.purpose || "None",
+       },
+     })
+
+
       const user = await this.prisma.user.create({
         data: {
           email: input.email,
@@ -786,6 +796,7 @@ export class AuthService {
           firstName: input.firstName,
           lastName: input.lastName,
           role: Role.ADMIN,
+          businessId: newBusiness.id
           // business: {
           //   create: {
           //         userId:"",  // NEED TO LOOK AT THIS MORE
@@ -800,18 +811,11 @@ export class AuthService {
         // },
       });
 
+  if(!user){
+     throw new UnauthorizedError("User creation failed");
+  }
 
-     const newBusiness = await  this.prisma.business.create({
-        data:{
-          userId: user.id,
-          address: input.businessAddress,
-          companySize: input.companySize,
-          purpose: input.purpose || "None",
-        },
-        include:{
-          User: true
-        }
-      })
+  
 
       const tokens = await this.tokenService.generateTokens(
         user as any,
@@ -898,6 +902,15 @@ export class AuthService {
         );
       }
 
+
+    const bussinesses = await this.prisma.business.create({
+        data:{
+          address: input.businessAddress as string,
+          companySize: input.companySize,
+          purpose: input.purpose || "None",
+        },
+      });
+
       const newUser = await this.prisma.user.create({
         data: {
           oauthprovider: input.oAuthProvider as unknown as OAuthProvider,
@@ -910,23 +923,27 @@ export class AuthService {
           firstName: input.firstName,
           lastName: input.lastName,
           role: Role.ADMIN,
-          business: {
-            create: {
-              address: input.businessAddress,
-              companySize: input.companySize,
-              purpose: input.purpose || "None",
-            },
-          },
+          businessId: bussinesses.id
+
+          // Business: {
+          //   create: {
+          //     address: input.businessAddress as string,
+          //     companySize: input.companySize,
+          //     purpose: input.purpose || "None",
+          //   },
+          // },
         },
-        include: { business: true },
+        // include: { Business: true },
       });
+
+
 
       const tokens = await this.tokenService.generateTokens(
         newUser as any,
-        newUser.business?.id
+        bussinesses.id
       );
 
-      return AuthMapper.toUserResponse(newUser, newUser.business?.id, tokens);
+      return AuthMapper.toUserResponse(newUser, bussinesses.id, tokens);
     } catch (error) {
       throw new UnauthorizedError(`Error occured ${error}`);
     }
@@ -1067,7 +1084,7 @@ export class AuthService {
 
     const tokens = await this.tokenService.generateTokens(
       user as any,
-      user?.business?.id 
+      user?.businessId as string 
     );
    
     // const tokens = await this.tokenService.generateTokens(

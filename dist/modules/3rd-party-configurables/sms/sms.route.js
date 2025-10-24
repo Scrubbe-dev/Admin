@@ -8,7 +8,6 @@ const token_service_1 = require("../../auth/services/token.service");
 const sms_controller_1 = require("./sms.controller");
 const auth_middleware_1 = require("../../auth/middleware/auth.middleware");
 const sms_service_1 = require("./sms.service");
-const business_middleware_1 = require("../../business-profile/business.middleware");
 const smsRouter = express_1.default.Router();
 const tokenService = new token_service_1.TokenService(process.env.JWT_SECRET, process.env.JWT_EXPIRES_IN || "1h", 15 // in mins
 );
@@ -68,7 +67,9 @@ smsRouter.use(authMiddleware.authenticate);
  *       500:
  *         description: Failed to connect SMS integration
  */
-smsRouter.post("/connect", business_middleware_1.mustBeAMember, (req, res, next) => {
+smsRouter.post("/connect", 
+//  mustBeAMember,
+(req, res, next) => {
     smsController.connectSMS(req, res, next);
 });
 exports.default = smsRouter;

@@ -8,7 +8,6 @@ const token_service_1 = require("../../auth/services/token.service");
 const whatsapp_service_1 = require("./whatsapp.service");
 const whatsapp_controller_1 = require("./whatsapp.controller");
 const auth_middleware_1 = require("../../auth/middleware/auth.middleware");
-const business_middleware_1 = require("../../business-profile/business.middleware");
 const whatsappRouter = express_1.default.Router();
 const tokenService = new token_service_1.TokenService(process.env.JWT_SECRET, process.env.JWT_EXPIRES_IN || "1h", 15 // in mins
 );
@@ -73,7 +72,9 @@ const authMiddleware = new auth_middleware_1.AuthMiddleware(tokenService);
  *       500:
  *         description: Failed to connect WhatsApp integration
  */
-whatsappRouter.post("/connect", authMiddleware.authenticate, business_middleware_1.mustBeAMember, (req, res, next) => {
+whatsappRouter.post("/connect", authMiddleware.authenticate, 
+// mustBeAMember,
+(req, res, next) => {
     whatsappController.connectWhatsapp(req, res, next);
 });
 exports.default = whatsappRouter;

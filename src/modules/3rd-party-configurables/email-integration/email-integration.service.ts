@@ -25,9 +25,11 @@ export class EmailIntegrationService {
     if (existing) throw new ConflictError("Subdomain already in use");
 
     const incidentEmail = `${input.subdomain}@incidents.scrubbe.com`;
-
+     const userBusinessId = await prisma.user.findFirst({
+        where:{id: userId},
+     })
     const business = await prisma.business.update({
-      where: { userId },
+      where: { id: userBusinessId?.businessId! },
       data: {
         subdomain: input.subdomain,
         incidentEmail,
@@ -41,8 +43,11 @@ export class EmailIntegrationService {
   }
 
   async getEmailIntegration(userId: string) {
+       const userBusinessId = await prisma.user.findFirst({
+        where:{id: userId},
+     })
     const business = await prisma.business.findFirst({
-      where: { userId },
+      where: { id: userBusinessId?.businessId! },
       select: {
         subdomain: true,
         incidentEmail: true,
@@ -73,8 +78,7 @@ export class EmailIntegrationService {
         business: { 
           select: { 
             id: true, 
-            subdomain: true,
-            userId: true // Include userId to get owner email
+            subdomain: true
           } 
         } 
       },
@@ -97,7 +101,7 @@ export class EmailIntegrationService {
     const business = await prisma.business.findFirst({
       where: { subdomain },
       include: { 
-        User: { // Changed from 'user' to 'User' (capitalized as per your schema)
+        users: { // Changed from 'user' to 'User' (capitalized as per your schema)
           select: { 
             id: true, // Add id to select
             email: true 
@@ -109,9 +113,8 @@ export class EmailIntegrationService {
     if (!business) throw new NotFoundError("Tenant not found");
 
     // Get business owner email from the User array
-    const businessOwner = business.User.find(u => u.id === business.userId);
+    const businessOwner = business.users.filter(u=>u.id === user.id)[0];
     if (!businessOwner) throw new NotFoundError("Business owner not found");
-
     const invites = await prisma.invites.findMany({
       where: {
         accepted: true,

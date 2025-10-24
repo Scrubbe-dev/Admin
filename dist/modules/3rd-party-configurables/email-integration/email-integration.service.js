@@ -20,8 +20,11 @@ class EmailIntegrationService {
         if (existing)
             throw new error_1.ConflictError("Subdomain already in use");
         const incidentEmail = `${input.subdomain}@incidents.scrubbe.com`;
+        const userBusinessId = await client_1.default.user.findFirst({
+            where: { id: userId },
+        });
         const business = await client_1.default.business.update({
-            where: { userId },
+            where: { id: userBusinessId?.businessId },
             data: {
                 subdomain: input.subdomain,
                 incidentEmail,
@@ -33,8 +36,11 @@ class EmailIntegrationService {
         };
     }
     async getEmailIntegration(userId) {
+        const userBusinessId = await client_1.default.user.findFirst({
+            where: { id: userId },
+        });
         const business = await client_1.default.business.findFirst({
-            where: { userId },
+            where: { id: userBusinessId?.businessId },
             select: {
                 subdomain: true,
                 incidentEmail: true,
@@ -58,8 +64,7 @@ class EmailIntegrationService {
                 business: {
                     select: {
                         id: true,
-                        subdomain: true,
-                        userId: true // Include userId to get owner email
+                        subdomain: true
                     }
                 }
             },
@@ -76,7 +81,7 @@ class EmailIntegrationService {
         const business = await client_1.default.business.findFirst({
             where: { subdomain },
             include: {
-                User: {
+                users: {
                     select: {
                         id: true, // Add id to select
                         email: true
@@ -87,7 +92,7 @@ class EmailIntegrationService {
         if (!business)
             throw new error_1.NotFoundError("Tenant not found");
         // Get business owner email from the User array
-        const businessOwner = business.User.find(u => u.id === business.userId);
+        const businessOwner = business.users.filter(u => u.id === user.id)[0];
         if (!businessOwner)
             throw new error_1.NotFoundError("Business owner not found");
         const invites = await client_1.default.invites.findMany({

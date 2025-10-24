@@ -5,6 +5,7 @@ class BusinessMapper {
     constructor() { }
     static toNameAndEmail(invite) {
         return {
+            id: invite.userId,
             firstname: invite.firstName,
             lastname: invite.lastName,
             email: invite.email,

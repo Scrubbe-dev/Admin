@@ -68,7 +68,7 @@ class BusinessService {
             const userBusiness = await client_1.default.business.findFirst({
                 where: {
                     OR: [
-                        { userId: userId }, // User is the business owner
+                        { id: user.businessId }, // User is the business owner
                         {
                             invites: {
                                 some: {
@@ -89,8 +89,9 @@ class BusinessService {
             const [businessOwner, acceptedInvites] = await Promise.all([
                 // Get business owner
                 client_1.default.user.findUnique({
-                    where: { id: userBusiness.userId },
+                    where: { businessId: userBusiness.id },
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
                         email: true
@@ -107,6 +108,7 @@ class BusinessService {
             ]);
             // Map business owner to member format
             const ownerMember = businessOwner ? {
+                id: businessOwner.id,
                 firstname: businessOwner.firstName,
                 lastname: businessOwner.lastName,
                 email: businessOwner.email,

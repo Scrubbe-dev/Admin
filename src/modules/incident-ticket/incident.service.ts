@@ -389,7 +389,7 @@ export class IncidentService {
         where: { id: businessId },
         include: { 
           invites: true, 
-          User: { // Changed from 'user' to 'User'
+          users: { // Changed from 'user' to 'User'
             where: { id: userId },
             select: { id: true, firstName: true, lastName: true }
           } 
@@ -401,7 +401,7 @@ export class IncidentService {
       }
 
       // Get business owner from User array
-      const businessOwner = business.User.find(u => u.id === business.userId);
+      const businessOwner = business.users.find(u => u.id === userId);
       if (!businessOwner) {
         throw new NotFoundError("Business owner not found");
       }
@@ -413,7 +413,7 @@ export class IncidentService {
           invite.stillAMember
       );
 
-      const isMember = inviteMember || business.userId === userId;
+      const isMember = inviteMember || business.users.some(u => u.id === userId);
 
       if (!isMember) {
         throw new ForbiddenError(
@@ -426,7 +426,7 @@ export class IncidentService {
           incidentTicketId,
           authorId: userId,
           content: request.content,
-          isBusinessOwner: business.userId === userId,
+          isBusinessOwner: business.users[0].id === userId,
         },
       });
 

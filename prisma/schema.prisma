@@ -21,7 +21,6 @@ model User {
   apiKeyDuration             DateTime                       @default(now())
   createdAt                  DateTime                       @default(now())
   updatedAt                  DateTime                       @updatedAt
-  // business                   Business?
   apiKey                     String?                        @default(cuid())
   role                       Role                           @default(USER)
   passwordChangedAt          DateTime?
@@ -31,6 +30,16 @@ model User {
   registerdWithOauth         Boolean                        @default(false)
   oauthProvider_uuid         String?
   scopes                     String[]                       @default(["api-key:create"])
+  
+  // Business relationship - User belongs to one Business
+  businessId                 String?                        @unique
+  business                   Business?                      @relation(fields: [businessId], references: [id])
+  
+  // IncidentTicket relationships
+  createdIncidentTickets     IncidentTicket[]               @relation("IncidentTicketCreator")
+  assignedIncidentTickets    IncidentTicket[]               @relation("IncidentTicketAssignee")
+  
+  // Other relations
   scrubbe_apikey             ApiKey[]
   ConversationParticipant    ConversationParticipant[]
   DetectionRule              DetectionRule[]
@@ -38,7 +47,6 @@ model User {
   Graph                      Graph[]
   Incident                   Incident[]
   IncidentComment            IncidentComment[]
-  IncidentTicket             IncidentTicket[]
   Invites                    Invites[]
   Message                    Message[]
   PlaybookExecution          PlaybookExecution[]
@@ -52,14 +60,13 @@ model User {
   escalatedIncidentsReceived EscalatedIncident[]            @relation("UserEscalatedTo")
   escalatedIncidentsMade     EscalatedIncident[]            @relation("UserEscalatedBy")
   Imssetup                   Imssetup[]
-  createdIncidentTickets IncidentTicket[] @relation("IncidentTicketCreator")
-  customers EndCustomer[] @relation("CompanyUserToCustomers")
-  businessId String?  // Add this field
-  business   Business? @relation(fields: [businessId], references: [id])
-  EndCustomerIncident EndCustomerIncident[]
-  EndCustomer EndCustomer[]
-  OnCallTeamMember OnCallTeamMember[]
+  customers                  EndCustomer[]                  @relation("CompanyUserToCustomers")
+  EndCustomerIncident        EndCustomerIncident[]
+  EndCustomer                EndCustomer[]
+  OnCallTeamMember           OnCallTeamMember[]
+
   @@index([apiKey])
+  @@index([businessId]) // Add index for better performance
 }
 
 model ResolveIncident {
@@ -226,18 +233,21 @@ model Business {
   companyPurpose             String?
   purpose                    String?
   dashBoardId                String?                      @unique
-  userId                     String?                      @unique
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
-  // user                       User                         @relation(fields: [userId], references: [id])
+  
+  // Users belong to this Business (one-to-many)
+  users                      User[]
+  
+  // Other relations
   dashboard                  BusinessDashboard?           @relation("BusinessToDashboard")
   IncidentTicket             IncidentTicket[]
   invites                    Invites[]
   IncidentTicketNotification IncidentTicketNotification[]
   thirdpartyIntegrations     UserThirdpartyIntegration[]
-  EndCustomerIncident EndCustomerIncident[]
-  User User[]
+  EndCustomerIncident        EndCustomerIncident[]
 }
+
 
 model BusinessDashboard {
   id                   String                         @id @default(uuid())
@@ -447,6 +457,7 @@ model Incident {
 
 // ===================== START INCIDENT TICKET ==================
 
+
 model IncidentTicket {
   id              String            @id @default(uuid())
   template        IncidentTemplate? @default(NONE)
@@ -458,7 +469,18 @@ model IncidentTicket {
   ticketId        String            @unique
   status          IncidentStatus    @default(OPEN)
 
-  assignedById String
+  // Creator relationship
+  createdById     String?
+  createdBy       User?              @relation("IncidentTicketCreator", fields: [createdById], references: [id])
+  
+  // Assignee relationship
+  assignedById    String
+  assignedBy      User              @relation("IncidentTicketAssignee", fields: [assignedById], references: [id])
+
+  // Business relationship
+  businessId      String?
+  business        Business?         @relation(fields: [businessId], references: [id])
+
   createdFrom  String? // ticket may have been created from slack, email, github etc
 
   // SLA targets
@@ -479,8 +501,7 @@ model IncidentTicket {
   slaResolveTimeMinutes Int? // Store the resolve time in minutes
   sLABreachAuditLog   SLABreachAuditLog[]
 
-
-    // Add these fields for MTTR monitoring
+  // Add these fields for MTTR monitoring
   mttrTargetAck DateTime?
   mttrTargetResolve DateTime?
   mttrResponseHalfNotified Boolean @default(false)
@@ -488,22 +509,15 @@ model IncidentTicket {
   mttrResponseBreachNotified Boolean @default(false)
   mttrResolveBreachNotified Boolean @default(false)
 
-  // Add this field to track ticket creator
-  createdById String?
-  createdBy User? @relation("IncidentTicketCreator", fields: [createdById], references: [id])
-
   recommendedActions DetermineAction[]
   riskScore          Int               @default(20)
-  businessId         String?
   priority           Priority          @default(LOW)
 
   conversation Conversation?
   comments     IncidentComment[]
 
   Incident                   Incident[]
-  assignedBy                 User?                          @relation(fields: [assignedById], references: [id])
   assignedTo                 Invites?                       @relation(fields: [assignedToEmail], references: [email])
-  business                   Business?                      @relation(fields: [businessId], references: [id])
   incidentTicketNotification IncidentTicketNotification[]
   playbookRecommendations    TicketPlaybookRecommendation[]
   ResolveIncident            ResolveIncident?
@@ -524,6 +538,10 @@ model IncidentTicket {
   intel          Intel[]
 
   Imssetup Imssetup[]
+
+  @@index([createdById])
+  @@index([assignedById])
+  @@index([businessId])
 }
 
 // ===================== END INCIDENT TICKET ==================

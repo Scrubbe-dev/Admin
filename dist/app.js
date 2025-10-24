@@ -81,12 +81,7 @@ console.log('- Scan for new incidents every 2 minutes');
 console.log('- Check SLA milestones every 5 minutes');
 console.log('- Run comprehensive audit every hour');
 const server = http_1.default.createServer(app);
-const io = new socket_io_1.Server(server, {
-    // path: "/api/v1/incident-ticket/conversation",
-    cors: {
-        origin: "*",
-    },
-});
+const io = new socket_io_1.Server(server);
 app.set("io", io);
 (0, socket_1.initSocket)(io, prisma);
 app.set("trust proxy", (ip) => {
@@ -236,4 +231,5 @@ process.on('SIGTERM', () => {
 });
 server.listen(env_1.env.PORT, () => {
     console.log(`Server running on port ${env_1.env.PORT}`);
+    console.log(`🔌 Socket.io available at /api/v1/incident-ticket/conversation`);
 });

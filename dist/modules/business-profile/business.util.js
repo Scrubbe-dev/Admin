@@ -38,7 +38,7 @@ class BusinessUtil {
             include: { business: true },
         });
         const business = await tx.business.findUnique({
-            where: { userId: updatedBusinessAdmin.id },
+            where: { id: updatedBusinessAdmin.businessId },
             select: { id: true, dashboard: true },
         });
         if (!business) {
@@ -150,7 +150,7 @@ class BusinessUtil {
         return jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
     }
     async generateInviteLink(invite) {
-        const baseUrl = "https://www.scrubbe.com/auth/invite";
+        const baseUrl = "https://incidents.scrubbe.com/auth/invite";
         const token = this.generateInviteToken(invite);
         const inviteLink = `${baseUrl}?token=${token}`;
         return inviteLink;

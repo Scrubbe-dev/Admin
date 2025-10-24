@@ -615,6 +615,13 @@ class AuthService {
                 throw new error_1.ConflictError("Email already in use");
             }
             const passwordHash = await this.securityUtils.hashPassword(input.password);
+            const newBusiness = await this.prisma.business.create({
+                data: {
+                    address: input.businessAddress,
+                    companySize: input.companySize,
+                    purpose: input.purpose || "None",
+                },
+            });
             const user = await this.prisma.user.create({
                 data: {
                     email: input.email,
@@ -623,6 +630,7 @@ class AuthService {
                     firstName: input.firstName,
                     lastName: input.lastName,
                     role: client_1.Role.ADMIN,
+                    businessId: newBusiness.id
                     // business: {
                     //   create: {
                     //         userId:"",  // NEED TO LOOK AT THIS MORE
@@ -636,17 +644,9 @@ class AuthService {
                 //   business: true,
                 // },
             });
-            const newBusiness = await this.prisma.business.create({
-                data: {
-                    userId: user.id,
-                    address: input.businessAddress,
-                    companySize: input.companySize,
-                    purpose: input.purpose || "None",
-                },
-                include: {
-                    User: true
-                }
-            });
+            if (!user) {
+                throw new error_1.UnauthorizedError("User creation failed");
+            }
             const tokens = await this.tokenService.generateTokens(user, newBusiness.id);
             const code = await this.generateAndSaveOTP(user.id, user.email);
             await this.emailService.sendVerificationEmail(user.email, code);
@@ -702,6 +702,13 @@ class AuthService {
                     ? ", please log in with " + input.oAuthProvider
                     : ""}`);
             }
+            const bussinesses = await this.prisma.business.create({
+                data: {
+                    address: input.businessAddress,
+                    companySize: input.companySize,
+                    purpose: input.purpose || "None",
+                },
+            });
             const newUser = await this.prisma.user.create({
                 data: {
                     oauthprovider: input.oAuthProvider,
@@ -714,18 +721,19 @@ class AuthService {
                     firstName: input.firstName,
                     lastName: input.lastName,
                     role: client_1.Role.ADMIN,
-                    business: {
-                        create: {
-                            address: input.businessAddress,
-                            companySize: input.companySize,
-                            purpose: input.purpose || "None",
-                        },
-                    },
+                    businessId: bussinesses.id
+                    // Business: {
+                    //   create: {
+                    //     address: input.businessAddress as string,
+                    //     companySize: input.companySize,
+                    //     purpose: input.purpose || "None",
+                    //   },
+                    // },
                 },
-                include: { business: true },
+                // include: { Business: true },
             });
-            const tokens = await this.tokenService.generateTokens(newUser, newUser.business?.id);
-            return auth_mapper_1.AuthMapper.toUserResponse(newUser, newUser.business?.id, tokens);
+            const tokens = await this.tokenService.generateTokens(newUser, bussinesses.id);
+            return auth_mapper_1.AuthMapper.toUserResponse(newUser, bussinesses.id, tokens);
         }
         catch (error) {
             throw new error_1.UnauthorizedError(`Error occured ${error}`);
@@ -830,13 +838,17 @@ class AuthService {
         if (!isValid) {
             throw new error_1.UnauthorizedError("Invalid credentials");
         }
-        const businessId = await invite_util_1.InviteUtil.getInvitedBusinessId(user.email);
+        // const businessId = await InviteUtil.getInvitedBusinessId(user.email);
         await this.prisma.user.update({
             where: { id: user.id },
             data: { lastLogin: new Date() },
         });
-        const tokens = await this.tokenService.generateTokens(user, businessId ?? user.business?.id);
-        return auth_mapper_1.AuthMapper.toUserResponse(user, businessId ?? user.business?.id, tokens, user?.business?.purpose);
+        const tokens = await this.tokenService.generateTokens(user, user?.businessId);
+        // const tokens = await this.tokenService.generateTokens(
+        //   user as any,
+        //   businessId ?? user.business?.id
+        // );
+        return auth_mapper_1.AuthMapper.toUserResponse(user, user?.business?.id, tokens, user?.business?.purpose);
     }
     async oAuthLogin(input) {
         const user = await this.prisma.user.findFirst({

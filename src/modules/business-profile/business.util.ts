@@ -46,7 +46,7 @@ export class BusinessUtil {
     });
 
     const business = await tx.business.findUnique({
-      where: { userId: updatedBusinessAdmin.id },
+      where: { id: updatedBusinessAdmin.businessId! },
       select: { id: true, dashboard: true },
     });
 

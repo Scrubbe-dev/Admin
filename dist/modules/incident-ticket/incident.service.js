@@ -258,7 +258,7 @@ class IncidentService {
                 where: { id: businessId },
                 include: {
                     invites: true,
-                    User: {
+                    users: {
                         where: { id: userId },
                         select: { id: true, firstName: true, lastName: true }
                     }
@@ -268,14 +268,14 @@ class IncidentService {
                 throw new error_1.NotFoundError(`Business not found with id: ${businessId}`);
             }
             // Get business owner from User array
-            const businessOwner = business.User.find(u => u.id === business.userId);
+            const businessOwner = business.users.find(u => u.id === userId);
             if (!businessOwner) {
                 throw new error_1.NotFoundError("Business owner not found");
             }
             // Check membership either owner or active member
             const inviteMember = business.invites.find((invite) => invite.email === email &&
                 invite.stillAMember);
-            const isMember = inviteMember || business.userId === userId;
+            const isMember = inviteMember || business.users.some(u => u.id === userId);
             if (!isMember) {
                 throw new error_1.ForbiddenError(`You must be an active member of ${business.name} to comment`);
             }
@@ -284,7 +284,7 @@ class IncidentService {
                     incidentTicketId,
                     authorId: userId,
                     content: request.content,
-                    isBusinessOwner: business.userId === userId,
+                    isBusinessOwner: business.users[0].id === userId,
                 },
             });
             return incident_mapper_1.IncidentMapper.mapToCommentResponse({

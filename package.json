@@ -18,7 +18,7 @@
     "testmail": "ts-node src/config/test-ethereal.config.ts",
     "sendsms": "ts-node src/config/twilio.config.ts",
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "nodemon dist/app.js",
     "migrate:init": "npx prisma migrate dev --name init",
     "migrate": "npx prisma migrate dev",
     "generate": "npx prisma generate",
@@ -27,7 +27,7 @@
     "prisma:reset": "npx prisma migrate reset",
     "dev": "concurrently \"tsc --watch\" \"nodemon dist/app.js\"",
     "ts:dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts", 
     "dockerbuild": "docker build -f ./src/infrastructure/docker/DockerFile -t file-converter-app",
     "dockerrun": "docker run -p 3000:3000 file-converter-app",
     "postinstall": "prisma generate"

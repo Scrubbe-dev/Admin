@@ -73,6 +73,16 @@ class AuthController {
         try {
             const input = await (0, validators_1.validateRequest)(auth_schema_1.loginSchema, req.body);
             const result = await this.authService.login(input);
+            // req.user?.businessId = result.businessId;
+            req.user = {
+                id: result.user.id,
+                email: result.user.email,
+                firstName: result.user.firstName,
+                lastName: result.user.lastName,
+                businessId: result.user.businessId,
+                accountType: result.user.accountType,
+                sub: result.user.id,
+            };
             res.json(result);
         }
         catch (error) {
