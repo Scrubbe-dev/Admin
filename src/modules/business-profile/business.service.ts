@@ -239,7 +239,7 @@ async acceptInvite(request: AcceptInviteTypes) {
   console.log('1. Starting acceptInvite service method', { email: request.email });
   try {
 
-      const business = await this.prisma.business.findUnique({
+      const business = await this.prisma.business.findFirst({
         where: { id: request.businessId }
       });
 
