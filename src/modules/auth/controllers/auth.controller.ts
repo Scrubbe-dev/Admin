@@ -31,6 +31,7 @@ import {
   forgotPasswordSchema,
 } from "../schemas/auth.schema";
 import { UnauthorizedError } from "../error";
+import { AccountType } from "@prisma/client";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -137,6 +138,16 @@ export class AuthController {
       const input = await validateRequest<LoginInput>(loginSchema, req.body);
 
       const result = await this.authService.login(input);
+      // req.user?.businessId = result.businessId;
+      req.user = {
+        id: result.user.id,
+        email: result.user.email,
+        firstName: result.user.firstName as string,
+        lastName: result.user.lastName as string,
+        businessId: result.user.businessId,
+        accountType: result.user.accountType as AccountType,
+        sub: result.user.id,
+      };
       res.json(result);
     } catch (error) {
       next(error);
