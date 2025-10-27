@@ -115,6 +115,9 @@ export class OnCallService {
       status: assignment.status,
       teamMembers: assignment.teamMembers.map((tm: any) => ({
         id: tm.id,
+        email: tm.member.email || null,
+        firstName: tm.member.firstName || null,
+        lastName: tm.member.lastName || null,
         member: {
           id: tm.member.id,
           email: tm.member.email,

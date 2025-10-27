@@ -88,7 +88,7 @@ class BusinessService {
             // Get all valid members: business owner + accepted invites
             const [businessOwner, acceptedInvites] = await Promise.all([
                 // Get business owner
-                client_1.default.user.findUnique({
+                client_1.default.user.findFirst({
                     where: { businessId: userBusiness.id },
                     select: {
                         id: true,
@@ -199,7 +199,7 @@ class BusinessService {
             }
             console.log('3. Invite found:', invite?.id);
             // Check if user already exists
-            const existingUser = await this.prisma.user.findUnique({
+            const existingUser = await this.prisma.user.findFirst({
                 where: { email: request.email }
             });
             let userId;
