@@ -136,6 +136,9 @@ export class OnCallService {
     return {
       date: DateUtils.formatDateForResponse(assignment.date),
       teamMembers: assignment.teamMembers.map((tm: any) => ({
+        email: tm.member.email,
+        firstName: tm.member.firstName,
+        lastName: tm.member.lastName,
         member: tm.member.id,
         startTime: tm.startTime,
         endTime: tm.endTime
