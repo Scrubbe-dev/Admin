@@ -59,6 +59,7 @@ export interface AuthRequest extends Express.Request {
 
 export interface ApiResponse<T = any> {
   success: boolean;
+  incidentTicket?: any;
   message: string;
   data?: T;
   error?: string;

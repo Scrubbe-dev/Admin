@@ -254,8 +254,11 @@ export class CustomerAuthService {
       const formattedCompanies = companyUsers.map(user => ({
         id: user.id,
         name: `${user.firstName} ${user.lastName}`.trim(),
+        companyName: user.business?.name,
+        companyDetails: user.business,
+        user:user,
         business: {
-          name: user.business?.name ?? ''
+          name: user.business?.name 
         }
       }));
 

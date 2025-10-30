@@ -10,12 +10,13 @@ import {
   Priority,
 } from "@prisma/client";
 
+// incident.schema.ts
 export const submitIncidentSchema = z.object({
   template: z.enum([
     IncidentTemplate.MALWARE,
     IncidentTemplate.NONE,
     IncidentTemplate.PHISHING,
-  ]),
+  ]).optional(),
   reason: z.string().min(10, "Provide a valid reason"),
   priority: z.enum([
     Priority.CRITICAL,
@@ -23,8 +24,20 @@ export const submitIncidentSchema = z.object({
     Priority.LOW,
     Priority.MEDIUM,
   ]),
-  assignedTo: emailSchema,
-  username: z.string().min(1, "username is required"),
+  assignedTo: emailSchema.optional(), // Make this optional
+  userName: z.string().min(1, "username is required"),
+  createdFrom: z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]).optional(),
+  // Add the new required fields
+  source: z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]),
+  category: z.string().min(1, "Category is required"),
+  subCategory: z.string().min(1, "Sub-category is required"),
+  description: z.string().min(1, "Description is required"),
+  impact: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+  status: z.enum(["OPEN", "ACKNOWLEDGED", "INVESTIGATION", "MITIGATED", "RESOLVED", "CLOSED"]),
+  MTTR: z.string().min(1, "MTTR is required"),
+  suggestionFix: z.string().optional(),
+  escalate: z.string().optional(),
+  affectedSystem: z.string().optional(),
 });
 
 export const updateTicketSchema = z.object({

@@ -43,12 +43,19 @@ export class OnCallService {
     });
   }
 
-  async getAllAssignments(): Promise<GetAllAssignmentsResponse[]> {
+  async getAllAssignments(userId: string): Promise<GetAllAssignmentsResponse[]> {
     const assignments = await prisma.onCallAssignment.findMany({
+      where: { id:userId},
       include: {
         teamMembers: {
           include: {
             member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true
+              }
             }
           }
         }

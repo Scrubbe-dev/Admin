@@ -41,28 +41,28 @@ export class IncidentController {
     }
   }
 
-  async submitIncident(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userId = req.user?.sub!;
-      const businessId = req.user?.businessId!;
-      // const request = await validateRequest<IncidentRequest>(
-      //   submitIncidentSchema,
-      //   req.body
-      // );
-      const request = (await req.body) as IncidentRequest;
+async submitIncident(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.sub!;
+    const businessId = req.user?.businessId!;
+    
+    // Use validation instead of direct casting
+    const request = await validateRequest<IncidentRequest>(
+      submitIncidentSchema,
+      req.body
+    );
 
-      const response = await this.incidentService.submitIncident(
-        request,
-        userId,
-        businessId
-      );
+    const response = await this.incidentService.submitIncident(
+      request,
+      userId,
+      businessId
+    );
 
-      res.json(response);
-    } catch (error) {
-      next(error);
-    }
+    res.json(response);
+  } catch (error) {
+    next(error);
   }
-
+}
   async acknowledgeIncident(req: Request, res: Response, next: NextFunction) {
     try {
       const { incidentTicketId } = req.params;

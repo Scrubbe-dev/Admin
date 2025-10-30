@@ -86,9 +86,49 @@ export class CustomerIncidentService {
         }
       });
 
+
+      //  ticketId,
+      //           reason: request.reason,
+      //           assignedToEmail: request.assignedTo ?? null,
+      //           userName: request.userName,
+      //           assignedById: userId as string,
+      //           priority: request.priority as Priority,
+      //           category: request.category as string,
+      //           subCategory: request.subCategory as string,
+      //           description: request.description as string,
+      //           MTTR: request.MTTR as string,
+      //           createdFrom: request.createdFrom ?? null,
+      //           businessId,
+      //           source: request.source as Source,
+      //           impact: request.impact as Impact,
+      //           suggestionFix: request.suggestionFix,
+      //           affectedSystem: request.affectedSystem,
+      //           status: request.status as IncidentStatus,
+      //         },
+
+    const incidentTicket = await prisma.incidentTicket.create({
+        data: {
+          ticketId: ticketNumber,
+          description: data.description,
+          priority: data.priority.toUpperCase() as Priority,
+          category: data.category,
+          status: 'OPEN' as IncidentStatus,
+          assignedById:customerId,
+          businessId: companyUser.business?.id as string,
+          userName: companyUser.firstName + ' ' + companyUser.lastName,
+          reason: data.shortDescription,
+          assignedToEmail: companyUser.email, 
+          subCategory: companyUser.business?.industry || "General",
+          MTTR: "N/A",
+        },
+      });
+
+
+
       return {
         success: true,
         message: 'Incident created successfully',
+        incidentTicket,
         data: {
           id: incident.id,
           ticketNumber: incident.ticketNumber,

@@ -48,44 +48,43 @@ export class IncidentService {
     }
   }
 
-  async submitIncident(
-    request: IncidentRequest,
-    userId: string,
-    businessId: string
-  ) {
-    try {
-      let ticketId: string;
-      let exists;
-      do {
-        ticketId = IncidentUtils.generateTicketId();
-
-        exists = await prisma.incidentTicket.findUnique({
-          where: { ticketId },
-        });
-      } while (exists);
-
-      const incidentTicket = await prisma.incidentTicket.create({
-        data: {
-          ticketId,
-          reason: request.reason,
-          assignedToEmail: request.assignedTo ?? null,
-          userName: request.userName,
-          assignedById: userId as string,
-          priority: request.priority as Priority,
-          category: request.category as string,
-          subCategory: request.subCategory as string,
-          description: request.description as string,
-          MTTR: request.MTTR as string,
-          createdFrom: request.createdFrom ?? null,
-          businessId,
-          source: request.source as Source,
-          impact: request.impact as Impact,
-          suggestionFix: request.suggestionFix,
-          affectedSystem: request.affectedSystem,
-          status: request.status as IncidentStatus,
-        },
+async submitIncident(
+  request: IncidentRequest,
+  userId: string,
+  businessId: string
+) {
+  try {
+    let ticketId: string;
+    let exists;
+    do {
+      ticketId = IncidentUtils.generateTicketId();
+      exists = await prisma.incidentTicket.findUnique({
+        where: { ticketId },
       });
+    } while (exists);
 
+    const incidentTicket = await prisma.incidentTicket.create({
+      data: {
+        ticketId,
+        reason: request.reason,
+        assignedToEmail: request.assignedTo ?? null, // Handle optional field
+        userName: request.userName,
+        assignedById: userId as string,
+        priority: request.priority as Priority,
+        category: request.category as string,
+        subCategory: request.subCategory as string,
+        description: request.description as string,
+        MTTR: request.MTTR as string,
+        createdFrom: request.createdFrom ?? null,
+        businessId,
+        source: request.source as Source,
+        impact: request.impact as Impact,
+        suggestionFix: request.suggestionFix,
+        affectedSystem: request.affectedSystem,
+        status: request.status as IncidentStatus,
+      },
+    });
+    
       const riskScore = await IncidentUtils.ezraDetermineRiskScore(
         incidentTicket
       );

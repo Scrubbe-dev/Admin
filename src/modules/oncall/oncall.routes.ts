@@ -1,8 +1,18 @@
 import { Response, Request, Router, NextFunction } from 'express';
 import { OnCallController } from './oncall.controller';
+import { TokenService } from '../auth/services/token.service';
+import { AuthMiddleware } from '../auth/middleware/auth.middleware';
 
 const oncallRouter = Router();
 const onCallController = new OnCallController();
+
+const tokenService = new TokenService(
+  process.env.JWT_SECRET!,
+  process.env.JWT_EXPIRES_IN || "1h",
+  15 // in mins
+);
+const authMiddleware = new AuthMiddleware(tokenService);
+
 
 // Utility to wrap async route handlers and forward errors to Express
 function asyncHandler(fn: Function) {
@@ -324,7 +334,9 @@ oncallRouter.post('/assign-member', asyncHandler(onCallController.assignMember.b
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-oncallRouter.get('/get-all-assign', asyncHandler(onCallController.getAllAssignments.bind(onCallController)));
+oncallRouter.get('/get-all-assign',
+	authMiddleware.authenticate, 
+	asyncHandler(onCallController.getAllAssignments.bind(onCallController)));
 
 /**
  * @swagger

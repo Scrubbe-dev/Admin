@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { OnCallService } from './oncall.services';
 import { OnCallValidator } from './oncall.utils';
 import { ValidationResult } from './oncall.types';
+import { CompanyModule } from '@faker-js/faker/.';
 
 const onCallService = new OnCallService();
 
@@ -65,7 +66,8 @@ export class OnCallController {
 
   async getAllAssignments(req: Request, res: Response) {
     try {
-      const assignments = await onCallService.getAllAssignments();
+      const userId = req.user?.id!;
+      const assignments = await onCallService.getAllAssignments(userId);
       console.log(assignments, "============Assignments=============")
       return res.status(200).json({
         success: true,

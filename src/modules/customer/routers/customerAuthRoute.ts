@@ -131,7 +131,7 @@ router.get(
   // (req: Request, res: Response, next: NextFunction) => {
   //   authenticateCustomer(req, res, next);
   // },
-  CustomerAuthController.getCompanies
+  (req:Request, res:Response)=>CustomerAuthController.getCompanies(req,res)
 );
 
 /**
