@@ -6,6 +6,7 @@ import {
   COMMUNICATION_CHANNEL,
   BusinessNotificationChannels,
   BusinessPrefferedIntegration,
+  IncidentTicket,
 } from "@prisma/client";
 
 export enum IncidentTemplate {
@@ -168,3 +169,38 @@ export interface CustomerFacingKbRequest {
   title: string;
   summary: string;
 }
+
+
+// incident.types.ts
+export type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalCount: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+    limit: number;
+  };
+};
+
+export type IncidentsResponse = PaginatedResponse<IncidentTicket & {
+  createdBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  assignedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  business?: {
+    id: string;
+    name: string;
+  };
+  comments?: any[];
+  ResolveIncident?: any;
+}>;

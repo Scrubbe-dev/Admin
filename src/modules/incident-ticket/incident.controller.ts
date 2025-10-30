@@ -18,14 +18,13 @@ import {
 
 export class IncidentController {
   constructor(private incidentService = new IncidentService()) {}
-  async getIncidentTicketByBusiness(
+ async getIncidentTicketByBusiness(
     req: Request,
     res: Response,
     next: NextFunction
   ) {
     try {
       const businessId = req.user?.businessId!;
-
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
@@ -300,4 +299,30 @@ async addComment(req: Request, res: Response, next: NextFunction) {
       next(error);
     }
   }
+
+   // New method to get all incidents with pagination
+  async getAllIncidents(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      
+      // Optional filters
+      const filters = {
+        status: req.query.status as string,
+        priority: req.query.priority as string,
+        search: req.query.search as string,
+      };
+
+      const response = await this.incidentService.getAllIncidents(
+        page, 
+        limit, 
+        filters
+      );
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }

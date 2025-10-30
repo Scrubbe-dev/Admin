@@ -13,6 +13,7 @@ import {
   Impact,
   IncidentStatus,
   Priority,
+  Prisma,
   SLABreachType,
   Source,
 } from "@prisma/client";
@@ -26,19 +27,109 @@ import {
 export class IncidentService {
   constructor() {}
 
+
+
+
+  
+
+  // async getIncidentTicketByBusiness(
+  //   businessId: string,
+  //   page: number,
+  //   limit: number
+  // ) {
+  //   try {
+  //     const inicidentTickets = prisma.incidentTicket.findMany({
+  //       where: {
+  //         businessId,
+  //       },
+  //     });
+
+  //     return inicidentTickets;
+  //   } catch (error) {
+  //     const err = `Failed to fetch incidents: ${
+  //       error instanceof Error && error.message
+  //     }`;
+  //     console.error(err);
+  //     throw new Error(err);
+  //   }
+  // }
+
+
   async getIncidentTicketByBusiness(
     businessId: string,
     page: number,
     limit: number
   ) {
     try {
-      const inicidentTickets = prisma.incidentTicket.findMany({
+      const skip = (page - 1) * limit;
+      
+      // Get incidents with pagination
+      const incidents = await prisma.incidentTicket.findMany({
+        where: {
+          businessId,
+        },
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            }
+          },
+          assignedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            }
+          },
+          comments: {
+            take: 5, // Get latest 5 comments
+            orderBy: {
+              createdAt: 'desc'
+            },
+            include: {
+              author: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                }
+              }
+            }
+          },
+          ResolveIncident: true,
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc' // Latest first
+        },
+      });
+
+      // Get total count for pagination info
+      const totalCount = await prisma.incidentTicket.count({
         where: {
           businessId,
         },
       });
 
-      return inicidentTickets;
+      const totalPages = Math.ceil(totalCount / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        incidents,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          hasNextPage,
+          hasPrevPage,
+          limit,
+        },
+      };
     } catch (error) {
       const err = `Failed to fetch incidents: ${
         error instanceof Error && error.message
@@ -47,6 +138,126 @@ export class IncidentService {
       throw new Error(err);
     }
   }
+
+
+
+
+
+
+
+
+// Add a new method to get all incidents (across all businesses) with pagination
+  async getAllIncidents(page: number, limit: number, filters?: any) {
+    try {
+      const skip = (page - 1) * limit;
+      
+      // Build where clause based on filters
+      const where: Prisma.IncidentTicketWhereInput = {};
+      
+      if (filters?.status) {
+        where.status = filters.status;
+      }
+      
+      if (filters?.priority) {
+        where.priority = filters.priority;
+      }
+      
+      if (filters?.search) {
+        where.OR = [
+          { ticketId: { contains: filters.search, mode: 'insensitive' } },
+          { userName: { contains: filters.search, mode: 'insensitive' } },
+          { reason: { contains: filters.search, mode: 'insensitive' } },
+          { description: { contains: filters.search, mode: 'insensitive' } },
+        ];
+      }
+
+      // Get incidents with pagination
+      const incidents = await prisma.incidentTicket.findMany({
+        where,
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            }
+          },
+          assignedBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+            }
+          },
+          business: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
+          comments: {
+            take: 5,
+            orderBy: {
+              createdAt: 'desc'
+            },
+            include: {
+              author: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                }
+              }
+            }
+          },
+          ResolveIncident: true,
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc'
+        },
+      });
+
+      // Get total count for pagination info
+      const totalCount = await prisma.incidentTicket.count({
+        where,
+      });
+
+      const totalPages = Math.ceil(totalCount / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
+      return {
+        incidents,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalCount,
+          hasNextPage,
+          hasPrevPage,
+          limit,
+        },
+      };
+    } catch (error) {
+      const err = `Failed to fetch all incidents: ${
+        error instanceof Error && error.message
+      }`;
+      console.error(err);
+      throw new Error(err);
+    }
+  }
+
+
+
+
+
+
+
+
+
+
 
 async submitIncident(
   request: IncidentRequest,
@@ -84,7 +295,7 @@ async submitIncident(
         status: request.status as IncidentStatus,
       },
     });
-    
+
       const riskScore = await IncidentUtils.ezraDetermineRiskScore(
         incidentTicket
       );

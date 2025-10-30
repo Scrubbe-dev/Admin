@@ -241,6 +241,96 @@ incidentRouter.get(
 
 /**
  * @swagger
+ * /api/v1/incident-ticket/all:
+ *   get:
+ *     summary: Get all incidents with pagination and filtering
+ *     description: >
+ *       Retrieve all incident tickets with pagination support. 
+ *       Supports filtering by status, priority, and search.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [OPEN, ACKNOWLEDGED, INVESTIGATION, MITIGATED, RESOLVED, CLOSED]
+ *         description: Filter by incident status
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *         description: Filter by incident priority
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in ticket ID, user name, reason, or description
+ *     responses:
+ *       200:
+ *         description: Paginated list of incidents
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 incidents:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/IncidentTicket'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 48
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPrevPage:
+ *                       type: boolean
+ *                       example: false
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to fetch incidents
+ */
+incidentRouter.get(
+  "/all",
+  authMiddleware.authenticate,
+  (req, res, next) => {
+    incidentController.getAllIncidents(req, res, next);
+  }
+);
+
+/**
+ * @swagger
  * /api/v1/incident-ticket:
  *   post:
  *     summary: Create a new incident ticket
