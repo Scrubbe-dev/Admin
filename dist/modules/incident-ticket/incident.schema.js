@@ -5,12 +5,13 @@ const zod_1 = require("zod");
 const validation_schema_1 = require("../../shared/validation/validation.schema");
 const incident_types_1 = require("./incident.types");
 const client_1 = require("@prisma/client");
+// incident.schema.ts
 exports.submitIncidentSchema = zod_1.z.object({
     template: zod_1.z.enum([
         incident_types_1.IncidentTemplate.MALWARE,
         incident_types_1.IncidentTemplate.NONE,
         incident_types_1.IncidentTemplate.PHISHING,
-    ]),
+    ]).optional(),
     reason: zod_1.z.string().min(10, "Provide a valid reason"),
     priority: zod_1.z.enum([
         client_1.Priority.CRITICAL,
@@ -18,8 +19,20 @@ exports.submitIncidentSchema = zod_1.z.object({
         client_1.Priority.LOW,
         client_1.Priority.MEDIUM,
     ]),
-    assignedTo: validation_schema_1.emailSchema,
-    username: zod_1.z.string().min(1, "username is required"),
+    assignedTo: validation_schema_1.emailSchema.optional(), // Make this optional
+    userName: zod_1.z.string().min(1, "username is required"),
+    createdFrom: zod_1.z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]).optional(),
+    // Add the new required fields
+    source: zod_1.z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]),
+    category: zod_1.z.string().min(1, "Category is required"),
+    subCategory: zod_1.z.string().min(1, "Sub-category is required"),
+    description: zod_1.z.string().min(1, "Description is required"),
+    impact: zod_1.z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+    status: zod_1.z.enum(["OPEN", "ACKNOWLEDGED", "INVESTIGATION", "MITIGATED", "RESOLVED", "CLOSED"]),
+    MTTR: zod_1.z.string().min(1, "MTTR is required"),
+    suggestionFix: zod_1.z.string().optional(),
+    escalate: zod_1.z.string().optional(),
+    affectedSystem: zod_1.z.string().optional(),
 });
 exports.updateTicketSchema = zod_1.z.object({
     template: zod_1.z.enum([

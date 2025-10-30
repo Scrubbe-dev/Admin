@@ -130,7 +130,7 @@ router.get("/companies",
 // (req: Request, res: Response, next: NextFunction) => {
 //   authenticateCustomer(req, res, next);
 // },
-customerAuthController_1.CustomerAuthController.getCompanies);
+(req, res) => customerAuthController_1.CustomerAuthController.getCompanies(req, res));
 /**
  * @swagger
  * /api/v1/customer/register:

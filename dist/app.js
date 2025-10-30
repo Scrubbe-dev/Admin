@@ -35,7 +35,6 @@ const ezra_route_1 = __importDefault(require("./modules/ezra-chat/ezra.route"));
 const fingerprint_route_1 = __importDefault(require("./modules/fingerprint/fingerprint.route"));
 const data_visual_route_1 = __importDefault(require("./modules/data-visualization/data-visual.route"));
 const incident_route_1 = __importDefault(require("./modules/incident-ticket/incident.route"));
-const socket_io_1 = require("socket.io");
 const socket_1 = require("./modules/socket/socket");
 const slack_router_1 = __importDefault(require("./modules/3rd-party-configurables/slack/slack.router"));
 const sms_route_1 = __importDefault(require("./modules/3rd-party-configurables/sms/sms.route"));
@@ -66,6 +65,7 @@ const resend_no_nodemailer_factory_1 = require("./modules/auth/services/resend-n
 const oncall_routes_1 = __importDefault(require("./modules/oncall/oncall.routes"));
 const contactus_routes_1 = __importDefault(require("./modules/contactus/contactus.routes"));
 const organizationRoute_1 = require("./modules/customer/routers/organizationRoute");
+const init_socket_1 = require("./modules/socket/init-socket");
 (0, dotenv_1.config)();
 // SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 /**
@@ -81,9 +81,9 @@ console.log('- Scan for new incidents every 2 minutes');
 console.log('- Check SLA milestones every 5 minutes');
 console.log('- Run comprehensive audit every hour');
 const server = http_1.default.createServer(app);
-const io = new socket_io_1.Server(server);
+const io = (0, init_socket_1.initSocketGlobally)(server);
 app.set("io", io);
-(0, socket_1.initSocket)(io, prisma);
+(0, socket_1.initSocket)(io, prisma); // Your existing socket initialization logic
 app.set("trust proxy", (ip) => {
     if (ip === "127.0.0.1" || ip === "::1")
         return true;

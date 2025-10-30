@@ -7,8 +7,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSocketIO = exports.initSocket = void 0;
 const socketAuth_1 = require("./socketAuth");
 let _io;
-// Store active participants for each socket
-const activeParticipants = new Map();
 const initSocket = (io, prisma) => {
     // Apply authentication middleware
     io.use(socketAuth_1.socketAuth);
@@ -17,16 +15,23 @@ const initSocket = (io, prisma) => {
     io.on("connection", (socket) => {
         const userId = socket.data.user.id;
         console.log(`🔌 User connected: ${userId} (${socket.id})`);
+        // Store user's active rooms
+        socket.data.rooms = new Set();
         // Join business room
         socket.on("joinBusinessRoom", ({ businessId }) => {
             if (!businessId) {
                 socket.emit("error", { message: "Business ID is required" });
                 return;
             }
-            socket.leave(socket.data.currentBusinessRoom); // Leave previous room
+            // Leave previous business room if any
+            if (socket.data.currentBusinessRoom) {
+                socket.leave(socket.data.currentBusinessRoom);
+                socket.data.rooms.delete(socket.data.currentBusinessRoom);
+            }
             socket.join(businessId);
             socket.data.currentBusinessRoom = businessId;
-            console.log(`🏢 Socket ${socket.id} joined business room: ${businessId}`);
+            socket.data.rooms.add(businessId);
+            console.log(`🏢 User ${userId} joined business room: ${businessId}`);
             socket.emit("joinedBusinessRoom", { businessId });
         });
         // Join conversation
@@ -39,6 +44,7 @@ const initSocket = (io, prisma) => {
                 // Leave previous conversation
                 if (socket.data.currentConversation) {
                     socket.leave(socket.data.currentConversation);
+                    socket.data.rooms.delete(socket.data.currentConversation);
                 }
                 const participant = await prisma.conversationParticipant.findFirst({
                     where: {
@@ -57,11 +63,10 @@ const initSocket = (io, prisma) => {
                     });
                     return;
                 }
-                // Store participant for this socket
-                activeParticipants.set(socket.id, participant);
                 // Join the conversation room
                 socket.join(incidentTicketId);
                 socket.data.currentConversation = incidentTicketId;
+                socket.data.rooms.add(incidentTicketId);
                 console.log(`💬 User ${userId} joined conversation ${participant.conversationId} for ticket ${incidentTicketId}`);
                 socket.emit("joinedConversation", {
                     incidentTicketId,
@@ -76,16 +81,16 @@ const initSocket = (io, prisma) => {
         // Send message
         socket.on("sendMessage", async ({ incidentTicketId, content }) => {
             try {
-                if (!incidentTicketId || !content) {
+                if (!incidentTicketId || !content?.trim()) {
                     socket.emit("error", {
                         message: "Incident ticket ID and content are required"
                     });
                     return;
                 }
-                const participant = activeParticipants.get(socket.id);
-                if (!participant) {
+                // Verify user is in the conversation room
+                if (!socket.data.rooms.has(incidentTicketId)) {
                     socket.emit("error", {
-                        message: "Not authorized to send messages. Please join a conversation first.",
+                        message: "You must join the conversation before sending messages",
                     });
                     return;
                 }
@@ -95,6 +100,19 @@ const initSocket = (io, prisma) => {
                 if (!conversation) {
                     socket.emit("error", {
                         message: `Conversation not found for ticket: ${incidentTicketId}`,
+                    });
+                    return;
+                }
+                // Verify user is a participant
+                const participant = await prisma.conversationParticipant.findFirst({
+                    where: {
+                        conversationId: conversation.id,
+                        userId,
+                    },
+                });
+                if (!participant) {
+                    socket.emit("error", {
+                        message: "Not authorized to send messages in this conversation",
                     });
                     return;
                 }
@@ -112,6 +130,7 @@ const initSocket = (io, prisma) => {
                                 email: true,
                                 firstName: true,
                                 lastName: true,
+                                // avatar: true,
                             },
                         },
                     },
@@ -127,8 +146,7 @@ const initSocket = (io, prisma) => {
         });
         // Handle typing indicators
         socket.on("typingStart", ({ incidentTicketId }) => {
-            const participant = activeParticipants.get(socket.id);
-            if (participant) {
+            if (socket.data.rooms.has(incidentTicketId)) {
                 socket.to(incidentTicketId).emit("userTyping", {
                     userId,
                     isTyping: true
@@ -136,8 +154,7 @@ const initSocket = (io, prisma) => {
             }
         });
         socket.on("typingStop", ({ incidentTicketId }) => {
-            const participant = activeParticipants.get(socket.id);
-            if (participant) {
+            if (socket.data.rooms.has(incidentTicketId)) {
                 socket.to(incidentTicketId).emit("userTyping", {
                     userId,
                     isTyping: false
@@ -146,8 +163,6 @@ const initSocket = (io, prisma) => {
         });
         // Handle disconnection
         socket.on("disconnect", (reason) => {
-            // Clean up
-            activeParticipants.delete(socket.id);
             console.log(`🔴 User disconnected: ${userId} (${socket.id}) - Reason: ${reason}`);
         });
         // Handle connection errors
@@ -159,7 +174,7 @@ const initSocket = (io, prisma) => {
 exports.initSocket = initSocket;
 const getSocketIO = () => {
     if (!_io) {
-        throw new Error("Socket.io not initialized. Call initSocket first.");
+        throw new Error("Socket.io not initialized. Call initSocketGlobally first.");
     }
     return _io;
 };

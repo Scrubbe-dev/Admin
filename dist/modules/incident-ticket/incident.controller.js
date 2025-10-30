@@ -25,11 +25,8 @@ class IncidentController {
         try {
             const userId = req.user?.sub;
             const businessId = req.user?.businessId;
-            // const request = await validateRequest<IncidentRequest>(
-            //   submitIncidentSchema,
-            //   req.body
-            // );
-            const request = (await req.body);
+            // Use validation instead of direct casting
+            const request = await (0, validators_1.validateRequest)(incident_schema_1.submitIncidentSchema, req.body);
             const response = await this.incidentService.submitIncident(request, userId, businessId);
             res.json(response);
         }
@@ -198,6 +195,24 @@ class IncidentController {
         try {
             const { ticketId } = req.params;
             const response = await this.incidentService.closeTicket(ticketId);
+            res.json(response);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    // New method to get all incidents with pagination
+    async getAllIncidents(req, res, next) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            // Optional filters
+            const filters = {
+                status: req.query.status,
+                priority: req.query.priority,
+                search: req.query.search,
+            };
+            const response = await this.incidentService.getAllIncidents(page, limit, filters);
             res.json(response);
         }
         catch (error) {
