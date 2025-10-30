@@ -78,6 +78,7 @@ import { createEmailServiceWithResend } from "./modules/auth/services/resend-no-
 import oncallRouter from "./modules/oncall/oncall.routes";
 import contactusRouter from "./modules/contactus/contactus.routes";
 import { organizationRoutes } from "./modules/customer/routers/organizationRoute";
+import {initSocketGlobally } from "./modules/socket/init-socket";
 
 
 dotenvConfig();
@@ -107,11 +108,10 @@ console.log('- Run comprehensive audit every hour');
 
 
 const server = http.createServer(app);
-const io = new Server(server);
+const io = initSocketGlobally(server);
 
 app.set("io", io);
-
-initSocket(io, prisma);
+initSocket(io, prisma); // Your existing socket initialization logic
 
 app.set("trust proxy", (ip: string) => {
   if (ip === "127.0.0.1" || ip === "::1") return true;
