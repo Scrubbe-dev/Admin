@@ -251,13 +251,19 @@ export class IncidentService {
 
 
 
+async checkTicketIdExists(ticketId: string): Promise<boolean> {
+  try {
+    const existingTicket = await prisma.incidentTicket.findUnique({
+      where: { ticketId },
+    });
+    return !!existingTicket;
+  } catch (error) {
+    console.error(`Error checking ticket ID existence: ${error}`);
+    return false;
+  }
+}
 
-
-
-
-
-
-
+// incident.service.ts - Update the submitIncident method
 
 async submitIncident(
   request: IncidentRequest,
@@ -265,20 +271,31 @@ async submitIncident(
   businessId: string
 ) {
   try {
+    // Validate that the provided ticketId exists and is unique
+    if (request.ticketId) {
+      const ticketIdExists = await this.checkTicketIdExists(request.ticketId);
+      if (ticketIdExists) {
+        throw new Error(`Ticket ID ${request.ticketId} already exists`);
+      }
+    }
+
+    // Use provided ticketId or generate a new one
     let ticketId: string;
-    let exists;
-    do {
-      ticketId = IncidentUtils.generateTicketId();
-      exists = await prisma.incidentTicket.findUnique({
-        where: { ticketId },
-      });
-    } while (exists);
+    if (request.ticketId) {
+      ticketId = request.ticketId;
+    } else {
+      let exists;
+      do {
+        ticketId = IncidentUtils.generateTicketId();
+        exists = await this.checkTicketIdExists(ticketId);
+      } while (exists);
+    }
 
     const incidentTicket = await prisma.incidentTicket.create({
       data: {
         ticketId,
         reason: request.reason,
-        assignedToEmail: request.assignedTo ?? null, // Handle optional field
+        assignedToEmail: request.assignedTo ?? null,
         userName: request.userName,
         assignedById: userId as string,
         priority: request.priority as Priority,
@@ -296,61 +313,61 @@ async submitIncident(
       },
     });
 
-      const riskScore = await IncidentUtils.ezraDetermineRiskScore(
-        incidentTicket
+    // ... rest of the existing method remains the same
+    const riskScore = await IncidentUtils.ezraDetermineRiskScore(
+      incidentTicket
+    );
+
+    const recommendedActions = await IncidentUtils.ezraRecommendedActions(
+      incidentTicket
+    );
+
+    const mappedActions = IncidentMapper.mapRecommendedAction(
+      recommendedActions?.action
+    );
+
+    const slaTargets = IncidentUtils.calculateSLATargets(
+      incidentTicket.createdAt,
+      incidentTicket.priority
+    );
+
+    const updatedTicket = await prisma.incidentTicket.update({
+      where: {
+        id: incidentTicket.id,
+      },
+      data: {
+        riskScore: riskScore?.score,
+        recommendedActions: mappedActions,
+        slaTargetAck: slaTargets.ack,
+        slaTargetResolve: slaTargets.resolve,
+      },
+    });
+
+    await IncidentUtils.sendIncidentTicketNotification(
+      updatedTicket,
+      "New Ticket submitted"
+    );
+
+    if (
+      updatedTicket.priority === "HIGH" ||
+      updatedTicket.priority === "CRITICAL"
+    ) {
+      console.log(
+        "============== HIGH PRIORITY INCIDENT DETECTED =============="
       );
-
-      const recommendedActions = await IncidentUtils.ezraRecommendedActions(
-        incidentTicket
-      );
-
-      const mappedActions = IncidentMapper.mapRecommendedAction(
-        recommendedActions?.action
-      );
-
-      const slaTargets = IncidentUtils.calculateSLATargets(
-        incidentTicket.createdAt,
-        incidentTicket.priority
-      );
-
-      const updatedTicket = await prisma.incidentTicket.update({
-        where: {
-          id: incidentTicket.id,
-        },
-        data: {
-          riskScore: riskScore?.score,
-          recommendedActions: mappedActions,
-          slaTargetAck: slaTargets.ack,
-          slaTargetResolve: slaTargets.resolve,
-        },
-      });
-
-      await IncidentUtils.sendIncidentTicketNotification(
-        updatedTicket,
-        "New Ticket submitted"
-      );
-
-      if (
-        updatedTicket.priority === "HIGH" ||
-        updatedTicket.priority === "CRITICAL"
-      ) {
-        console.log(
-          "============== HIGH PRIORITY INCIDENT DETECTED =============="
-        );
-        const meetUtil = new MeetUtil();
-
-        await meetUtil.triggerWarRoom(updatedTicket);
-      }
-
-      return updatedTicket;
-    } catch (error) {
-      const err = `Failed to submit incident: ${
-        error instanceof Error && error.message
-      }`;
-      console.error(err);
-      throw new Error(err);
+      const meetUtil = new MeetUtil();
+      await meetUtil.triggerWarRoom(updatedTicket);
     }
+
+    return updatedTicket;
+  } catch (error) {
+    const err = `Failed to submit incident: ${
+      error instanceof Error && error.message
+    }`;
+    console.error(err);
+    throw new Error(err);
   }
+}
 
   async acknowledgeIncident(ticketId: string) {
     try {

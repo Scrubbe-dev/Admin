@@ -1330,6 +1330,47 @@ incidentRouter.get(
   }
 );
 
+// incident.router.ts - Add this route before the POST /incident-ticket route
+
+/**
+ * @swagger
+ * /api/v1/incident-ticket/generate-id:
+ *   get:
+ *     summary: Generate a unique incident ticket ID
+ *     description: >
+ *       Generates a unique incident ticket ID that can be used on the frontend
+ *       before creating an incident ticket. The generated ID is guaranteed to be unique.
+ *     tags: [Incident Tickets]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unique ticket ID generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ticketId:
+ *                   type: string
+ *                   example: "INC6932612"
+ *                 generatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-08-02T16:28:23.146Z"
+ *       401:
+ *         description: Unauthorized (no valid token provided)
+ *       500:
+ *         description: Failed to generate ticket ID
+ */
+incidentRouter.get(
+  "/generate-id",
+  authMiddleware.authenticate,
+  (req, res, next) => {
+    incidentController.generateTicketId(req, res, next);
+  }
+);
+
 //3rd party interactions (see slack module)
 incidentRouter.get("/:ticketId", (req, res, next) => {
   incidentController.getIncidentTicketById(req, res, next);

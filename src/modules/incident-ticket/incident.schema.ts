@@ -11,6 +11,8 @@ import {
 } from "@prisma/client";
 
 // incident.schema.ts
+// incident.schema.ts - Update submitIncidentSchema
+
 export const submitIncidentSchema = z.object({
   template: z.enum([
     IncidentTemplate.MALWARE,
@@ -24,10 +26,9 @@ export const submitIncidentSchema = z.object({
     Priority.LOW,
     Priority.MEDIUM,
   ]),
-  assignedTo: emailSchema.optional(), // Make this optional
+  assignedTo: emailSchema.optional(),
   userName: z.string().min(1, "username is required"),
   createdFrom: z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]).optional(),
-  // Add the new required fields
   source: z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]),
   category: z.string().min(1, "Category is required"),
   subCategory: z.string().min(1, "Sub-category is required"),
@@ -38,6 +39,7 @@ export const submitIncidentSchema = z.object({
   suggestionFix: z.string().optional(),
   escalate: z.string().optional(),
   affectedSystem: z.string().optional(),
+  ticketId: z.string().optional(), // Add this line - make it optional
 });
 
 export const updateTicketSchema = z.object({

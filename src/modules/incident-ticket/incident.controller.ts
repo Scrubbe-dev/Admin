@@ -15,6 +15,7 @@ import {
   submitIncidentSchema,
   updateTicketSchema,
 } from "./incident.schema";
+import { IncidentUtils } from "./incident.util";
 
 export class IncidentController {
   constructor(private incidentService = new IncidentService()) {}
@@ -39,6 +40,28 @@ export class IncidentController {
       next(error);
     }
   }
+
+
+  
+async generateTicketId(req: Request, res: Response, next: NextFunction) {
+  try {
+    let ticketId: string;
+    let exists: boolean;
+    
+    // Generate unique ticket ID
+    do {
+      ticketId = IncidentUtils.generateTicketId();
+      exists = await this.incidentService.checkTicketIdExists(ticketId);
+    } while (exists);
+
+    res.json({
+      ticketId,
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
 async submitIncident(req: Request, res: Response, next: NextFunction) {
   try {
