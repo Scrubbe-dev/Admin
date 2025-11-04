@@ -234,7 +234,7 @@ app.use("/api/v1/customer", customerIncidentRoutes); // Route for  customer inci
 app.use("/api/v1", oncallRouter); // Route for testing email sending
 app.use("/api/v1/mocktest", contactusRouter); // Route for testing email sending
 app.use("/api/v1/organization", organizationRoutes)
-app.use("/api/dashboard",dashboardRouter) // Route for Dashboard
+app.use("/api/v1/dashboard",dashboardRouter) // Route for Dashboard
 
 app.get("/health", async (req, res) => {
   try {
