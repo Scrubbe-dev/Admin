@@ -79,6 +79,7 @@ import oncallRouter from "./modules/oncall/oncall.routes";
 import contactusRouter from "./modules/contactus/contactus.routes";
 import { organizationRoutes } from "./modules/customer/routers/organizationRoute";
 import {initSocketGlobally } from "./modules/socket/init-socket";
+import dashboardRouter from "./modules/dashboard/routes/dashboard.router";
 
 
 dotenvConfig();
@@ -233,6 +234,7 @@ app.use("/api/v1/customer", customerIncidentRoutes); // Route for  customer inci
 app.use("/api/v1", oncallRouter); // Route for testing email sending
 app.use("/api/v1/mocktest", contactusRouter); // Route for testing email sending
 app.use("/api/v1/organization", organizationRoutes)
+app.use("/api/dashboard",dashboardRouter) // Route for Dashboard
 
 app.get("/health", async (req, res) => {
   try {
