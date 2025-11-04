@@ -4,6 +4,7 @@ exports.IncidentController = void 0;
 const incident_service_1 = require("./incident.service");
 const validators_1 = require("../auth/utils/validators");
 const incident_schema_1 = require("./incident.schema");
+const incident_util_1 = require("./incident.util");
 class IncidentController {
     incidentService;
     constructor(incidentService = new incident_service_1.IncidentService()) {
@@ -16,6 +17,24 @@ class IncidentController {
             const limit = parseInt(req.query.limit) || 10;
             const response = await this.incidentService.getIncidentTicketByBusiness(businessId, page, limit);
             res.json(response);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async generateTicketId(req, res, next) {
+        try {
+            let ticketId;
+            let exists;
+            // Generate unique ticket ID
+            do {
+                ticketId = incident_util_1.IncidentUtils.generateTicketId();
+                exists = await this.incidentService.checkTicketIdExists(ticketId);
+            } while (exists);
+            res.json({
+                ticketId,
+                generatedAt: new Date().toISOString()
+            });
         }
         catch (error) {
             next(error);

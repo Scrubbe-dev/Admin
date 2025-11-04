@@ -12,6 +12,7 @@ import { ForbiddenError, NotFoundError } from "../auth/error";
 import {
   Impact,
   IncidentStatus,
+  IncidentTemplate,
   Priority,
   Prisma,
   SLABreachType,
@@ -263,7 +264,7 @@ async checkTicketIdExists(ticketId: string): Promise<boolean> {
   }
 }
 
-// incident.service.ts - Update the submitIncident method
+
 
 async submitIncident(
   request: IncidentRequest,
@@ -271,33 +272,31 @@ async submitIncident(
   businessId: string
 ) {
   try {
-    // Validate that the provided ticketId exists and is unique
+    // Step 1: Validate and generate ticket ID
+    let finalTicketId: string;
+    
     if (request.ticketId) {
+      // Use provided ticket ID after validation
       const ticketIdExists = await this.checkTicketIdExists(request.ticketId);
       if (ticketIdExists) {
-        throw new Error(`Ticket ID ${request.ticketId} already exists`);
+        throw new Error(`Ticket ID ${request.ticketId} already exists. Please use a different ID.`);
       }
-    }
-
-    // Use provided ticketId or generate a new one
-    let ticketId: string;
-    if (request.ticketId) {
-      ticketId = request.ticketId;
+      finalTicketId = request.ticketId;
     } else {
-      let exists;
-      do {
-        ticketId = IncidentUtils.generateTicketId();
-        exists = await this.checkTicketIdExists(ticketId);
-      } while (exists);
+      // Generate a new unique ticket ID
+      finalTicketId = await this.generateUniqueTicketId();
     }
 
+    console.log(`Creating incident with ticket ID: ${finalTicketId}`);
+
+    // Step 2: Create the incident ticket
     const incidentTicket = await prisma.incidentTicket.create({
       data: {
-        ticketId,
+        ticketId: finalTicketId,
         reason: request.reason,
         assignedToEmail: request.assignedTo ?? null,
         userName: request.userName,
-        assignedById: userId as string,
+        assignedById: userId,
         priority: request.priority as Priority,
         category: request.category as string,
         subCategory: request.subCategory as string,
@@ -310,17 +309,15 @@ async submitIncident(
         suggestionFix: request.suggestionFix,
         affectedSystem: request.affectedSystem,
         status: request.status as IncidentStatus,
+        template: request.template || IncidentTemplate.NONE,
       },
     });
 
-    // ... rest of the existing method remains the same
-    const riskScore = await IncidentUtils.ezraDetermineRiskScore(
-      incidentTicket
-    );
-
-    const recommendedActions = await IncidentUtils.ezraRecommendedActions(
-      incidentTicket
-    );
+    // Step 3: Calculate risk score and recommended actions
+    const [riskScore, recommendedActions] = await Promise.all([
+      IncidentUtils.ezraDetermineRiskScore(incidentTicket),
+      IncidentUtils.ezraRecommendedActions(incidentTicket)
+    ]);
 
     const mappedActions = IncidentMapper.mapRecommendedAction(
       recommendedActions?.action
@@ -331,6 +328,7 @@ async submitIncident(
       incidentTicket.priority
     );
 
+    // Step 4: Update ticket with calculated fields
     const updatedTicket = await prisma.incidentTicket.update({
       where: {
         id: incidentTicket.id,
@@ -343,11 +341,13 @@ async submitIncident(
       },
     });
 
+    // Step 5: Send notifications
     await IncidentUtils.sendIncidentTicketNotification(
       updatedTicket,
       "New Ticket submitted"
     );
 
+    // Step 6: Trigger war room for high priority incidents
     if (
       updatedTicket.priority === "HIGH" ||
       updatedTicket.priority === "CRITICAL"
@@ -359,15 +359,53 @@ async submitIncident(
       await meetUtil.triggerWarRoom(updatedTicket);
     }
 
-    return updatedTicket;
+    return {
+      success: true,
+      data: updatedTicket,
+      message: `Incident ${finalTicketId} created successfully`
+    };
   } catch (error) {
-    const err = `Failed to submit incident: ${
-      error instanceof Error && error.message
-    }`;
-    console.error(err);
-    throw new Error(err);
+    console.error('Submit incident error:', error);
+    
+    // Handle specific error cases
+    if (error instanceof Error) {
+      if (error.message.includes('Ticket ID already exists')) {
+        throw new Error(`Failed to create incident: ${error.message}`);
+      }
+      if (error.message.includes('Unique constraint failed')) {
+        throw new Error('Ticket ID already exists. Please use a different ID.');
+      }
+    }
+    
+    throw new Error(
+      `Failed to submit incident: ${
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      }`
+    );
   }
 }
+
+
+
+private async generateUniqueTicketId(): Promise<string> {
+  let ticketId: string;
+  let exists: boolean;
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  do {
+    ticketId = IncidentUtils.generateTicketId();
+    exists = await this.checkTicketIdExists(ticketId);
+    attempts++;
+    
+    if (attempts >= maxAttempts) {
+      throw new Error('Unable to generate unique ticket ID after multiple attempts');
+    }
+  } while (exists);
+
+  return ticketId;
+}
+
 
   async acknowledgeIncident(ticketId: string) {
     try {

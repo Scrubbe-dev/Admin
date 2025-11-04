@@ -50,7 +50,7 @@ const initSocketGlobally = (server) => {
     io = new socket_io_1.Server(server, {
         path: "/socket.io", // Use standard path
         cors: {
-            origin: process.env.FRONTEND_URL || "http://localhost:5173",
+            origin: "*",
             methods: ["GET", "POST"],
             credentials: true
         },

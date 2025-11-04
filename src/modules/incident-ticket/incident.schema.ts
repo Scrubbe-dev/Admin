@@ -9,10 +9,9 @@ import {
   IncidentStatus,
   Priority,
 } from "@prisma/client";
+import prisma from '../../lib/prisma'
 
 // incident.schema.ts
-// incident.schema.ts - Update submitIncidentSchema
-
 export const submitIncidentSchema = z.object({
   template: z.enum([
     IncidentTemplate.MALWARE,
@@ -39,7 +38,20 @@ export const submitIncidentSchema = z.object({
   suggestionFix: z.string().optional(),
   escalate: z.string().optional(),
   affectedSystem: z.string().optional(),
-  ticketId: z.string().optional(), // Add this line - make it optional
+  ticketId: z.string()
+    .regex(/^INC\d{7}$/, "Ticket ID must be in format INC followed by 7 digits (e.g., INC1234567)")
+    .optional()
+    .refine(async (ticketId) => {
+      if (!ticketId) return true; // Optional, so empty is valid
+      
+      // Check if ticketId already exists in database
+      const existingTicket = await prisma.incidentTicket.findUnique({
+        where: { ticketId },
+      });
+      return !existingTicket; // Return true if ticketId doesn't exist
+    }, {
+      message: "Ticket ID already exists"
+    }),
 });
 
 export const updateTicketSchema = z.object({

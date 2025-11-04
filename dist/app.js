@@ -66,6 +66,7 @@ const oncall_routes_1 = __importDefault(require("./modules/oncall/oncall.routes"
 const contactus_routes_1 = __importDefault(require("./modules/contactus/contactus.routes"));
 const organizationRoute_1 = require("./modules/customer/routers/organizationRoute");
 const init_socket_1 = require("./modules/socket/init-socket");
+const dashboard_router_1 = __importDefault(require("./modules/dashboard/routes/dashboard.router"));
 (0, dotenv_1.config)();
 // SAVE API-KEY TO NEWLY CREATED APIKEY TABLE
 /**
@@ -182,6 +183,7 @@ app.use("/api/v1/customer", customerIncidentRoute_1.customerIncidentRoutes); // 
 app.use("/api/v1", oncall_routes_1.default); // Route for testing email sending
 app.use("/api/v1/mocktest", contactus_routes_1.default); // Route for testing email sending
 app.use("/api/v1/organization", organizationRoute_1.organizationRoutes);
+app.use("/api/dashboard", dashboard_router_1.default); // Route for Dashboard
 app.get("/health", async (req, res) => {
     try {
         await prisma.$queryRaw `SELECT 1`;

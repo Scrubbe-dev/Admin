@@ -229,5 +229,48 @@ class ResendEmailService {
         // This is the same as sendPasswordChangedConfirmation, so we'll reuse that method
         await this.sendPasswordChangedConfirmation(email);
     }
+    async sendOnCallAssignmentEmail(to, assigneeName, assignmentData) {
+        const formattedDate = new Date(assignmentData.date).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">On-Call Assignment Notification</h2>
+      <p>Hello ${assigneeName},</p>
+      <p>You have been assigned to on-call duty with the following schedule:</p>
+      
+      <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #4A90E2; margin: 20px 0;">
+        <p><strong>Date:</strong> ${formattedDate}</p>
+        <p><strong>Time Slot:</strong> ${assignmentData.startTime} - ${assignmentData.endTime}</p>
+        <p><strong>Assignment ID:</strong> ${assignmentData.assignmentId}</p>
+      </div>
+      
+      <p><strong>Your Responsibilities:</strong></p>
+      <ul style="color: #555;">
+        <li>Be available during your assigned time slot</li>
+        <li>Monitor incident tickets and respond promptly</li>
+        <li>Coordinate with other team members as needed</li>
+        <li>Escalate critical issues according to procedures</li>
+      </ul>
+      
+      <p>Please ensure you're prepared and have access to all necessary systems during your on-call period.</p>
+      
+      <p>If you have any questions or need to request a swap, please contact your team lead.</p>
+      
+      <p>Thank you for your commitment to maintaining our service reliability.</p>
+      
+      <p>Best regards,<br>
+      The ${process.env.APP_NAME || "Scrubbe"} Team</p>
+    </div>
+  `;
+        await this.sendEmail({
+            to,
+            subject: `On-Call Assignment - ${formattedDate}`,
+            html,
+        });
+    }
 }
 exports.ResendEmailService = ResendEmailService;

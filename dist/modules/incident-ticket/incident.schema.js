@@ -1,10 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.customerFacingKbSchema = exports.resolutionSchema = exports.commentSchema = exports.updateTicketSchema = exports.submitIncidentSchema = void 0;
 const zod_1 = require("zod");
 const validation_schema_1 = require("../../shared/validation/validation.schema");
 const incident_types_1 = require("./incident.types");
 const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("../../lib/prisma"));
 // incident.schema.ts
 exports.submitIncidentSchema = zod_1.z.object({
     template: zod_1.z.enum([
@@ -19,10 +23,9 @@ exports.submitIncidentSchema = zod_1.z.object({
         client_1.Priority.LOW,
         client_1.Priority.MEDIUM,
     ]),
-    assignedTo: validation_schema_1.emailSchema.optional(), // Make this optional
+    assignedTo: validation_schema_1.emailSchema.optional(),
     userName: zod_1.z.string().min(1, "username is required"),
     createdFrom: zod_1.z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]).optional(),
-    // Add the new required fields
     source: zod_1.z.enum(["EMAIL", "SLACK", "PORTAL", "PHONE", "OTHERS"]),
     category: zod_1.z.string().min(1, "Category is required"),
     subCategory: zod_1.z.string().min(1, "Sub-category is required"),
@@ -33,6 +36,20 @@ exports.submitIncidentSchema = zod_1.z.object({
     suggestionFix: zod_1.z.string().optional(),
     escalate: zod_1.z.string().optional(),
     affectedSystem: zod_1.z.string().optional(),
+    ticketId: zod_1.z.string()
+        .regex(/^INC\d{7}$/, "Ticket ID must be in format INC followed by 7 digits (e.g., INC1234567)")
+        .optional()
+        .refine(async (ticketId) => {
+        if (!ticketId)
+            return true; // Optional, so empty is valid
+        // Check if ticketId already exists in database
+        const existingTicket = await prisma_1.default.incidentTicket.findUnique({
+            where: { ticketId },
+        });
+        return !existingTicket; // Return true if ticketId doesn't exist
+    }, {
+        message: "Ticket ID already exists"
+    }),
 });
 exports.updateTicketSchema = zod_1.z.object({
     template: zod_1.z.enum([

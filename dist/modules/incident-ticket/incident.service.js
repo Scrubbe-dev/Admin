@@ -200,21 +200,41 @@ class IncidentService {
             throw new Error(err);
         }
     }
+    async checkTicketIdExists(ticketId) {
+        try {
+            const existingTicket = await client_1.default.incidentTicket.findUnique({
+                where: { ticketId },
+            });
+            return !!existingTicket;
+        }
+        catch (error) {
+            console.error(`Error checking ticket ID existence: ${error}`);
+            return false;
+        }
+    }
     async submitIncident(request, userId, businessId) {
         try {
-            let ticketId;
-            let exists;
-            do {
-                ticketId = incident_util_1.IncidentUtils.generateTicketId();
-                exists = await client_1.default.incidentTicket.findUnique({
-                    where: { ticketId },
-                });
-            } while (exists);
+            // Step 1: Validate and generate ticket ID
+            let finalTicketId;
+            if (request.ticketId) {
+                // Use provided ticket ID after validation
+                const ticketIdExists = await this.checkTicketIdExists(request.ticketId);
+                if (ticketIdExists) {
+                    throw new Error(`Ticket ID ${request.ticketId} already exists. Please use a different ID.`);
+                }
+                finalTicketId = request.ticketId;
+            }
+            else {
+                // Generate a new unique ticket ID
+                finalTicketId = await this.generateUniqueTicketId();
+            }
+            console.log(`Creating incident with ticket ID: ${finalTicketId}`);
+            // Step 2: Create the incident ticket
             const incidentTicket = await client_1.default.incidentTicket.create({
                 data: {
-                    ticketId,
+                    ticketId: finalTicketId,
                     reason: request.reason,
-                    assignedToEmail: request.assignedTo ?? null, // Handle optional field
+                    assignedToEmail: request.assignedTo ?? null,
                     userName: request.userName,
                     assignedById: userId,
                     priority: request.priority,
@@ -229,12 +249,17 @@ class IncidentService {
                     suggestionFix: request.suggestionFix,
                     affectedSystem: request.affectedSystem,
                     status: request.status,
+                    template: request.template || client_2.IncidentTemplate.NONE,
                 },
             });
-            const riskScore = await incident_util_1.IncidentUtils.ezraDetermineRiskScore(incidentTicket);
-            const recommendedActions = await incident_util_1.IncidentUtils.ezraRecommendedActions(incidentTicket);
+            // Step 3: Calculate risk score and recommended actions
+            const [riskScore, recommendedActions] = await Promise.all([
+                incident_util_1.IncidentUtils.ezraDetermineRiskScore(incidentTicket),
+                incident_util_1.IncidentUtils.ezraRecommendedActions(incidentTicket)
+            ]);
             const mappedActions = incident_mapper_1.IncidentMapper.mapRecommendedAction(recommendedActions?.action);
             const slaTargets = incident_util_1.IncidentUtils.calculateSLATargets(incidentTicket.createdAt, incidentTicket.priority);
+            // Step 4: Update ticket with calculated fields
             const updatedTicket = await client_1.default.incidentTicket.update({
                 where: {
                     id: incidentTicket.id,
@@ -246,20 +271,49 @@ class IncidentService {
                     slaTargetResolve: slaTargets.resolve,
                 },
             });
+            // Step 5: Send notifications
             await incident_util_1.IncidentUtils.sendIncidentTicketNotification(updatedTicket, "New Ticket submitted");
+            // Step 6: Trigger war room for high priority incidents
             if (updatedTicket.priority === "HIGH" ||
                 updatedTicket.priority === "CRITICAL") {
                 console.log("============== HIGH PRIORITY INCIDENT DETECTED ==============");
                 const meetUtil = new meetUtil_1.MeetUtil();
                 await meetUtil.triggerWarRoom(updatedTicket);
             }
-            return updatedTicket;
+            return {
+                success: true,
+                data: updatedTicket,
+                message: `Incident ${finalTicketId} created successfully`
+            };
         }
         catch (error) {
-            const err = `Failed to submit incident: ${error instanceof Error && error.message}`;
-            console.error(err);
-            throw new Error(err);
+            console.error('Submit incident error:', error);
+            // Handle specific error cases
+            if (error instanceof Error) {
+                if (error.message.includes('Ticket ID already exists')) {
+                    throw new Error(`Failed to create incident: ${error.message}`);
+                }
+                if (error.message.includes('Unique constraint failed')) {
+                    throw new Error('Ticket ID already exists. Please use a different ID.');
+                }
+            }
+            throw new Error(`Failed to submit incident: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
         }
+    }
+    async generateUniqueTicketId() {
+        let ticketId;
+        let exists;
+        let attempts = 0;
+        const maxAttempts = 10;
+        do {
+            ticketId = incident_util_1.IncidentUtils.generateTicketId();
+            exists = await this.checkTicketIdExists(ticketId);
+            attempts++;
+            if (attempts >= maxAttempts) {
+                throw new Error('Unable to generate unique ticket ID after multiple attempts');
+            }
+        } while (exists);
+        return ticketId;
     }
     async acknowledgeIncident(ticketId) {
         try {
