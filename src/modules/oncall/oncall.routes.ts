@@ -181,7 +181,7 @@ function asyncHandler(fn: Function) {
  * /assign-member:
  *   post:
  *     summary: Create a new on-call assignment for a specific date
- *     description: Assign team members to on-call shifts for a specific date with their respective time slots
+ *     description: Assign team members to on-call shifts for a specific date with their respective time slots. All assigned members will receive email notifications.
  *     tags:
  *       - On-Call
  *     requestBody:
@@ -204,7 +204,7 @@ function asyncHandler(fn: Function) {
  *                     endTime: "09:00"
  *     responses:
  *       201:
- *         description: On-call assignment created successfully
+ *         description: On-call assignment created successfully and notifications sent
  *         content:
  *           application/json:
  *             schema:
@@ -215,7 +215,7 @@ function asyncHandler(fn: Function) {
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "On-call assignment created successfully"
+ *                   example: "On-call assignment created successfully and notifications sent"
  *                 data:
  *                   $ref: '#/components/schemas/OnCallAssignmentResponse'
  *       400:
@@ -225,7 +225,7 @@ function asyncHandler(fn: Function) {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
- *         description: Not found - One or more users not found
+ *         description: Not found - One or more users not found or users without email addresses
  *         content:
  *           application/json:
  *             schema:

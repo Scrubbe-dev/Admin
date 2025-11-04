@@ -18,6 +18,16 @@ export interface EmailService {
     },
     meetingLink: string
   ): Promise<void>;
+  sendOnCallAssignmentEmail(
+    to: string,
+    assigneeName: string,
+    assignmentData: {
+      date: string;
+      startTime: string;
+      endTime: string;
+      assignmentId: string;
+    }
+  ): Promise<void>;
   sendPasswordResetEmail(email: string, resetToken: string): Promise<void>;
   sendPasswordChangedConfirmation(email: string): Promise<void>;
   sendCustomEmail(options: CustomEmailOptions): Promise<void>;

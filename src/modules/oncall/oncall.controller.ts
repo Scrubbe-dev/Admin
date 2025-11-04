@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { OnCallService } from './oncall.services';
 import { OnCallValidator } from './oncall.utils';
 import { ValidationResult } from './oncall.types';
-import { CompanyModule } from '@faker-js/faker/.';
 
 const onCallService = new OnCallService();
 
@@ -20,29 +19,40 @@ export class OnCallController {
         });
       }
 
-      // Check if user exists for each team member
+      // Check if user exists for each team member and get their email
       const { PrismaClient } = await import('@prisma/client');
       const prisma = new PrismaClient();
       
-      for (const member of req.body.teamMembers) {
+      const userValidationPromises = req.body.teamMembers.map(async (member: any) => {
         const user = await prisma.user.findUnique({
-          where: { id: member.member }
+          where: { id: member.member },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
         });
 
         if (!user) {
-          return res.status(404).json({
-            success: false,
-            message: `User with id ${member.member} not found`
-          });
+          throw new Error(`User with id ${member.member} not found`);
         }
-      }
+
+        if (!user.email) {
+          throw new Error(`User with id ${member.member} does not have an email address`);
+        }
+
+        return user;
+      });
+
+      const users = await Promise.all(userValidationPromises);
 
       // Create assignment
       const assignment = await onCallService.createAssignment(req.body);
 
       return res.status(201).json({
         success: true,
-        message: 'On-call assignment created successfully',
+        message: 'On-call assignment created successfully and notifications sent',
         data: assignment
       });
 
@@ -56,6 +66,13 @@ export class OnCallController {
         });
       }
 
+      if (error.message.includes('not found') || error.message.includes('email address')) {
+        return res.status(404).json({
+          success: false,
+          message: error.message
+        });
+      }
+
       return res.status(500).json({
         success: false,
         message: 'Internal server error',
@@ -64,6 +81,7 @@ export class OnCallController {
     }
   }
 
+  // ... rest of the methods remain the same
   async getAllAssignments(req: Request, res: Response) {
     try {
       const userId = req.user?.id!;

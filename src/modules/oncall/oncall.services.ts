@@ -1,10 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 import { CreateOnCallAssignmentRequest, OnCallAssignmentResponse, GetAllAssignmentsResponse } from './oncall.types';
 import { DateUtils } from './oncall.utils';
+import { OnCallAssignmentEmailData, OnCallEmailService } from './oncall-email.services';
 
 const prisma = new PrismaClient();
 
 export class OnCallService {
+
+  private emailService: OnCallEmailService;
+
+  constructor() {
+    this.emailService = new OnCallEmailService();
+  }
+
   async createAssignment(data: CreateOnCallAssignmentRequest): Promise<OnCallAssignmentResponse> {
     // Check for overlapping assignments for team members on the same date
     await this.checkForOverlappingAssignments(data);
@@ -39,9 +47,34 @@ export class OnCallService {
         }
       });
 
+      await this.sendAssignmentNotifications(assignment);
+
       return this.formatAssignmentResponse(assignment);
     });
   }
+
+    private async sendAssignmentNotifications(assignment: any): Promise<void> {
+    try {
+      const emailDataList: OnCallAssignmentEmailData[] = assignment.teamMembers.map((tm: any) => ({
+        email: tm.member.email,
+        firstName: tm.member.firstName,
+        lastName: tm.member.lastName,
+        date: assignment.date.toISOString().split('T')[0],
+        startTime: tm.startTime,
+        endTime: tm.endTime,
+        assignmentId: assignment.id
+      }));
+
+      await this.emailService.sendBulkAssignmentNotifications(emailDataList);
+      
+      console.log(`✅ Sent ${emailDataList.length} on-call assignment notifications`);
+    } catch (error) {
+      // Log the error but don't fail the assignment creation
+      console.error('❌ Failed to send assignment notifications:', error);
+      // You might want to implement a retry mechanism or queue system here
+    }
+  }
+
 
   async getAllAssignments(userId: string): Promise<GetAllAssignmentsResponse[]> {
     const assignments = await prisma.onCallAssignment.findMany({
