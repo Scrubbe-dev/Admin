@@ -24,7 +24,7 @@ export class DashboardService {
               id: true,
               firstName: true,
               lastName: true,
-              email: true,
+              email: true
             },
           },
           assignedBy: {
@@ -292,7 +292,8 @@ export class DashboardService {
       .filter(inc => ['OPEN', 'IN_PROGRESS', 'ACKNOWLEDGED'].includes(inc.status))
       .slice(0, 10)
       .map(inc => ({
-        id: inc.ticketId,
+        id: inc.id,
+        ticketId:inc.ticketId || null,
         title: inc.reason,
         createdAt: inc.createdAt,
         assignedTo: inc.assignedBy?.firstName 
