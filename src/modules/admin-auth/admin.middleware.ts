@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { ApiError } from './admin.utils';
-import { AccountType } from '@prisma/client';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { ApiError } from "./admin.utils";
+import { AccountType } from "@prisma/client";
+import { Role } from "../auth/types/auth.types";
 
 declare global {
   namespace Express {
@@ -14,7 +15,8 @@ declare global {
         email: string;
         accountType?: AccountType;
         businessId?: string;
-        scopes?: string[]
+        scopes?: string[];
+        roles?: Role[];
       };
     }
   }
@@ -30,14 +32,17 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   const token = authHeader.split(' ')[1];
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {id: string;
-        sub: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        accountType?: AccountType;
-        businessId?: string;
-        scopes?: string[] };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+      sub: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      accountType?: AccountType;
+      businessId?: string;
+      scopes?: string[];
+      roles?: Role[];
+    };
     req.user = decoded;
     next();
   } catch (err) {

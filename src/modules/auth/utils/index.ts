@@ -1,5 +1,6 @@
-import {Request} from 'express'
+import { Request } from "express";
 import { AccountType } from "@prisma/client";
+import { Role } from "../types/auth.types";
 
 declare global {
   namespace Express {
@@ -13,6 +14,7 @@ declare global {
         accountType?: AccountType;
         businessId?: string;
         scopes?: string[];
+        roles?: Role[];
       };
     }
   }
