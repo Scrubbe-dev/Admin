@@ -18,6 +18,8 @@ export class AuthMapper {
         firstName: user.firstName,
         lastName: user.lastName,
         accountType: user.accountType,
+        role: user.role,
+        roles: [user.role],
         purpose,
       },
       tokens: {

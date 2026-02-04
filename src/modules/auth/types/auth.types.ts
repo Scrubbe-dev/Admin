@@ -14,7 +14,8 @@ export type User = {
   lastLogin: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  roles: Role[];
+  role: Role;
+  roles?: Role[];
 };
 
 export interface MappedUser {
@@ -25,6 +26,8 @@ export interface MappedUser {
     lastName: string | null;
     businessId?: string;
     accountType: AccountType | null;
+    role?: Role;
+    roles?: Role[];
   };
   tokens: Tokens;
 }
@@ -95,6 +98,8 @@ export interface OAuthRequest {
   image?: string;
   id: string;
   oAuthProvider: OAuthProviders;
+  githubUsername?: string;
+  experienceLevel?: string;
 }
 
 export interface OAuthBusinesRequest {

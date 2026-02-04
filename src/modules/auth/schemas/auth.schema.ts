@@ -68,6 +68,11 @@ export const registerDevByOauth = z.object({
     invalid_type_error: "Invalid OAuth provider",
   }),
   email: emailSchema,
+  githubUsername: z
+    .string()
+    .min(1, "Please provide a valid github username")
+    .optional(),
+  experienceLevel: z.string().min(1, "Experience is required").optional(),
 });
 
 // register busines by Oauth

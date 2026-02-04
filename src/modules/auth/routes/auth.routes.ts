@@ -266,6 +266,14 @@ export function createAuthRouter(
    *                 format: uri
    *                 example: "https://example.com/avatar.png"
    *                 description: Optional profile image URL from the OAuth provider
+   *               githubUsername:
+   *                 type: string
+   *                 example: "johndoe-dev"
+   *                 description: Optional GitHub username for developer profiling
+   *               experienceLevel:
+   *                 type: string
+   *                 example: "Intermediate"
+   *                 description: Optional developer experience level
    *     responses:
    *       201:
    *         description: Developer account registered successfully

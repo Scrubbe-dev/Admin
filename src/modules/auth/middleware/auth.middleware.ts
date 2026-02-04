@@ -16,6 +16,7 @@ declare global {
         accountType?: AccountType;
         businessId?: string;
         scopes?: string[];
+        roles?: Role[];
       };
     }
   }

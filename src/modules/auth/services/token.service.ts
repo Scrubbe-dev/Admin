@@ -23,6 +23,11 @@ export class TokenService {
     user: User,
     businessId?: string
   ): Promise<string> {
+    const resolvedRoles = Array.isArray((user as any).roles)
+      ? (user as any).roles
+      : user.role
+      ? [user.role]
+      : [];
     const payload: JwtPayload = {
       businessId,
       sub: user.id,
@@ -31,7 +36,7 @@ export class TokenService {
       email: user.email,
       accountType: user.accountType,
       scopes: user.scopes,
-      roles: user.roles,
+      roles: resolvedRoles,
       iat: Math.floor(Date.now() / 1000),
       // corrected from secs to mins -> added '*60'
       exp: Math.floor(Date.now() / 1000) + parseInt(this.jwtExpiresIn) * 60,

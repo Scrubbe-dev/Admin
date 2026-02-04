@@ -8,7 +8,7 @@ declare global {
         scopes: string[];
         id: string;
         email: string;
-        roles: Role
+        roles: Role[]
       };
     }
   }

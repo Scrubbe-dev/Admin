@@ -861,6 +861,12 @@ export class AuthService {
           firstName: input.firstName,
           lastName: input.lastName,
           role: Role.USER,
+          developer: {
+            create: {
+              experience: input.experienceLevel,
+              githubUsername: input.githubUsername,
+            },
+          },
         },
       });
 
