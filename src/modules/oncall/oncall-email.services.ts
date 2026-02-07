@@ -1,4 +1,4 @@
-import { createEmailServiceWithResend } from '../auth/services/resend-no-nodemailer.factory';
+import { createEmailServiceWithSes } from '../auth/services/ses-email.factory';
 
 export interface OnCallAssignmentEmailData {
   email: string;
@@ -14,7 +14,7 @@ export class OnCallEmailService {
   private emailService;
 
   constructor() {
-    this.emailService = createEmailServiceWithResend();
+    this.emailService = createEmailServiceWithSes();
   }
 
   async sendAssignmentNotification(emailData: OnCallAssignmentEmailData): Promise<void> {

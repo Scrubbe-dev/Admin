@@ -1,7 +1,7 @@
 import { PrismaClient, SLABreachType } from '@prisma/client';
 import { SLADeadlines, SLABreach, SLARule } from '../slarule/slarule.types';
 import { calculateSLADeadlines, getSLARule } from './auto-slarules.utils';
-import { createEmailServiceWithResend } from '../auth/services/resend-no-nodemailer.factory';
+import { createEmailServiceWithSes } from '../auth/services/ses-email.factory';
 // import { createEmailService } from '../auth/services/nodemailer.factory';
 
 const prisma = new PrismaClient();
@@ -10,7 +10,7 @@ export class SLAService {
   private emailService;
 
   constructor() {
-    this.emailService = createEmailServiceWithResend();
+    this.emailService = createEmailServiceWithSes();
   }
 
 

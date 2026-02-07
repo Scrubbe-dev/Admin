@@ -1,12 +1,12 @@
-import { ResendEmailService } from "../auth/services/resend-no-nodemailer.service";
-import { createEmailServiceWithResend } from "../auth/services/resend-no-nodemailer.factory";
+import { EmailService } from "../auth/types/nodemailer.types";
+import { createEmailServiceWithSes } from "../auth/services/ses-email.factory";
 import { ContactUsRequest } from "./contactus.types";
 
 export class ContactUsService {
-  private emailService: ResendEmailService;
+  private emailService: EmailService;
 
   constructor() {
-    this.emailService = createEmailServiceWithResend();
+    this.emailService = createEmailServiceWithSes();
   }
 
   async sendContactUsEmail(contactData: ContactUsRequest): Promise<void> {

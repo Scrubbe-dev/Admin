@@ -126,9 +126,7 @@ export function createAuthRouter(
    *             required:
    *               - email
    *               - password
-   *               - businessAddress
-   *               - companySize
-   *               - purpose
+   *               - companyName
    *             properties:
    *               email:
    *                 type: string
@@ -148,18 +146,10 @@ export function createAuthRouter(
    *                 type: string
    *                 example: "Smith"
    *                 description: User's last name
-   *               businessAddress:
+   *               companyName:
    *                 type: string
-   *                 example: "123 Main St, Springfield"
-   *                 description: Physical address of the business
-   *               companySize:
-   *                 type: string
-   *                 example: "11-50"
-   *                 description: Size range of the company
-   *               purpose:
-   *                 type: string
-   *                 example: "Monitoring cloud infrastructure"
-   *                 description: Purpose of using the platform
+   *                 example: "Acme Corp"
+   *                 description: Legal or trading name of the company
    *     responses:
    *       201:
    *         description: Business user registered successfully and verification email sent
@@ -409,8 +399,7 @@ export function createAuthRouter(
    *               - oAuthProvider
    *               - email
    *               - isVerified
-   *               - companySize
-   *               - purpose
+   *               - companyName
    *             properties:
    *               firstName:
    *                 type: string
@@ -444,18 +433,10 @@ export function createAuthRouter(
    *                 format: uri
    *                 example: "https://example.com/logo.png"
    *                 description: Optional profile or company logo from the OAuth provider
-   *               businessAddress:
+   *               companyName:
    *                 type: string
-   *                 example: "123 Main Street, New York"
-   *                 description: Optional business address of the company
-   *               companySize:
-   *                 type: string
-   *                 example: "1-10 people"
-   *                 description: Size of the company
-   *               purpose:
-   *                 type: string
-   *                 example: "Data analysis tools"
-   *                 description: Purpose of creating the business account
+   *                 example: "Acme Corp"
+   *                 description: Legal or trading name of the company
    *     responses:
    *       201:
    *         description: Business account registered successfully
@@ -479,15 +460,9 @@ export function createAuthRouter(
    *                     lastName:
    *                       type: string
    *                       example: "Doe"
-   *                     address:
+   *                     companyName:
    *                       type: string
-   *                       example: "123 street"
-   *                     purpose:
-   *                       type: string
-   *                       example: "data analyst"
-   *                     companySize:
-   *                       type: string
-   *                       example: "1-10 people"
+   *                       example: "Acme Corp"
    *                     accountType:
    *                       type: string
    *                       example: "BUSINESS"

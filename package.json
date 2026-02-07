@@ -37,6 +37,7 @@
   "license": "ISC",
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
+    "@aws-sdk/client-ses": "^3.705.0",
     "@gitbeaker/node": "^35.8.1",
     "@maxmind/geoip2-node": "^6.0.0",
     "@nestjs/common": "^11.1.0",

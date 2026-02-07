@@ -84,9 +84,7 @@ export type RegisterBusinessRequest = {
   firstName: string;
   lastName: string;
   email: string;
-  businessAddress?: string;
-  companySize: string;
-  purpose?: string;
+  companyName: string;
   password: string;
 };
 
@@ -111,9 +109,7 @@ export interface OAuthBusinesRequest {
   id: string; // oauthproviderid
   oAuthProvider: OAuthProviders;
 
-  businessAddress?: string;
-  companySize: string;
-  purpose?: string;
+  companyName: string;
 }
 
 export interface OAuthLoginRequest {

@@ -8,13 +8,10 @@ import {
 import { PasswordResetService } from './reset.services';
 import { Logger } from './utils/logger';
 import { PrismaClient } from '@prisma/client';
-import { ResendEmailService } from '../auth/services/resend.service';
-import { createEmailService } from '../auth/services/nodemailer.factory';
 import prisma from '../../lib/prisma'
-import {resendConfig} from '../../config/resend.config'
-import { createEmailServiceWithResend } from '../auth/services/resend-no-nodemailer.factory';
+import { createEmailServiceWithSes } from '../auth/services/ses-email.factory';
 // Create service instances
-const emailService = createEmailServiceWithResend()
+const emailService = createEmailServiceWithSes()
 const logger = new Logger();
 const passwordResetService = new PasswordResetService(prisma, emailService, logger);
 

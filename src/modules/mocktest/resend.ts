@@ -1,29 +1,29 @@
-import { Resend } from 'resend';
 import { Router, Response, Request } from "express";
+import { createEmailServiceWithSes } from "../auth/services/ses-email.factory";
 
-const sendMailerRouter = Router()
-const resend = new Resend('re_4hDMRFZg_3j178uSm9WRJZwURnjmwgzT9');
+const sendMailerRouter = Router();
+const emailService = createEmailServiceWithSes();
 
-async function sendMail(request:Request,response:Response){ 
-  try{ 
-    const { data, error } = await resend.emails.send({
-        from: 'Acme <onboarding@resend.dev>',
-        to: ['uchennnachinka4@gmail.com'],
-        subject: 'Hello World',
-        html: '<strong>It works!</strong>',
+async function sendMail(request: Request, response: Response) {
+  try {
+    const defaultRecipient =
+      process.env.AWS_SES_TEST_TO ||
+      process.env.AWS_SES_FROM_EMAIL ||
+      process.env.FROM_EMAIL ||
+      "test@example.com";
+
+    await emailService.sendCustomEmail({
+      to: [defaultRecipient],
+      subject: "AWS SES Test Email",
+      html: "<strong>It works!</strong>",
+      text: "It works!",
     });
 
-    if (error) {
-        return console.error({ error });
-    }
+    response.json({ message: "mail sent successfully" });
+  } catch (err) {
+    response.status(500).json({ message: `${err} from sending mail` });
+  }
+}
 
-      response.json({message: "mail sent successfully", data , error})
-    }catch(err){
-      response.send({message: `${err} from sending mail`})
-    }
- }
-
-
-
-  sendMailerRouter.get("/test/sendmailer",sendMail);
-  export default sendMailerRouter;
+sendMailerRouter.get("/test/sendmailer", sendMail);
+export default sendMailerRouter;

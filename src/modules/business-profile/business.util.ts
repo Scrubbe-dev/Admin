@@ -11,7 +11,7 @@ import { AccountType, Prisma } from "@prisma/client";
 import { ConflictError } from "../auth/error";
 import { createEmailService } from "../auth/services/nodemailer.factory";
 import bcrypt from "bcryptjs";
-import { createEmailServiceWithResend } from "../auth/services/resend-no-nodemailer.factory";
+import { createEmailServiceWithSes } from "../auth/services/ses-email.factory";
 dotenv.config();
 
 export class BusinessUtil {
@@ -140,7 +140,7 @@ export class BusinessUtil {
       // const emailService = new EmailService();
 
       // await emailService.sendInviteEmail(invite, inviteLink);
-      await  createEmailServiceWithResend().sendInviteEmail(invite,inviteLink)
+      await createEmailServiceWithSes().sendInviteEmail(invite, inviteLink);
     } catch (error) {
       throw new Error(
         `Error occured while sending email: ${

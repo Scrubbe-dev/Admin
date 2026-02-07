@@ -20,7 +20,6 @@ import { SecurityUtils } from "./modules/auth/utils/security.utils";
 import { AuthMiddleware } from "./modules/auth/middleware/auth.middleware";
 import { AuthController } from "./modules/auth/controllers/auth.controller";
 // import { EmailServices } from './modules/password-reset/email.services';
-import { ResendEmailService } from './modules/auth/services/resend.service'
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 
@@ -60,7 +59,6 @@ import playbookRouter from "./modules/playbook/playbook.route";
 import imsRouter from "./modules/ims-setup/ims.router";
 import passwordResetRouter from "./modules/password-reset/reset.route";
 // import {sendGridConfig} from "./config/sendgrid.config"
-import { resendConfig } from "./config/resend.config"
 // In your main application file (e.g., index.ts or app.ts)
 
 
@@ -74,7 +72,7 @@ import pricingRouter from "./modules/pricing/pricing.route";
 import { SLACronService } from "./modules/auto-sla/auto-cron.service";
 import { customerAuthRoutes } from "./modules/customer/routers/customerAuthRoute";
 import { customerIncidentRoutes } from "./modules/customer/routers/customerIncidentRoute";
-import { createEmailServiceWithResend } from "./modules/auth/services/resend-no-nodemailer.factory";
+import { createEmailServiceWithSes } from "./modules/auth/services/ses-email.factory";
 import oncallRouter from "./modules/oncall/oncall.routes";
 import contactusRouter from "./modules/contactus/contactus.routes";
 import { organizationRoutes } from "./modules/customer/routers/organizationRoute";
@@ -149,15 +147,14 @@ const tokenService = new TokenService(
   config.refreshTokenExpiresInDays
 );
 // BEFORE PUSHING TO PROD, COMMENT OUT LOCAL DB AND USE PROD DB IN ENV
-// const emailService = new ResendEmailService(resendConfig); // verification token service
 // const emailService = createEmailService();
-const emailsServicesWithResend = createEmailServiceWithResend();
+const emailService = createEmailServiceWithSes();
 // const emailServices = new EmailServices();
 const authService = new AuthService(
   prisma,
   tokenService,
   securityUtils,
-  emailsServicesWithResend
+  emailService
 );
 const authMiddleware = new AuthMiddleware(tokenService);
 const authController = new AuthController(authService);

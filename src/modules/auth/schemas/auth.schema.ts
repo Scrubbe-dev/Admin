@@ -85,9 +85,7 @@ export const registerBusinessByOauth = z.object({
   }),
   email: businessEmailSchema,
 
-  businessAddress: z.string().min(10, "Please provide a valid address"),
-  companySize: z.string().min(1, "Company size is required"),
-  purpose: z.string().min(1, "Purpose is required").optional(),
+  companyName: z.string().min(1, "Company name is required"),
 });
 
 // Register business schema
@@ -96,9 +94,7 @@ export const registerBusinessSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   email: businessEmailSchema,
   password: passwordSchema,
-  businessAddress: z.string().min(10, "Please provide a valid address"),
-  companySize: z.string().min(1, "Company size is required"),
-  purpose: z.string().min(1, "Purpose is required").optional(),
+  companyName: z.string().min(1, "Company name is required"),
 });
 
 // Login schema

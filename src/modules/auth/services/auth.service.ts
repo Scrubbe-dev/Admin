@@ -779,11 +779,9 @@ export class AuthService {
       );
 
 
-   const newBusiness = await  this.prisma.business.create({
-       data:{
-         address: input.businessAddress,
-         companySize: input.companySize,
-         purpose: input.purpose || "None",
+   const newBusiness = await this.prisma.business.create({
+       data: {
+         name: input.companyName,
        },
      })
 
@@ -910,10 +908,8 @@ export class AuthService {
 
 
     const bussinesses = await this.prisma.business.create({
-        data:{
-          address: input.businessAddress as string,
-          companySize: input.companySize,
-          purpose: input.purpose || "None",
+        data: {
+          name: input.companyName,
         },
       });
 
